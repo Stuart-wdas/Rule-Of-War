@@ -1,0 +1,14 @@
+{
+  "name": "result-of-war",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A browser-based turn strategy game.",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check game.js && node --check game-rules.js && node --check maps/map-catalog.js && node --check maps/runtime-map.js && node --check maps/procedural-terrain.js && node --check terrain/terrain-types.js && node --check terrain/seeded-random.js && node --check terrain/noise.js && node --check terrain/elevation-generation.js && node --check terrain/water-surface-generation.js && node --check terrain/river-generation.js && node --check terrain/terrain-gameplay-rules.js && node --check terrain/terrain-generator.js && node --check terrain/terrain-pathfinding.js && node --check core/board-utils.js && node --check core/battlefield-view-index.js && node --check core/navigation-graph.js && node --check state/game-state.js && node --check config/developer-config.js && node --check storage/saved-match-store.js && node --check network/snapshot-utils.js && node --check network/multiplayer-state.js && node --check ui/dom-elements.js && node --check controllers/ai-controller.js && node --check controllers/movement-controller.js && node --check controllers/combat-controller.js && node --check controllers/production-controller.js && node --check controllers/phase-controller.js && node --check battlefield3d.js && node --check server.js"
+  },
+  "dependencies": {
+    "three": "^0.185.1",
+    "ws": "^8.21.1"
+  }
+}
