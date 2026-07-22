@@ -13,6 +13,7 @@ export function createBattlefieldViewIndex({
   buildings,
   selected,
   movementRangeFor,
+  getWorldPoint = null,
   canUnitAttack,
   isValidBuildTile,
   isTerrainPassable,
@@ -70,14 +71,17 @@ export function createBattlefieldViewIndex({
       if (piece.revealsFog !== true) continue;
       const spec = unitTypes[piece.type] ?? buildings[piece.type];
       if (!spec) continue;
-      const center = runtimeMap.tileByCoordinate.get(keyOf(piece.x, piece.y))
-        ?.center ?? { x: piece.x, y: piece.y };
+      const visionRange = spec.visionRange ?? spec.range ?? 0;
+      const center =
+        getWorldPoint?.(piece) ??
+        runtimeMap.tileByCoordinate.get(keyOf(piece.x, piece.y))?.center ??
+        { x: piece.x, y: piece.y };
       visibilitySources.push({
         x: center.x,
         y: center.y,
-        radius: spec.range,
+        radius: visionRange,
       });
-      for (const tile of runtimeMap.tilesWithinRadius(piece, spec.range, {
+      for (const tile of runtimeMap.tilesWithinRadius(piece, visionRange, {
         includeOrigin: true,
       }))
         visible.add(keyOf(tile.x, tile.y));

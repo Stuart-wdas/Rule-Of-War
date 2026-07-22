@@ -48,6 +48,11 @@ import {
   terrainGameplayProperties,
 } from "./maps/procedural-terrain.js";
 import { findTerrainPath } from "./terrain/terrain-pathfinding.js";
+import { hydrateTerrain } from "./terrain/terrain-generator.js";
+import {
+  cacheTerrain,
+  getCachedTerrain,
+} from "./terrain/terrain-cache.js";
 import { createFreshState } from "./state/game-state.js";
 import { SavedMatchStore } from "./storage/saved-match-store.js";
 import { collectDomElements } from "./ui/dom-elements.js";
@@ -85,6 +90,7 @@ let reconnectTimer = null;
 let intentionalSocketClose = false;
 let pendingGameMode = null;
 let preparedMapId = null;
+let fastForwarding = false;
 let multiplayer = createEmptyMultiplayerState();
 const uid = (prefix) =>
   `${prefix}-${localOwner}-${Date.now().toString(36)}-${++idCounter}`;
@@ -99,6 +105,7 @@ function isHumanGame() {
 
 function isInteractionLocked() {
   return (
+    fastForwarding ||
     state.resolving ||
     Boolean(state.winner) ||
     (isHumanGame() &&
@@ -109,7 +116,7 @@ function isInteractionLocked() {
   );
 }
 
-function applyRuntimeRules() {
+function applyRuntimeRules({ terrain = null, resolutionScale = 1 } = {}) {
   const dimensions = applyConfiguredRules(gameConfig);
   COLS = dimensions.cols;
   ROWS = dimensions.rows;
@@ -120,12 +127,18 @@ function applyRuntimeRules() {
       : { id: "custom-grid", name: "CUSTOM GRID", cols: COLS, rows: ROWS },
   );
   activeTerrainSeed ??= runtimeMap.id ?? selectedMapId;
-  terrainSampler = createTerrainSampler(
-    runtimeMap.bounds,
-    activeTerrainSeed,
-    preset.terrainConfig,
-  );
-  terrainGenerator = terrainSampler.terrain;
+  if (terrain) {
+    terrainGenerator = terrain;
+    terrainSampler = (x, y) => terrain.sample(x, y);
+    terrainSampler.terrain = terrain;
+  } else {
+    terrainSampler = createTerrainSampler(
+      runtimeMap.bounds,
+      activeTerrainSeed,
+      { ...preset.terrainConfig, resolutionScale },
+    );
+    terrainGenerator = terrainSampler.terrain;
+  }
   terrainTileCache = new Map();
   navigationGraph = runtimeMap.graph;
 }
@@ -175,6 +188,8 @@ let navigationMapProjection = null;
 let navigationResizeFrame = null;
 let selectedStructureId = null;
 let structurePopoverAnchor = null;
+const UNIT_COLLISION_RADIUS = 0.34;
+const FORMATION_SPACING = 0.7;
 
 // The controller only chooses orders. Every injected engine function still
 // validates the AI against the same movement, cost, and combat rules as users.
@@ -201,6 +216,7 @@ const movementController = new MovementController({
   getUnit,
   pieceAt,
   isGroundOccupied,
+  isGroundPositionOccupied,
   getBattlefield: () => battlefield3D,
   isVisible: isVisibleToPlayer,
   getLocalOwner: () => localOwner,
@@ -246,8 +262,7 @@ const productionController = new ProductionController({
 const airController = new AirController({
   getState: () => state,
   getBattlefield: () => battlefield3D,
-  getWorldPoint: (piece) =>
-    runtimeMap.tileByCoordinate.get(`${piece.x},${piece.y}`)?.center ?? piece,
+  getWorldPoint: mapPositionFor,
   getAttackTarget,
   damageFor,
   getLocalOwner: () => localOwner,
@@ -279,9 +294,116 @@ function coord(x, y) {
   return `${columnLabel(x)}${y + 1}`;
 }
 
+function tileCenter(x, y) {
+  return runtimeMap?.tileByCoordinate.get(`${x},${y}`)?.center ?? { x, y };
+}
+
+function mapPositionFor(piece) {
+  if (!piece) return { x: 0, y: 0 };
+  if (piece.center) return piece.center;
+  if (Number.isFinite(piece.worldX) && Number.isFinite(piece.worldY))
+    return { x: piece.worldX, y: piece.worldY };
+  if (Number.isFinite(piece.x) && Number.isFinite(piece.y))
+    return tileCenter(piece.x, piece.y);
+  return { x: 0, y: 0 };
+}
+
+function targetPointForTile(x, y, pointer = null) {
+  if (Number.isFinite(pointer?.worldX) && Number.isFinite(pointer?.worldY))
+    return { x: pointer.worldX, y: pointer.worldY };
+  return tileCenter(x, y);
+}
+
+function tileAtMapPoint(point) {
+  if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y))
+    return null;
+  if (runtimeMap.virtual)
+    return runtimeMap.getTile(Math.round(point.x), Math.round(point.y));
+  return (
+    runtimeMap.tiles.reduce((nearest, candidate) => {
+      const candidateDistance = Math.hypot(
+        candidate.center.x - point.x,
+        candidate.center.y - point.y,
+      );
+      if (!nearest || candidateDistance < nearest.distance)
+        return { tile: candidate, distance: candidateDistance };
+      return nearest;
+    }, null)?.tile ?? null
+  );
+}
+
+function clearUnitSelection() {
+  state.selectedId = null;
+  state.selectedIds = [];
+  state.intent = null;
+}
+
+function selectedUnits() {
+  const ids = Array.isArray(state.selectedIds)
+    ? state.selectedIds
+    : state.selectedId
+      ? [state.selectedId]
+      : [];
+  return ids
+    .map((id) => getUnit(id))
+    .filter((unit) => unit && unit.owner === localOwner && unit.hp > 0);
+}
+
+function selectedUnitIdSet() {
+  return new Set(selectedUnits().map((unit) => unit.id));
+}
+
+function defaultSelectionIntentForUnits(units) {
+  if (units.length > 1) {
+    const groundGroup = units.every(
+      (unit) => UNIT_TYPES[unit.type]?.airUnit !== true,
+    );
+    const totalMoveCost = units.reduce(
+      (sum, unit) => sum + (UNIT_TYPES[unit.type]?.actionCost ?? 0),
+      0,
+    );
+    return state.phase === "orders" &&
+      groundGroup &&
+      units.every((unit) => canQueueUnitOrder(unit, "move")) &&
+      state.players[localOwner].resources >= totalMoveCost
+      ? "move"
+      : null;
+  }
+  return defaultSelectionIntent(units[0]);
+}
+
+function selectUnit(unit, { additive = false, pointer = null } = {}) {
+  if (!unit || unit.owner !== localOwner) return;
+  closeStructurePopover();
+  selectedStructureId = null;
+  const current = selectedUnits().map((item) => item.id);
+  let nextIds;
+  if (additive) {
+    nextIds = current.includes(unit.id)
+      ? current.filter((id) => id !== unit.id)
+      : [...current, unit.id];
+  } else {
+    nextIds = [unit.id];
+  }
+  state.selectedIds = nextIds;
+  state.selectedId = nextIds[0] ?? null;
+  state.intent = defaultSelectionIntentForUnits(selectedUnits());
+  if (
+    unit.type === "commander" &&
+    Number.isFinite(pointer?.clientX) &&
+    Number.isFinite(pointer?.clientY)
+  ) {
+    const battlefieldBounds = els.battlefield.getBoundingClientRect();
+    structurePopoverAnchor = {
+      x: pointer.clientX - battlefieldBounds.left,
+      y: pointer.clientY - battlefieldBounds.top,
+    };
+  } else if (unit.type !== "commander") structurePopoverAnchor = null;
+}
+
 function distance(a, b) {
-  const first = runtimeMap?.tileByCoordinate.get(`${a.x},${a.y}`)?.center ?? a;
-  const second = runtimeMap?.tileByCoordinate.get(`${b.x},${b.y}`)?.center ?? b;
+  const first = mapPositionFor(a);
+  const second = mapPositionFor(b);
   return euclideanDistance(first, second);
 }
 
@@ -302,10 +424,131 @@ function groundMovementCostAt(x, y) {
     : Number.POSITIVE_INFINITY;
 }
 
-function movementRoutePlan(actor, x, y) {
+function routePoint(point) {
+  const tile = tileAtMapPoint(point);
+  return tile
+    ? { x: tile.x, y: tile.y, worldX: point.x, worldY: point.y }
+    : null;
+}
+
+function sampleGroundSegment(start, end, { collect = false } = {}) {
+  const length = euclideanDistance(start, end);
+  const steps = Math.max(1, Math.ceil(length / 0.2));
+  const samples = [];
+  let cost = 0;
+  let previous = start;
+  for (let index = 1; index <= steps; index += 1) {
+    const amount = index / steps;
+    const point = {
+      x: start.x + (end.x - start.x) * amount,
+      y: start.y + (end.y - start.y) * amount,
+    };
+    const tile = tileAtMapPoint(point);
+    if (!tile) return null;
+    const movementCost = groundMovementCostAt(tile.x, tile.y);
+    if (!Number.isFinite(movementCost)) return null;
+    const stepCost = euclideanDistance(previous, point) * movementCost;
+    cost += stepCost;
+    if (collect) samples.push({ point, tile, stepCost });
+    previous = point;
+  }
+  return { cost, samples };
+}
+
+function smoothGroundPath(actor, gridPath, destinationPoint) {
+  const start = mapPositionFor(actor);
+  const candidates = [
+    start,
+    ...gridPath.slice(1, -1).map((tile) => tile.center ?? tileCenter(tile.x, tile.y)),
+    destinationPoint,
+  ];
+  const smoothed = [start];
+  let anchor = 0;
+  while (anchor < candidates.length - 1) {
+    let next = candidates.length - 1;
+    while (next > anchor + 1) {
+      if (sampleGroundSegment(candidates[anchor], candidates[next])) break;
+      next -= 1;
+    }
+    smoothed.push(candidates[next]);
+    anchor = next;
+  }
+  return smoothed;
+}
+
+function turnWaypointsForRoute(points, movementRange) {
+  const waypoints = [];
+  let turnRoute = [points[0]];
+  let turnCost = 0;
+  let totalMovementCost = 0;
+  for (let segment = 1; segment < points.length; segment += 1) {
+    let previous = points[segment - 1];
+    const sampled = sampleGroundSegment(previous, points[segment], {
+      collect: true,
+    });
+    if (!sampled) return null;
+    for (const sample of sampled.samples) {
+      let stepStart = previous;
+      let stepCost = sample.stepCost;
+      while (turnCost + stepCost > movementRange + 1e-6) {
+        const remaining = movementRange - turnCost;
+        const ratio = stepCost > 0 ? remaining / stepCost : 1;
+        const stop = {
+          x: stepStart.x + (sample.point.x - stepStart.x) * ratio,
+          y: stepStart.y + (sample.point.y - stepStart.y) * ratio,
+        };
+        const waypoint = routePoint(stop);
+        if (waypoint) {
+          turnRoute.push(stop);
+          waypoint.via = turnRoute.slice(1).map(routePoint).filter(Boolean);
+          waypoints.push(waypoint);
+          turnRoute = [stop];
+        }
+        totalMovementCost += remaining;
+        stepStart = stop;
+        stepCost -= remaining;
+        turnCost = 0;
+      }
+      turnCost += stepCost;
+      totalMovementCost += stepCost;
+      previous = sample.point;
+    }
+    const segmentEnd = points[segment];
+    const routeEnd = turnRoute[turnRoute.length - 1];
+    if (euclideanDistance(routeEnd, segmentEnd) > 1e-6)
+      turnRoute.push(segmentEnd);
+  }
+  const final = routePoint(points[points.length - 1]);
+  const last = waypoints[waypoints.length - 1];
+  if (
+    final &&
+    (!last ||
+      Math.abs(last.worldX - final.worldX) > 1e-6 ||
+      Math.abs(last.worldY - final.worldY) > 1e-6)
+  ) {
+    final.via = turnRoute.slice(1).map(routePoint).filter(Boolean);
+    waypoints.push(final);
+  }
+  return { waypoints, totalMovementCost };
+}
+
+function movementRoutePlan(actor, x, y, targetPoint = null) {
   const destination = navigationGraph.resolve({ x, y });
   const current = navigationGraph.resolve(actor);
   if (!destination || !current) return null;
+  const destinationPoint = targetPoint ?? tileCenter(x, y);
+  if (current.id === destination.id) {
+    const localRoute = turnWaypointsForRoute(
+      [mapPositionFor(actor), destinationPoint],
+      movementRangeFor(actor),
+    );
+    if (!localRoute || localRoute.totalMovementCost <= 0) return null;
+    return {
+      path: [{ x, y, worldX: destinationPoint.x, worldY: destinationPoint.y }],
+      waypoints: localRoute.waypoints,
+      totalMovementCost: localRoute.totalMovementCost,
+    };
+  }
   const result = findTerrainPath({
     graph: navigationGraph,
     start: current,
@@ -316,35 +559,21 @@ function movementRoutePlan(actor, x, y) {
   });
   if (!result || result.path.length < 2) return null;
 
-  const movementRange = movementRangeFor(actor);
-  const path = result.path.slice(1).map((tile) => ({ x: tile.x, y: tile.y }));
-  const waypoints = [];
-  let turnCost = 0;
-  for (let index = 1; index < result.path.length; index += 1) {
-    const previous = result.path[index - 1];
-    const currentTile = result.path[index];
-    const stepCost =
-      distance(previous, currentTile) *
-      groundMovementCostAt(currentTile.x, currentTile.y);
-    if (turnCost > 0 && turnCost + stepCost > movementRange + 1e-6) {
-      const stop = result.path[index - 1];
-      waypoints.push({ x: stop.x, y: stop.y });
-      turnCost = 0;
-    }
-    turnCost += stepCost;
-    if (turnCost >= movementRange - 1e-6) {
-      waypoints.push({ x: currentTile.x, y: currentTile.y });
-      turnCost = 0;
-    }
-  }
-  const final = path[path.length - 1];
-  const lastWaypoint = waypoints[waypoints.length - 1];
-  if (!lastWaypoint || lastWaypoint.x !== final.x || lastWaypoint.y !== final.y)
-    waypoints.push({ ...final });
-  return { path, waypoints, totalMovementCost: result.cost };
+  const continuousPath = smoothGroundPath(actor, result.path, destinationPoint);
+  const planned = turnWaypointsForRoute(
+    continuousPath,
+    movementRangeFor(actor),
+  );
+  if (!planned?.waypoints.length) return null;
+  const path = continuousPath.slice(1).map(routePoint).filter(Boolean);
+  return { path, ...planned };
 }
 
-function buildingFootprintTiles(x, y) {
+function buildingFootprintTiles(x, y, type = null) {
+  if (BUILDINGS[type]?.footprintSize === 1) {
+    const tile = navigationGraph.resolve({ x, y });
+    return tile ? [tile] : [];
+  }
   const square = [];
   for (let offsetY = -1; offsetY <= 1; offsetY += 1)
     for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
@@ -375,8 +604,11 @@ function buildingFootprintTiles(x, y) {
   return footprint.length === 9 ? footprint : [];
 }
 
-function buildingFootprintCoordinates(x, y) {
-  return buildingFootprintTiles(x, y).map((tile) => ({ x: tile.x, y: tile.y }));
+function buildingFootprintCoordinates(x, y, type = null) {
+  return buildingFootprintTiles(x, y, type).map((tile) => ({
+    x: tile.x,
+    y: tile.y,
+  }));
 }
 
 function bridgeMetrics(start, end) {
@@ -486,6 +718,43 @@ function isGroundOccupied(x, y, includePending = true) {
   );
 }
 
+function isGroundPositionOccupied(
+  x,
+  y,
+  worldX = null,
+  worldY = null,
+  ignoreUnitId = null,
+  includePending = true,
+) {
+  const target = Number.isFinite(worldX) && Number.isFinite(worldY)
+    ? { x: worldX, y: worldY }
+    : tileCenter(x, y);
+  const structureBlocks = state.structures.some(
+    (piece) =>
+      piece.type !== "bridge" &&
+      piece.hp > 0 &&
+      occupiesTile(piece, x, y),
+  );
+  if (structureBlocks) return true;
+  if (
+    includePending &&
+    state.jobs.some(
+      (job) =>
+        job.kind === "building" &&
+        job.type !== "bridge" &&
+        occupiesTile(job, x, y),
+    )
+  )
+    return true;
+
+  return state.units.some((unit) => {
+    if (unit.id === ignoreUnitId) return false;
+    if (UNIT_TYPES[unit.type]?.airUnit === true && unit.airborne === true)
+      return false;
+    return euclideanDistance(mapPositionFor(unit), target) < UNIT_COLLISION_RADIUS;
+  });
+}
+
 function isFootprintClear(
   footprint,
   { ignoreJobId = null, expectedSize = 9 } = {},
@@ -500,10 +769,17 @@ function isFootprintClear(
   );
 }
 
-function getAttackTarget(x, y, actor) {
+function getAttackTarget(x, y, actor, targetId = null) {
   const hostile = piecesAt(x, y, false).filter(
     (piece) => piece.owner !== actor.owner && piece.hp > 0,
   );
+  const locked = targetId
+    ? [...state.units, ...state.structures].find(
+        (piece) =>
+          piece.id === targetId && piece.owner !== actor.owner && piece.hp > 0,
+      )
+    : null;
+  if (locked) return locked;
   return (
     hostile.find(
       (piece) =>
@@ -596,14 +872,17 @@ function producerCanRecruit(producer, type, owner = localOwner) {
   )
     return false;
   if (UNIT_TYPES[type]?.airUnit !== true) return true;
-  return (
-    !state.units.some(
-      (unit) => unit.homeAirfieldId === producer.id && unit.hp > 0,
-    ) &&
-    !state.jobs.some(
-      (job) => job.kind === "recruit" && job.producerId === producer.id,
-    )
-  );
+  const capacity = BUILDINGS[producer.type]?.aircraftCapacity ?? 1;
+  const assigned = state.units.filter(
+    (unit) => unit.homeAirfieldId === producer.id && unit.hp > 0,
+  ).length;
+  const queued = state.jobs.filter(
+    (job) =>
+      job.kind === "recruit" &&
+      (job.producerId ?? job.barracksId) === producer.id &&
+      UNIT_TYPES[job.type]?.airUnit === true,
+  ).length;
+  return assigned + queued < capacity;
 }
 
 function availableProducer(type, owner = localOwner) {
@@ -630,8 +909,8 @@ function isVisibleToPlayer(x, y) {
     .filter((piece) => piece.owner === localOwner && piece.revealsFog === true)
     .some((piece) => {
       const spec = UNIT_TYPES[piece.type] ?? BUILDINGS[piece.type];
-
-      return distance(piece, { x, y }) <= spec.range;
+      const visionRange = spec.visionRange ?? spec.range ?? 0;
+      return distance(piece, { x, y }) <= visionRange;
     });
 }
 
@@ -771,6 +1050,18 @@ function createStaticUI() {
   initializeHudPanels();
 
   els.structurePopover.addEventListener("click", (event) => {
+    const commanderBuild = event.target.closest("[data-commander-build]");
+    if (commanderBuild) {
+      chooseBuild(commanderBuild.dataset.commanderBuild);
+      return;
+    }
+    const closeCommander = event.target.closest("[data-close-commander]");
+    if (closeCommander) {
+      clearUnitSelection();
+      structurePopoverAnchor = null;
+      render();
+      return;
+    }
     const closeButton = event.target.closest("[data-close-structure]");
     if (closeButton) {
       closeStructurePopover();
@@ -787,7 +1078,11 @@ function createStaticUI() {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || !selectedStructureId) return;
+    const commanderOpen =
+      state.phase === "deployment" &&
+      getUnit(state.selectedId)?.type === "commander";
+    if (event.key !== "Escape" || (!selectedStructureId && !commanderOpen)) return;
+    if (commanderOpen) clearUnitSelection();
     closeStructurePopover();
     render();
   });
@@ -802,10 +1097,12 @@ function createStaticUI() {
     handleTileClick(Number(tile.dataset.x), Number(tile.dataset.y), {
       clientX: event.clientX,
       clientY: event.clientY,
+      shiftKey: event.shiftKey,
     });
   });
 
   els.phaseButton.addEventListener("click", advancePhase);
+  els.turnSkipButton?.addEventListener("click", fastForwardConfiguredTurns);
   els.moveButton.addEventListener("click", () => setIntent("move"));
   els.attackButton.addEventListener("click", () => setIntent("attack"));
   els.orderList.addEventListener("click", (event) => {
@@ -1092,6 +1389,7 @@ function applyNetworkSnapshot(snapshot, { cancelAnimations = true } = {}) {
   const previousConfig = JSON.stringify(gameConfig);
   const localUi = {
     selectedId: state.selectedId,
+    selectedIds: Array.isArray(state.selectedIds) ? state.selectedIds : [],
     intent: state.intent,
     buildMode: state.buildMode,
     bridgeStart: state.bridgeStart,
@@ -1123,6 +1421,7 @@ function applyNetworkSnapshot(snapshot, { cancelAnimations = true } = {}) {
       structure.footprint = buildingFootprintCoordinates(
         structure.x,
         structure.y,
+        structure.type,
       );
   }
   for (const job of game.jobs) {
@@ -1142,12 +1441,17 @@ function applyNetworkSnapshot(snapshot, { cancelAnimations = true } = {}) {
       job.type !== "bridge" &&
       (!Array.isArray(job.footprint) || job.footprint.length !== 9)
     )
-      job.footprint = buildingFootprintCoordinates(job.x, job.y);
+      job.footprint = buildingFootprintCoordinates(job.x, job.y, job.type);
   }
   state = {
     ...game,
     resolving: false,
     resolutionStep: null,
+    selectedIds: localUi.selectedIds.filter((selectedId) =>
+      game.units.some(
+        (unitItem) => unitItem.id === selectedId && unitItem.owner === localOwner,
+      ),
+    ),
     selectedId: game.units.some(
       (unitItem) =>
         unitItem.id === localUi.selectedId && unitItem.owner === localOwner,
@@ -1168,6 +1472,10 @@ function applyNetworkSnapshot(snapshot, { cancelAnimations = true } = {}) {
             },
           ],
   };
+  if (state.selectedId && !state.selectedIds.includes(state.selectedId))
+    state.selectedIds.unshift(state.selectedId);
+  if (!state.selectedId && state.selectedIds.length)
+    state.selectedId = state.selectedIds[0];
 
   if (previousConfig !== JSON.stringify(gameConfig)) {
     syncConfigDependentUI();
@@ -1318,36 +1626,102 @@ function showLoadingScreen(map) {
   showGameMenu("loading");
 }
 
+function terrainCacheKey(map, seed, terrainConfig) {
+  return `v2:${map.id}:${map.cols}x${map.rows}:${seed}:${JSON.stringify(terrainConfig ?? {})}`;
+}
+
+function generateTerrainInWorker(bounds, seed, config) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL("./terrain/terrain-worker.js", import.meta.url),
+      { type: "module" },
+    );
+    worker.onmessage = ({ data }) => {
+      worker.terminate();
+      if (!data?.ok) {
+        reject(new Error(data?.error ?? "Terrain worker failed."));
+        return;
+      }
+      resolve(data.terrain);
+    };
+    worker.onerror = (event) => {
+      worker.terminate();
+      reject(new Error(event.message || "Terrain worker failed."));
+    };
+    worker.postMessage({ bounds, seed, config });
+  });
+}
+
 async function prepareBattlefieldAssets(mapId) {
   const map = getMapPreset(mapId);
   showLoadingScreen(map);
   await yieldLoadingFrame();
 
-  updateLoadingProgress(18, "ALLOCATING VIRTUAL MAP INDEX");
+  updateLoadingProgress(10, "TERRAIN · BUILDING COARSE PREVIEW");
   gameConfig = applyMapPreset(developerConfigStore.load(), mapId);
   activeTerrainSeed = null;
-  applyRuntimeRules();
-  await yieldLoadingFrame();
-
-  updateLoadingProgress(42, "DEPLOYING STARTING FORCES");
+  applyRuntimeRules({ resolutionScale: 0.08 });
   state = freshState();
   battlefieldView = null;
-  await yieldLoadingFrame();
-
-  updateLoadingProgress(62, "BUILDING COMMAND INTERFACE");
   syncConfigDependentUI();
-  await yieldLoadingFrame();
-
-  updateLoadingProgress(78, "STREAMING TACTICAL TILE WINDOW");
   initializeBattlefield3D();
+  render();
+  document.querySelector(".app-shell").inert = false;
+  document.body.classList.add("battlefield-loading-preview");
   await yieldLoadingFrame();
 
-  updateLoadingProgress(94, "FINALIZING FOG AND ASSETS");
+  const cacheKey = terrainCacheKey(map, activeTerrainSeed, map.terrainConfig);
+  updateLoadingProgress(24, "TERRAIN · CHECKING SEED CACHE");
+  let serializedTerrain = null;
+  try {
+    serializedTerrain = await getCachedTerrain(cacheKey);
+  } catch (error) {
+    console.warn("Terrain cache read skipped.", error);
+  }
+  if (!serializedTerrain) {
+    updateLoadingProgress(32, "TERRAIN · GENERATING DETAILED HEIGHT FIELD");
+    serializedTerrain = await generateTerrainInWorker(
+      runtimeMap.bounds,
+      activeTerrainSeed,
+      map.terrainConfig,
+    );
+    cacheTerrain(cacheKey, serializedTerrain).catch((error) =>
+      console.warn("Terrain cache write skipped.", error),
+    );
+  } else updateLoadingProgress(58, "TERRAIN · RESTORING CACHED SEED");
+
+  const detailedTerrain = hydrateTerrain(serializedTerrain);
+  if (!detailedTerrain) throw new Error("Generated terrain could not be restored.");
+  applyRuntimeRules({ terrain: detailedTerrain });
+  updateLoadingProgress(66, "WATER · LEVELING LAKES AND RIVERS");
+  await yieldLoadingFrame();
+
+  state = freshState();
+  battlefieldView = null;
+  updateLoadingProgress(76, "BATTLEFIELD · STREAMING TACTICAL WINDOW");
+  const previewViewState = battlefield3D?.getViewState?.();
+  initializeBattlefield3D({
+    deferVegetation: true,
+    deferFogClouds: true,
+    viewState: previewViewState,
+  });
   render();
+  await yieldLoadingFrame();
+
+  updateLoadingProgress(86, "VEGETATION · DEPLOYING LOW-POLY TREES");
+  battlefield3D?.enableVegetation?.();
+  await yieldLoadingFrame();
+  updateLoadingProgress(93, "FOG · FORMING CLOUD COVER");
+  battlefield3D?.enableFogClouds?.();
+  render();
+  await yieldLoadingFrame();
+  updateLoadingProgress(97, "BATTLEFIELD · DRAWING TACTICAL MAP");
+  renderTacticalNavigation(battlefieldView);
   preparedMapId = map.id;
   await yieldLoadingFrame();
-  updateLoadingProgress(100, "OPERATION READY");
+  updateLoadingProgress(100, "BATTLEFIELD · OPERATION READY");
   await yieldLoadingFrame();
+  document.body.classList.remove("battlefield-loading-preview");
 }
 
 async function confirmMapSelection() {
@@ -1367,6 +1741,7 @@ async function confirmMapSelection() {
     els.selectedMapCopy.textContent =
       "BATTLEFIELD PREPARATION FAILED · CHECK THE CONSOLE";
   } finally {
+    document.body.classList.remove("battlefield-loading-preview");
     renderSelectedMap();
   }
 }
@@ -1705,8 +2080,7 @@ function setMultiplayerReady() {
   if (isInteractionLocked()) return;
   sendPlanUpdate();
   closeStructurePopover();
-  state.selectedId = null;
-  state.intent = null;
+  clearUnitSelection();
   state.buildMode = null;
   state.bridgeStart = null;
   multiplayer.localReady = true;
@@ -1831,8 +2205,7 @@ function closeStructurePopover() {
 function selectStructure(structure, pointer = null) {
   if (!structure) return;
   selectedStructureId = structure.id;
-  state.selectedId = null;
-  state.intent = null;
+  clearUnitSelection();
   if (Number.isFinite(pointer?.clientX) && Number.isFinite(pointer?.clientY)) {
     const battlefieldBounds = els.battlefield.getBoundingClientRect();
     structurePopoverAnchor = {
@@ -1851,11 +2224,13 @@ function structureDescription(structure) {
   if (structure.type === "barracks")
     return "Produces ground combat units and deploys them onto a clear nearby land cell after resolution.";
   if (structure.type === "airfield")
-    return "Builds, launches, and recovers one bomber assigned to this airfield.";
+    return `Builds, launches, and recovers up to ${BUILDINGS.airfield.aircraftCapacity} bombers assigned to this airfield.`;
   if (structure.type === "mine")
     return `Feeds the supply network with ◆ ${gameConfig.mineIncome} at the end of every round.`;
   if (structure.type === "bridge")
     return "Creates an operational crossing that allows ground units to traverse water cells.";
+  if (structure.type === "watchtower")
+    return "A passive observation post that spots targets for long-range fire support.";
   return "Operational field structure.";
 }
 
@@ -1899,13 +2274,56 @@ function structureRecruitmentMarkup(structure) {
       ? "Recruitment controls reopen during the next deployment phase."
       : structure.type === "airfield" &&
           !producerCanRecruit(structure, "plane", localOwner)
-        ? "This airfield already has a bomber assigned or in production."
+        ? `This airfield's ${BUILDINGS.airfield.aircraftCapacity} aircraft bays are occupied or reserved.`
         : "Recruits enter the manifest now and deploy after round resolution.";
   return `<div class="structure-production"><div class="structure-production-heading"><strong>PRODUCTION</strong><span>${queuedCount ? `${queuedCount} QUEUED` : "READY NEXT ROUND"}</span></div><div class="structure-recruit-grid">${buttons}</div><p class="structure-production-note">${note}</p></div>`;
 }
 
+function positionBattlefieldPopover(element, anchor = null) {
+  const point = anchor ?? {
+    x: els.battlefield.clientWidth / 2,
+    y: els.battlefield.clientHeight / 2,
+  };
+  const margin = 10;
+  const width = element.offsetWidth;
+  const height = element.offsetHeight;
+  let left = point.x + 14;
+  if (left + width + margin > els.battlefield.clientWidth)
+    left = point.x - width - 14;
+  left = Math.max(
+    margin,
+    Math.min(left, els.battlefield.clientWidth - width - margin),
+  );
+  const top = Math.max(
+    margin,
+    Math.min(
+      point.y - height / 2,
+      els.battlefield.clientHeight - height - margin,
+    ),
+  );
+  element.style.left = `${left}px`;
+  element.style.top = `${top}px`;
+}
+
 function renderStructurePopover() {
   const structure = getStructure(selectedStructureId);
+  const commander = getUnit(state.selectedId);
+  if (
+    !structure &&
+    commander?.owner === localOwner &&
+    commander.type === "commander" &&
+    commander.hp > 0 &&
+    state.phase === "deployment"
+  ) {
+    const watchtower = BUILDINGS.watchtower;
+    const bridge = BUILDINGS.bridge;
+    const locked = isInteractionLocked();
+    els.structurePopover.className = "structure-popover commander-popover";
+    els.structurePopover.innerHTML = `<header class="structure-popover-header"><span class="structure-popover-mark" aria-hidden="true">${UNIT_TYPES.commander.mark}</span><span class="structure-popover-heading"><small>FIELD COMMANDER</small><strong id="structure-popover-title">COMMAND POST</strong></span><button class="structure-popover-close" type="button" data-close-commander aria-label="Close commander controls">×</button></header><div class="structure-popover-body"><p class="structure-popover-description">Commission field structures within ${movementRangeFor(commander)} cells of this commander.</p><div class="structure-stat-grid"><span class="structure-stat"><small>POSITION</small><strong>${coord(commander.x, commander.y)}</strong></span><span class="structure-stat"><small>INTEGRITY</small><strong>${commander.hp} / ${UNIT_TYPES.commander.lives} HP</strong></span></div><div class="structure-production"><div class="structure-production-heading"><strong>FIELD CONSTRUCTION</strong><span>COMMANDER ONLY</span></div><div class="structure-recruit-grid"><button class="structure-recruit${state.buildMode === "watchtower" ? " active" : ""}" type="button" data-commander-build="watchtower"${locked || state.players[localOwner].resources < watchtower.price ? " disabled" : ""}><i>${watchtower.mark}</i><strong>${watchtower.label}</strong><span>♦ ${watchtower.price}</span></button><button class="structure-recruit${state.buildMode === "bridge" ? " active" : ""}" type="button" data-commander-build="bridge"${locked || state.players[localOwner].resources < bridge.pricePerMeter ? " disabled" : ""}><i>${bridge.mark}</i><strong>${bridge.label}</strong><span>♦ ${bridge.pricePerMeter}/M</span></button></div><p class="structure-production-note">Watchtowers occupy one cell. Bridges are priced by their final span.</p></div></div>`;
+    els.structurePopover.hidden = false;
+    positionBattlefieldPopover(els.structurePopover, structurePopoverAnchor);
+    return;
+  }
   if (!structure || structure.hp <= 0 || !isPieceVisible(structure)) {
     closeStructurePopover();
     els.structurePopover.hidden = true;
@@ -1933,29 +2351,7 @@ function renderStructurePopover() {
   els.structurePopover.innerHTML = `<header class="structure-popover-header"><span class="structure-popover-mark" aria-hidden="true">${spec.mark}</span><span class="structure-popover-heading"><small>${friendly ? "FRIENDLY STRUCTURE" : "IDENTIFIED HOSTILE STRUCTURE"}</small><strong id="structure-popover-title">${spec.label}</strong></span><button class="structure-popover-close" type="button" data-close-structure aria-label="Close structure information">×</button></header><div class="structure-popover-body"><p class="structure-popover-description">${structureDescription(structure)}</p><div class="structure-stat-grid"><span class="structure-stat"><small>COMMAND</small><strong>${ownerName}</strong></span><span class="structure-stat"><small>POSITION</small><strong>${coord(structure.x, structure.y)}</strong></span><span class="structure-stat"><small>INTEGRITY</small><strong>${structure.hp} / ${spec.lives} HP</strong></span><span class="structure-stat"><small>FOOTPRINT</small><strong>${footprint}</strong></span><span class="structure-stat"><small>STATUS</small><strong>OPERATIONAL</strong></span><span class="structure-stat"><small>FIELD COVERAGE</small><strong>${coverage}</strong></span></div>${structureRecruitmentMarkup(structure)}</div>`;
   els.structurePopover.hidden = false;
 
-  const anchor = structurePopoverAnchor ?? {
-    x: els.battlefield.clientWidth / 2,
-    y: els.battlefield.clientHeight / 2,
-  };
-  const margin = 10;
-  const width = els.structurePopover.offsetWidth;
-  const height = els.structurePopover.offsetHeight;
-  let left = anchor.x + 14;
-  if (left + width + margin > els.battlefield.clientWidth)
-    left = anchor.x - width - 14;
-  left = Math.max(
-    margin,
-    Math.min(left, els.battlefield.clientWidth - width - margin),
-  );
-  const top = Math.max(
-    margin,
-    Math.min(
-      anchor.y - 18,
-      els.battlefield.clientHeight - height - margin,
-    ),
-  );
-  els.structurePopover.style.left = `${left}px`;
-  els.structurePopover.style.top = `${top}px`;
+  positionBattlefieldPopover(els.structurePopover, structurePopoverAnchor);
 }
 
 function render() {
@@ -1969,6 +2365,7 @@ function render() {
     buildings: BUILDINGS,
     selected,
     movementRangeFor,
+    getWorldPoint: mapPositionFor,
     canUnitAttack,
     isValidBuildTile,
     isTerrainPassable: (x, y) =>
@@ -2010,6 +2407,7 @@ function renderTacticalNavigation(view) {
         String(first.id).localeCompare(String(second.id))
       );
     });
+  const selectedIds = selectedUnitIdSet();
   els.navigationUnitCount.textContent = `${friendlyUnits.length} UNIT${friendlyUnits.length === 1 ? "" : "S"}`;
   els.unitQuickNav.innerHTML = friendlyUnits.length
     ? friendlyUnits
@@ -2025,7 +2423,7 @@ function renderTacticalNavigation(view) {
                 ? "BOMB RUN"
                 : order.kind.toUpperCase()
               : "READY";
-          return `<button class="unit-nav-row${unit.id === state.selectedId ? " active" : ""}" type="button" data-unit-nav="${unit.id}" aria-label="Focus ${spec.label} at ${coord(unit.x, unit.y)}"><span class="unit-nav-mark">${spec.mark}</span><span class="unit-nav-copy"><strong>${spec.label}</strong><small>${coord(unit.x, unit.y)} / ${status}</small></span><b class="unit-nav-health">${unit.hp}/${spec.lives}</b></button>`;
+          return `<button class="unit-nav-row${selectedIds.has(unit.id) ? " active" : ""}" type="button" data-unit-nav="${unit.id}" aria-label="Focus ${spec.label} at ${coord(unit.x, unit.y)}"><span class="unit-nav-mark">${spec.mark}</span><span class="unit-nav-copy"><strong>${spec.label}</strong><small>${coord(unit.x, unit.y)} / ${status}</small></span><b class="unit-nav-health">${unit.hp}/${spec.lives}</b></button>`;
         })
         .join("")
     : '<p class="unit-quick-nav-empty">NO FRIENDLY UNITS AVAILABLE</p>';
@@ -2165,13 +2563,12 @@ function renderTacticalNavigation(view) {
     ...state.jobs.filter((job) => job.kind === "building"),
   ].filter((piece) => isPieceVisible(piece, view));
   for (const piece of mapPieces) {
-    const center =
-      runtimeMap.tileByCoordinate.get(`${piece.x},${piece.y}`)?.center ?? piece;
+    const center = mapPositionFor(piece);
     let point = project(center);
     const friendly = piece.owner === localOwner;
     const isUnit = piece.type in UNIT_TYPES;
     const selected =
-      piece.id === state.selectedId || piece.id === selectedStructureId;
+      selectedIds.has(piece.id) || piece.id === selectedStructureId;
     if (
       piece.type === "bridge" &&
       Number.isFinite(piece.endX) &&
@@ -2227,8 +2624,7 @@ function navigateToUnit(id) {
     !isInteractionLocked() &&
     (state.phase === "orders" || state.phase === "attack")
   ) {
-    state.selectedId = unit.id;
-    state.intent = defaultSelectionIntent(unit);
+    selectUnit(unit);
     render();
   }
   battlefield3D?.focusTile(unit.x, unit.y, { distance: 14 });
@@ -2360,6 +2756,15 @@ function renderPhase() {
   els.moveButton.hidden = attacking;
   els.attackButton.hidden = !attacking;
   els.phaseButton.disabled = isInteractionLocked();
+  if (els.turnSkipControl)
+    els.turnSkipControl.hidden = isHumanGame();
+  if (els.turnSkipButton) {
+    els.turnSkipButton.disabled =
+      isHumanGame() || isInteractionLocked() || Boolean(state.winner);
+    els.turnSkipButton.textContent = fastForwarding || state.resolving
+      ? "ADVANCING..."
+      : "FAST FORWARD";
+  }
   document.body.classList.toggle(
     "resolving",
     state.resolutionStep === "combat",
@@ -2379,10 +2784,7 @@ function initialRenderCenter() {
       x: (runtimeMap.bounds.minX + runtimeMap.bounds.maxX) / 2,
       y: (runtimeMap.bounds.minY + runtimeMap.bounds.maxY) / 2,
     };
-  const centers = friendlyPieces.map(
-    (piece) =>
-      runtimeMap.tileByCoordinate.get(`${piece.x},${piece.y}`)?.center ?? piece,
-  );
+  const centers = friendlyPieces.map(mapPositionFor);
   return {
     x: centers.reduce((sum, center) => sum + center.x, 0) / centers.length,
     y: centers.reduce((sum, center) => sum + center.y, 0) / centers.length,
@@ -2413,10 +2815,8 @@ function renderTileDescriptors(view, maximumTiles = MAX_DETAILED_TILES) {
 }
 
 function virtualRangeOverlay(selected) {
-  if (!isVirtualizedBattlefield()) return { kind: null, sources: [] };
   const sourceFor = (piece, radius) => ({
-    ...(runtimeMap.tileByCoordinate.get(`${piece.x},${piece.y}`)?.center ??
-      piece),
+    ...mapPositionFor(piece),
     radius,
   });
   if (state.buildMode) {
@@ -2444,6 +2844,12 @@ function virtualRangeOverlay(selected) {
       ],
     };
   }
+  const group = selectedUnits();
+  if (group.length > 1 && state.intent === "move")
+    return {
+      kind: "reachable",
+      sources: group.map((unit) => sourceFor(unit, movementRangeFor(unit))),
+    };
   if (selected && state.intent === "move")
     return {
       kind: "reachable",
@@ -2459,6 +2865,7 @@ function virtualRangeOverlay(selected) {
 
 function renderMap(view, selected = getUnit(state.selectedId)) {
   const selectedStructure = getStructure(selectedStructureId);
+  const selectedIds = selectedUnitIdSet();
   const renderFallbackGrid = !battlefield3D;
   const tiles = renderFallbackGrid ? [] : null;
   const fallbackBudget = isVirtualizedBattlefield()
@@ -2474,7 +2881,10 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
     const key = `${x},${y}`;
     const visible = view.isVisible(x, y);
     const isSelected = Boolean(
-      (selected && selected.x === x && selected.y === y) ||
+      state.units.some(
+        (unit) =>
+          selectedIds.has(unit.id) && unit.x === x && unit.y === y,
+      ) ||
         (selectedStructure && occupiesTile(selectedStructure, x, y)),
     );
     // Nearby detailed instances retain per-tile interaction highlighting.
@@ -2580,11 +2990,22 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
         guide: piece.guide === true,
         bridgeAnchorOnly: piece.bridgeAnchorOnly === true,
         selected:
-          piece.id === state.selectedId || piece.id === selectedStructureId,
+          selectedIds.has(piece.id) || piece.id === selectedStructureId,
         orderKind: order?.kind || null,
         heading: piece.owner === 0 ? 0 : Math.PI,
         airborne: piece.airborne === true,
+        ...(isUnit &&
+        Number.isFinite(piece.worldX) &&
+        Number.isFinite(piece.worldY)
+          ? { worldX: piece.worldX, worldY: piece.worldY }
+          : {}),
         footprintSize: isUnit ? 1 : (spec.footprintSize ?? 1),
+        ...(!isUnit && Number.isFinite(spec.modelWidth)
+          ? { modelWidth: spec.modelWidth }
+          : {}),
+        ...(!isUnit && Number.isFinite(spec.modelDepth)
+          ? { modelDepth: spec.modelDepth }
+          : {}),
         ...(piece.type === "bridge"
           ? {
               endX: piece.endX,
@@ -2599,8 +3020,13 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
     tiles: tileModels,
     pieces,
     orderTargets: state.orders
-      .filter((order) => order.owner === localOwner && order.kind === "move")
+      .filter(
+        (order) =>
+          order.owner === localOwner &&
+          (order.kind === "attack" || order.kind === "move"),
+      )
       .filter((order) => {
+        if (order.kind === "attack") return true;
         const actor = getUnit(order.unitId);
         return UNIT_TYPES[actor?.type]?.airUnit === true;
       })
@@ -2608,9 +3034,16 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
         const actor = getUnit(order.unitId);
         return {
           id: order.id,
-          kind: UNIT_TYPES[actor?.type]?.airUnit === true ? "bomb" : "move",
+          kind:
+            order.kind === "attack"
+              ? "attack"
+              : UNIT_TYPES[actor?.type]?.airUnit === true
+                ? "bomb"
+                : "move",
           x: order.x,
           y: order.y,
+          worldX: order.worldX,
+          worldY: order.worldY,
         };
       }),
     movementRoutes: state.orders
@@ -2626,7 +3059,20 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
           : [{ x: order.x, y: order.y }];
         const actorPathIndex = Array.isArray(order.path)
           ? order.path.findIndex(
-              (point) => point.x === actor.x && point.y === actor.y,
+              (point) => {
+                if (point.x !== actor.x || point.y !== actor.y) return false;
+                if (
+                  Number.isFinite(point.worldX) &&
+                  Number.isFinite(point.worldY)
+                )
+                  return (
+                    euclideanDistance(mapPositionFor(actor), {
+                      x: point.worldX,
+                      y: point.worldY,
+                    }) < 0.05
+                  );
+                return true;
+              },
             )
           : -1;
         const remainingPath = Array.isArray(order.path)
@@ -2635,15 +3081,24 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
         return {
           id: order.id,
           points: [
-            { x: actor.x, y: actor.y },
+            {
+              x: actor.x,
+              y: actor.y,
+              worldX: actor.worldX,
+              worldY: actor.worldY,
+            },
             ...remainingPath.map((point) => ({
               x: point.x,
               y: point.y,
+              worldX: point.worldX,
+              worldY: point.worldY,
             })),
           ],
           flagPoints: remainingWaypoints.map((waypoint) => ({
             x: waypoint.x,
             y: waypoint.y,
+            worldX: waypoint.worldX,
+            worldY: waypoint.worldY,
           })),
         };
       })
@@ -2653,10 +3108,11 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
       state.intent === "move" &&
       UNIT_TYPES[selected.type]?.airUnit !== true,
     fog: {
-      enabled: isVirtualizedBattlefield() && gameConfig.fogEnabled,
+      enabled: gameConfig.fogEnabled,
       sources: view.visibilitySources,
     },
     rangeOverlay: virtualRangeOverlay(selected),
+    terrainFlatteningAreas: terrainFlatteningAreas(),
   });
 }
 
@@ -2707,6 +3163,92 @@ function terrainProperties(x, y, mapTile = null) {
   return terrain;
 }
 
+function terrainFlatteningAreas() {
+  const buildings = [
+    ...state.structures,
+    ...state.jobs.filter((job) => job.kind === "building"),
+  ].filter(
+    (piece) =>
+      piece.type !== "bridge" &&
+      Array.isArray(piece.footprint) &&
+      piece.footprint.length,
+  );
+  const areas = buildings
+    .map((piece) => {
+      const points = [];
+      const elevations = [];
+      for (const tile of piece.footprint) {
+        const descriptor =
+          runtimeMap.tileByCoordinate.get(`${tile.x},${tile.y}`) ?? null;
+        if (descriptor?.vertices?.length) points.push(...descriptor.vertices);
+        else {
+          const center = tileCenter(tile.x, tile.y);
+          points.push(
+            { x: center.x - 0.5, y: center.y - 0.5 },
+            { x: center.x + 0.5, y: center.y + 0.5 },
+          );
+        }
+        elevations.push(terrainProperties(tile.x, tile.y).surfaceElevation);
+      }
+      if (!points.length || !elevations.length) return null;
+      elevations.sort((first, second) => first - second);
+      const targetElevation = elevations[Math.floor(elevations.length / 2)];
+      // Keep one complete cell of level ground around every foundation. This
+      // prevents the smoothing falloff from cutting into the building pad.
+      const foundationMargin = 1;
+      return {
+        id: piece.id,
+        minX: Math.min(...points.map((point) => point.x)) - foundationMargin,
+        maxX: Math.max(...points.map((point) => point.x)) + foundationMargin,
+        minY: Math.min(...points.map((point) => point.y)) - foundationMargin,
+        maxY: Math.max(...points.map((point) => point.y)) + foundationMargin,
+        targetElevation,
+        edge: 1.25,
+      };
+    })
+    .filter(Boolean);
+  // Adjacent foundation buffers must share one plateau. Leaving overlapping
+  // areas at independent levels causes the later area's elevation to win and
+  // creates a ridge between otherwise level structures.
+  const merged = [];
+  for (const area of areas) {
+    const matches = merged.filter(
+      (other) =>
+        area.minX <= other.maxX &&
+        area.maxX >= other.minX &&
+        area.minY <= other.maxY &&
+        area.maxY >= other.minY,
+    );
+    if (!matches.length) {
+      merged.push({ ...area, levels: [area.targetElevation] });
+      continue;
+    }
+    const target = matches[0];
+    target.minX = Math.min(target.minX, area.minX);
+    target.maxX = Math.max(target.maxX, area.maxX);
+    target.minY = Math.min(target.minY, area.minY);
+    target.maxY = Math.max(target.maxY, area.maxY);
+    target.levels.push(area.targetElevation);
+    for (const match of matches.slice(1)) {
+      target.minX = Math.min(target.minX, match.minX);
+      target.maxX = Math.max(target.maxX, match.maxX);
+      target.minY = Math.min(target.minY, match.minY);
+      target.maxY = Math.max(target.maxY, match.maxY);
+      target.levels.push(...match.levels);
+      merged.splice(merged.indexOf(match), 1);
+    }
+  }
+  return merged.map((area, index) => {
+    const levels = area.levels.sort((first, second) => first - second);
+    return {
+      ...area,
+      id: `foundation-${index}`,
+      targetElevation: levels[Math.floor(levels.length / 2)],
+      levels: undefined,
+    };
+  });
+}
+
 function terrainClass(x, y, mapTile = null) {
   return terrainProperties(x, y, mapTile).type;
 }
@@ -2745,6 +3287,8 @@ function pieceMarkup(piece) {
 
 function renderSelected() {
   const selected = getUnit(state.selectedId);
+  const group = selectedUnits();
+  const groupSelected = group.length > 1;
   const selectedMovementRange = selected ? movementRangeFor(selected) : null;
   const movedThisRound = selected?.movedThisRound === true;
   const selectedIsAirUnit = UNIT_TYPES[selected?.type]?.airUnit === true;
@@ -2761,6 +3305,28 @@ function renderSelected() {
     els.attackButton.disabled = true;
     els.attackButton.title = "";
     els.attackRange.textContent = "Select unit";
+  } else if (groupSelected) {
+    const groundGroup = group.every(
+      (unit) => UNIT_TYPES[unit.type]?.airUnit !== true,
+    );
+    const totalMoveCost = group.reduce(
+      (sum, unit) => sum + (UNIT_TYPES[unit.type]?.actionCost ?? 0),
+      0,
+    );
+    const blockedCount = group.filter(
+      (unit) => !canQueueUnitOrder(unit, "move"),
+    ).length;
+    els.selectedCard.className = "selected-card";
+    els.selectedCard.innerHTML = `<span class="selected-unit-icon">${group.length}</span><span><strong>PLATOON SELECTED</strong><small>${group.length} unit${group.length === 1 ? "" : "s"} Â· â—† ${totalMoveCost} to move all Â· Shift-click to add/remove</small></span>`;
+    els.moveButton.disabled =
+      state.phase !== "orders" ||
+      !groundGroup ||
+      blockedCount > 0 ||
+      state.players[localOwner].resources < totalMoveCost ||
+      isInteractionLocked();
+    els.attackButton.disabled = true;
+    els.attackButton.title = "Group orders currently support movement only.";
+    els.attackRange.textContent = "Group movement";
   } else {
     const spec = UNIT_TYPES[selected.type];
     els.selectedCard.className = `selected-card${movedThisRound ? " moved" : ""}`;
@@ -2803,13 +3369,20 @@ function renderSelected() {
   }
   const moveCopy = els.moveButton.querySelector("small");
   const moveLabel = els.moveButton.querySelector("strong");
-  if (moveLabel) moveLabel.textContent = selectedIsAirUnit ? "BOMB RUN" : "MOVE";
+  if (moveLabel)
+    moveLabel.textContent = groupSelected
+      ? "PLATOON MOVE"
+      : selectedIsAirUnit
+        ? "BOMB RUN"
+        : "MOVE";
   if (moveCopy)
-    moveCopy.textContent = selected
-      ? selectedIsAirUnit
+    moveCopy.textContent = groupSelected
+      ? `${group.length} units selected`
+      : selected
+        ? selectedIsAirUnit
         ? `Fly up to ${selectedMovementRange} blocks`
         : `${selectedMovementRange} blocks per round`
-      : "Select a unit";
+        : "Select a unit";
   els.moveButton.classList.toggle("active", state.intent === "move");
   els.attackButton.classList.toggle("active", state.intent === "attack");
 
@@ -2824,12 +3397,16 @@ function renderSelected() {
       ? `Bridge start fixed at ${coord(state.bridgeStart.x, state.bridgeStart.y)}. Choose the opposite bank · ◆ ${BUILDINGS.bridge.pricePerMeter} per metre.`
       : "Choose a clear riverbank within your commander's movement radius to set the bridge start.";
   else if (state.buildMode)
-    message = `Place the centre of ${BUILDINGS[state.buildMode].label}'s 3 × 3 footprint on a highlighted square.`;
+    message = `Place ${BUILDINGS[state.buildMode].label}'s ${BUILDINGS[state.buildMode].footprintSize} × ${BUILDINGS[state.buildMode].footprintSize} footprint on a highlighted square.`;
   else if (selectedStructureId) {
     const selectedStructure = getStructure(selectedStructureId);
     if (selectedStructure)
       message = `${BUILDINGS[selectedStructure.type].label} selected at ${coord(selectedStructure.x, selectedStructure.y)}.`;
   }
+  else if (groupSelected && state.intent === "move")
+    message = `Choose a platoon destination. Units will spread into formation and plot individual routes.`;
+  else if (groupSelected)
+    message = `${group.length} units selected. Shift-click units to add or remove them.`;
   else if (selected?.airborne)
     message = `${UNIT_TYPES[selected.type].label} is over ${coord(selected.x, selected.y)} and will bomb, then return to its Airfield.`;
   else if (selected && state.intent === "move")
@@ -2955,6 +3532,14 @@ function renderLog() {
 
 function renderPurchases() {
   const deployment = state.phase === "deployment";
+  const selectedCommander = getUnit(state.selectedId);
+  const commanderSelected = Boolean(
+    selectedCommander?.owner === localOwner &&
+      selectedCommander.type === "commander" &&
+      selectedCommander.hp > 0,
+  );
+  if (els.commanderConstruction)
+    els.commanderConstruction.hidden = true;
   const hasCommander = state.units.some(
     (item) =>
       item.owner === localOwner && item.type === "commander" && item.hp > 0,
@@ -2968,12 +3553,12 @@ function renderPurchases() {
     button.disabled =
       !deployment ||
       isInteractionLocked() ||
-      (spec.commanderOnly && !hasCommander) ||
+      (spec.commanderOnly && (!hasCommander || !commanderSelected)) ||
       state.players[localOwner].resources < minimumPrice;
     button.classList.toggle("active", state.buildMode === type);
     button.title =
-      spec.commanderOnly && !hasCommander
-        ? "A surviving commander is required."
+      spec.commanderOnly && !commanderSelected
+        ? "Select a surviving commander to construct this."
         : "";
   });
 }
@@ -2991,14 +3576,17 @@ function chooseBuild(type) {
     !spec ||
     state.phase !== "deployment" ||
     isInteractionLocked() ||
-    (spec.commanderOnly && !hasCommander) ||
+    (spec.commanderOnly &&
+      (!hasCommander || getUnit(state.selectedId)?.type !== "commander")) ||
     state.players[localOwner].resources < minimumPrice
   )
     return;
   state.buildMode = state.buildMode === type ? null : type;
   state.bridgeStart = null;
-  state.selectedId = null;
-  closeStructurePopover();
+  if (!spec.commanderOnly) {
+    clearUnitSelection();
+    closeStructurePopover();
+  } else selectedStructureId = null;
   render();
 }
 
@@ -3014,6 +3602,12 @@ function commanderForBridgeStart(x, y, owner = localOwner) {
       .filter(
         (item) =>
           item.owner === owner && item.type === "commander" && item.hp > 0,
+      )
+      .filter(
+        (item) =>
+          owner !== localOwner ||
+          getUnit(state.selectedId)?.type !== "commander" ||
+          item.id === state.selectedId,
       )
       .find(
         (commander) =>
@@ -3062,15 +3656,28 @@ function isValidBuildTile(
     return state.bridgeStart
       ? isValidBridgeEnd(state.bridgeStart, x, y, owner)
       : Boolean(commanderForBridgeStart(x, y, owner));
-  const footprint = buildingFootprintCoordinates(x, y);
+  const spec = BUILDINGS[type];
+  const footprint = buildingFootprintCoordinates(x, y, type);
   if (
-    !isFootprintClear(footprint) ||
+    !isFootprintClear(footprint, {
+      expectedSize: (spec?.footprintSize ?? 3) ** 2,
+    }) ||
     !footprint.every((tile) => {
       const terrain = terrainProperties(tile.x, tile.y);
       return terrain.passable && !terrain.water;
     })
   )
     return false;
+  if (spec?.commanderOnly)
+    return state.units.some(
+      (commander) =>
+        commander.id === state.selectedId &&
+        commander.owner === owner &&
+        commander.type === "commander" &&
+        commander.hp > 0 &&
+        navigationGraph.isConnected(commander, { x, y }) &&
+        distance(commander, { x, y }) <= movementRangeFor(commander),
+    );
   const ownStructures = state.structures.filter((item) => item.owner === owner);
   if (
     ownStructures.some(
@@ -3093,11 +3700,11 @@ function isValidBuildTile(
 function queueBuilding(type, x, y, owner = localOwner) {
   const spec = BUILDINGS[type];
   if (!spec || spec.linear || !Number.isFinite(spec.price)) return false;
-  const footprint = buildingFootprintCoordinates(x, y);
+  const footprint = buildingFootprintCoordinates(x, y, type);
   if (
     (owner === localOwner &&
       (state.phase !== "deployment" || isInteractionLocked())) ||
-    !isValidBuildTile(x, y, owner) ||
+    !isValidBuildTile(x, y, owner, type) ||
     state.players[owner].resources < spec.price
   )
     return false;
@@ -3188,11 +3795,134 @@ function queueRecruit(type, owner = localOwner, producerId = null) {
   return true;
 }
 
+function nearestFriendlyUnitAt(x, y, pointer = null) {
+  const target = targetPointForTile(x, y, pointer);
+  return (
+    state.units
+      .filter((unit) => {
+        if (unit.owner !== localOwner || unit.hp <= 0) return false;
+        const separation = euclideanDistance(mapPositionFor(unit), target);
+        const selectionRadius = UNIT_TYPES[unit.type]?.airUnit ? 0.72 : 0.48;
+        return separation <= selectionRadius || (unit.x === x && unit.y === y);
+      })
+      .sort((first, second) => {
+        const distanceDifference =
+          euclideanDistance(mapPositionFor(first), target) -
+          euclideanDistance(mapPositionFor(second), target);
+        if (Math.abs(distanceDifference) > 0.01) return distanceDifference;
+        return (
+          Number(UNIT_TYPES[second.type]?.airUnit === true) -
+          Number(UNIT_TYPES[first.type]?.airUnit === true)
+        );
+      })[0] ?? null
+  );
+}
+
+function formationOffsets(count) {
+  if (count <= 1) return [{ x: 0, y: 0 }];
+  const offsets = [{ x: 0, y: 0 }];
+  for (let ring = 1; offsets.length < count; ring += 1) {
+    const slots = ring === 1 ? 6 : ring * 8;
+    for (let index = 0; index < slots && offsets.length < count; index += 1) {
+      const angle = (index / slots) * Math.PI * 2;
+      offsets.push({
+        x: Math.cos(angle) * FORMATION_SPACING * ring,
+        y: Math.sin(angle) * FORMATION_SPACING * ring,
+      });
+    }
+  }
+  return offsets;
+}
+
+function isReservedFormationPoint(point, reserved) {
+  return reserved.some(
+    (other) =>
+      euclideanDistance(point, other) < UNIT_COLLISION_RADIUS * 2.2,
+  );
+}
+
+function findFormationDestination(actor, preferredPoint, reserved = []) {
+  const candidates = [preferredPoint];
+  for (let ring = 1; ring <= 4; ring += 1) {
+    const radius = ring * FORMATION_SPACING * 0.55;
+    const slots = ring * 8;
+    for (let index = 0; index < slots; index += 1) {
+      const angle = (index / slots) * Math.PI * 2;
+      candidates.push({
+        x: preferredPoint.x + Math.cos(angle) * radius,
+        y: preferredPoint.y + Math.sin(angle) * radius,
+      });
+    }
+  }
+  for (const point of candidates) {
+    if (isReservedFormationPoint(point, reserved)) continue;
+    const tile = tileAtMapPoint(point);
+    if (!tile) continue;
+    if (isValidMove(actor, tile.x, tile.y, undefined, point)) {
+      reserved.push(point);
+      return { x: tile.x, y: tile.y, worldX: point.x, worldY: point.y };
+    }
+  }
+  return null;
+}
+
+function queueGroupMove(units, x, y, pointer = null) {
+  const movable = units.filter(
+    (unit) =>
+      unit.owner === localOwner &&
+      UNIT_TYPES[unit.type]?.airUnit !== true &&
+      canQueueUnitOrder(unit, "move"),
+  );
+  if (movable.length < 2) return false;
+  const totalCost = movable.reduce(
+    (sum, unit) => sum + (UNIT_TYPES[unit.type]?.actionCost ?? 0),
+    0,
+  );
+  if (state.players[localOwner].resources < totalCost) return false;
+
+  const basePoint = targetPointForTile(x, y, pointer);
+  const offsets = formationOffsets(movable.length);
+  const reserved = [];
+  const destinations = movable
+    .map((unit, index) => ({
+      unit,
+      destination: findFormationDestination(
+        unit,
+        {
+          x: basePoint.x + offsets[index].x,
+          y: basePoint.y + offsets[index].y,
+        },
+        reserved,
+      ),
+    }))
+    .filter((item) => item.destination);
+  if (!destinations.length) return false;
+
+  let queued = 0;
+  for (const { unit, destination } of destinations) {
+    if (
+      queueOrder(unit, "move", destination.x, destination.y, localOwner, {
+        worldX: destination.worldX,
+        worldY: destination.worldY,
+        preserveIntent: true,
+        suppressLog: true,
+      })
+    )
+      queued += 1;
+  }
+  if (!queued) return false;
+  state.intent = null;
+  log(`${queued} unit platoon route plotted to ${coord(x, y)}.`);
+  schedulePlanSync();
+  return true;
+}
+
 function handleTileClick(x, y, pointer = null) {
   if (isInteractionLocked()) return;
   const clickedStructure = state.structures.find((structure) =>
     occupiesTile(structure, x, y),
   );
+  const clickedFriendlyUnit = nearestFriendlyUnitAt(x, y, pointer);
   if (state.phase === "deployment") {
     if (state.buildMode === "bridge") {
       closeStructurePopover();
@@ -3218,6 +3948,10 @@ function handleTileClick(x, y, pointer = null) {
     } else if (state.buildMode) {
       closeStructurePopover();
       if (queueBuilding(state.buildMode, x, y)) state.buildMode = null;
+    } else if (clickedFriendlyUnit) {
+      selectUnit(clickedFriendlyUnit, { pointer });
+      render();
+      return;
     } else if (clickedStructure) {
       selectStructure(clickedStructure, pointer);
       render();
@@ -3229,14 +3963,23 @@ function handleTileClick(x, y, pointer = null) {
 
   if (state.phase !== "orders" && state.phase !== "attack") return;
 
-  const clicked = pieceAt(x, y, false);
-  const friendlyUnit = state.units.find(
-    (unit) => unit.owner === localOwner && unit.x === x && unit.y === y,
-  );
+  const lockedTarget = pointer?.targetId
+    ? [...state.units, ...state.structures].find(
+        (piece) =>
+          piece.id === pointer.targetId &&
+          piece.owner === enemyOwner() &&
+          piece.hp > 0,
+      )
+    : null;
+  const attackX = lockedTarget?.x ?? x;
+  const attackY = lockedTarget?.y ?? y;
+  const clicked = lockedTarget ?? pieceAt(x, y, false);
+  const friendlyUnit = clickedFriendlyUnit;
   if (friendlyUnit) {
-    closeStructurePopover();
-    state.selectedId = friendlyUnit.id;
-    state.intent = defaultSelectionIntent(friendlyUnit);
+    selectUnit(friendlyUnit, {
+      additive: Boolean(pointer?.shiftKey),
+      pointer,
+    });
     render();
     return;
   }
@@ -3254,25 +3997,64 @@ function handleTileClick(x, y, pointer = null) {
     return;
   }
   let orderQueued = false;
-  if (state.intent === "move" && isValidMove(selected, x, y))
-    orderQueued = queueOrder(selected, "move", x, y);
-  else if (state.intent === "attack" && isValidTarget(selected, x, y))
-    orderQueued = queueOrder(selected, "attack", x, y);
+  const destinationPoint = targetPointForTile(x, y, pointer);
+  const firePoint = lockedTarget
+    ? mapPositionFor(lockedTarget)
+    : destinationPoint;
+  const fireTarget = {
+    x: attackX,
+    y: attackY,
+    worldX: firePoint.x,
+    worldY: firePoint.y,
+  };
+  const group = selectedUnits();
+  if (
+    state.intent === "move" &&
+    group.length > 1 &&
+    group.every((unit) => UNIT_TYPES[unit.type]?.airUnit !== true)
+  )
+    orderQueued = queueGroupMove(group, x, y, pointer);
+  else if (
+    state.intent === "move" &&
+    isValidMove(selected, x, y, undefined, destinationPoint)
+  )
+    orderQueued = queueOrder(selected, "move", x, y, localOwner, {
+      worldX: destinationPoint.x,
+      worldY: destinationPoint.y,
+    });
+  else if (
+    state.intent === "attack" &&
+    isValidTarget(selected, attackX, attackY, lockedTarget ?? fireTarget)
+  )
+    orderQueued = queueOrder(selected, "attack", attackX, attackY, localOwner, {
+      targetId: lockedTarget?.id,
+      worldX: firePoint.x,
+      worldY: firePoint.y,
+      preciseTarget: true,
+    });
   else if (
     state.phase === "orders" &&
     UNIT_TYPES[selected.type]?.airUnit === true &&
     clicked?.owner === enemyOwner() &&
-    isValidMove(selected, x, y)
+    isValidMove(selected, x, y, undefined, destinationPoint)
   )
-    orderQueued = queueOrder(selected, "move", x, y);
+    orderQueued = queueOrder(selected, "move", x, y, localOwner, {
+      worldX: destinationPoint.x,
+      worldY: destinationPoint.y,
+    });
   else if (
     clicked &&
     clicked.owner === enemyOwner() &&
     isVisibleToPlayer(x, y) &&
-    isValidTarget(selected, x, y)
+    isValidTarget(selected, attackX, attackY, lockedTarget ?? fireTarget)
   ) {
     state.intent = "attack";
-    orderQueued = queueOrder(selected, "attack", x, y);
+    orderQueued = queueOrder(selected, "attack", attackX, attackY, localOwner, {
+      targetId: lockedTarget?.id,
+      worldX: firePoint.x,
+      worldY: firePoint.y,
+      preciseTarget: true,
+    });
   } else if (clickedStructure) {
     selectStructure(clickedStructure, pointer);
     render();
@@ -3284,6 +4066,24 @@ function handleTileClick(x, y, pointer = null) {
 
 function setIntent(intent) {
   const selected = getUnit(state.selectedId);
+  const group = selectedUnits();
+  if (intent === "move" && group.length > 1) {
+    const totalMoveCost = group.reduce(
+      (sum, unit) => sum + (UNIT_TYPES[unit.type]?.actionCost ?? 0),
+      0,
+    );
+    if (
+      state.phase !== "orders" ||
+      isInteractionLocked() ||
+      group.some((unit) => UNIT_TYPES[unit.type]?.airUnit === true) ||
+      group.some((unit) => !canQueueUnitOrder(unit, "move")) ||
+      state.players[localOwner].resources < totalMoveCost
+    )
+      return;
+    state.intent = state.intent === intent ? null : intent;
+    render();
+    return;
+  }
   const validForPhase =
     (intent === "move" && state.phase === "orders") ||
     (intent === "attack" && state.phase === "attack");
@@ -3311,8 +4111,9 @@ function defaultSelectionIntent(unitItem) {
     : null;
 }
 
-function isValidMove(actor, x, y, terrainPlan = undefined) {
+function isValidMove(actor, x, y, terrainPlan = undefined, targetPoint = null) {
   const isAirUnit = UNIT_TYPES[actor.type]?.airUnit === true;
+  const destinationPoint = targetPoint ?? tileCenter(x, y);
   const homeAirfield = isAirUnit
     ? state.structures.find(
         (structure) =>
@@ -3323,29 +4124,52 @@ function isValidMove(actor, x, y, terrainPlan = undefined) {
     : null;
   return (
     (!isAirUnit || (homeAirfield && actor.airborne !== true)) &&
-    (isAirUnit || !isGroundOccupied(x, y)) &&
+    (isAirUnit ||
+      !isGroundPositionOccupied(
+        x,
+        y,
+        destinationPoint.x,
+        destinationPoint.y,
+        actor.id,
+      )) &&
     (isAirUnit || Number.isFinite(groundMovementCostAt(x, y))) &&
-    distance(actor, { x, y }) > 0 &&
-    (!isAirUnit || distance(actor, { x, y }) <= movementRangeFor(actor)) &&
+    distance(actor, {
+      x,
+      y,
+      worldX: destinationPoint.x,
+      worldY: destinationPoint.y,
+    }) > 0 &&
+    (!isAirUnit ||
+      distance(actor, {
+        x,
+        y,
+        worldX: destinationPoint.x,
+        worldY: destinationPoint.y,
+      }) <= movementRangeFor(actor)) &&
     navigationGraph.isConnected(actor, { x, y }) &&
     (isAirUnit ||
       Boolean(
         terrainPlan !== undefined
           ? terrainPlan
-          : movementRoutePlan(actor, x, y),
+          : movementRoutePlan(actor, x, y, destinationPoint),
       ))
   );
 }
 
-function isValidTarget(actor, x, y) {
+function isValidTarget(actor, x, y, target = null) {
+  const destination = target ?? { x, y };
   return (
     canUnitAttack(actor) &&
-    distance(actor, { x, y }) > 0 &&
-    distance(actor, { x, y }) <= UNIT_TYPES[actor.type].range
+    distance(actor, destination) > 0 &&
+    distance(actor, destination) <= UNIT_TYPES[actor.type].range
   );
 }
 
-function queueOrder(actor, kind, x, y, owner = localOwner) {
+function queueOrder(actor, kind, x, y, owner = localOwner, options = {}) {
+  if (owner && typeof owner === "object") {
+    options = owner;
+    owner = localOwner;
+  }
   const cost = UNIT_TYPES[actor.type].actionCost;
   const invalidPhase =
     (kind === "move" && state.phase !== "orders") ||
@@ -3359,12 +4183,40 @@ function queueOrder(actor, kind, x, y, owner = localOwner) {
   )
     return false;
   const isAirUnit = UNIT_TYPES[actor.type]?.airUnit === true;
+  const destinationPoint =
+    Number.isFinite(options.worldX) && Number.isFinite(options.worldY)
+      ? { x: options.worldX, y: options.worldY }
+      : tileCenter(x, y);
   const movementPlan =
     kind === "move" && !isAirUnit
-      ? movementRoutePlan(actor, x, y)
+      ? movementRoutePlan(actor, x, y, destinationPoint)
       : null;
-  if (kind === "move" && !isValidMove(actor, x, y, movementPlan)) return false;
-  if (kind === "attack" && !isValidTarget(actor, x, y)) return false;
+  if (
+    kind === "move" &&
+    !isValidMove(actor, x, y, movementPlan, destinationPoint)
+  )
+    return false;
+  const lockedTarget = options.targetId
+    ? [...state.units, ...state.structures].find(
+        (piece) => piece.id === options.targetId && piece.hp > 0,
+      )
+    : null;
+  const preciseAttackTarget =
+    kind === "attack" &&
+    Number.isFinite(options.worldX) &&
+    Number.isFinite(options.worldY)
+      ? {
+          x,
+          y,
+          worldX: options.worldX,
+          worldY: options.worldY,
+        }
+      : null;
+  if (
+    kind === "attack" &&
+    !isValidTarget(actor, x, y, lockedTarget ?? preciseAttackTarget)
+  )
+    return false;
   if (kind === "move" && !isAirUnit && !movementPlan?.waypoints.length)
     return false;
   state.players[owner].resources -= cost;
@@ -3375,6 +4227,15 @@ function queueOrder(actor, kind, x, y, owner = localOwner) {
     unitId: actor.id,
     x,
     y,
+    ...(kind === "move" || kind === "attack"
+      ? { worldX: destinationPoint.x, worldY: destinationPoint.y }
+      : {}),
+    ...(kind === "attack" && lockedTarget
+      ? { targetId: lockedTarget.id }
+      : {}),
+    ...(kind === "attack" && options.preciseTarget
+      ? { preciseTarget: true }
+      : {}),
     cost,
     ...(movementPlan
       ? {
@@ -3386,7 +4247,7 @@ function queueOrder(actor, kind, x, y, owner = localOwner) {
         }
       : {}),
   });
-  if (owner === localOwner) {
+  if (owner === localOwner && !options.suppressLog) {
     log(
       isAirUnit && kind === "move"
         ? `${UNIT_TYPES[actor.type].label} bombing run designated over ${coord(x, y)}.`
@@ -3396,7 +4257,7 @@ function queueOrder(actor, kind, x, y, owner = localOwner) {
     );
     schedulePlanSync();
   }
-  state.intent = null;
+  if (!options.preserveIntent) state.intent = null;
   return true;
 }
 
@@ -3451,6 +4312,40 @@ function advancePhaseLocally() {
     phaseController.resolveRound({ includeAi: true });
 }
 
+async function fastForwardConfiguredTurns() {
+  if (isHumanGame() || fastForwarding || state.resolving || state.winner) return;
+  const turns = Math.max(
+    1,
+    Math.min(10, Number.parseInt(els.turnSkipCount?.value ?? "1", 10) || 1),
+  );
+  closeStructurePopover();
+  clearUnitSelection();
+  state.buildMode = null;
+  state.bridgeStart = null;
+  fastForwarding = true;
+  log(`Strategic time advance initiated for ${turns} round${turns === 1 ? "" : "s"}.`);
+  render();
+
+  let completed = 0;
+  try {
+    while (completed < turns && !state.winner) {
+      if (state.phase === "deployment") state.phase = "orders";
+      if (state.phase === "orders")
+        await phaseController.beginAttackPhase({ includeAi: true, present: false });
+      if (state.phase === "attack") {
+        await phaseController.resolveRound({ includeAi: true, present: false });
+        completed += 1;
+      }
+    }
+  } finally {
+    fastForwarding = false;
+  }
+  log(
+    `Strategic time advance complete. ${completed} round${completed === 1 ? "" : "s"} resolved.`,
+  );
+  render();
+}
+
 function checkWinner() {
   const playerAlive =
     state.units.some((item) => item.owner === 0) ||
@@ -3482,7 +4377,11 @@ function pause(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-function initializeBattlefield3D() {
+function initializeBattlefield3D({
+  deferVegetation = false,
+  deferFogClouds = false,
+  viewState = null,
+} = {}) {
   battlefield3D?.destroy();
   battlefield3D = null;
   els.threeViewport.replaceChildren();
@@ -3498,6 +4397,7 @@ function initializeBattlefield3D() {
       buildings: BUILDINGS,
       selected,
       movementRangeFor,
+      getWorldPoint: mapPositionFor,
       canUnitAttack,
       isValidBuildTile,
       isTerrainPassable: (x, y) =>
@@ -3529,8 +4429,11 @@ function initializeBattlefield3D() {
       renderChunkSize: runtimeMap.renderChunkSize,
       terrainSeed: activeTerrainSeed,
       terrain: terrainGenerator,
+      terrainFlatteningAreas: terrainFlatteningAreas(),
       terrainDebug: gameConfig.terrainDebug,
       showElevationValues: gameConfig.terrainDebugElevation,
+      deferVegetation,
+      deferFogClouds,
       resolvePlacementPreview: (x, y) => {
         const type = state.buildMode;
         const spec = BUILDINGS[type];
@@ -3594,6 +4497,12 @@ function initializeBattlefield3D() {
           pending: true,
           previewValid: isValidBuildTile(x, y),
           footprintSize: spec.footprintSize ?? 1,
+          ...(Number.isFinite(spec.modelWidth)
+            ? { modelWidth: spec.modelWidth }
+            : {}),
+          ...(Number.isFinite(spec.modelDepth)
+            ? { modelDepth: spec.modelDepth }
+            : {}),
         };
       },
       onPlacementPreviewChange: updateBridgePlacementReadout,
@@ -3606,6 +4515,7 @@ function initializeBattlefield3D() {
         renderMap(battlefieldView, getUnit(state.selectedId));
       },
     });
+    battlefield3D.restoreViewState(viewState);
     document.body.classList.add("three-enabled");
     els.battlefieldGrid.replaceChildren();
     els.battlefieldGrid.hidden = true;

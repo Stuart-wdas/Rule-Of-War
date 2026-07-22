@@ -28,7 +28,7 @@ export class CombatController {
     this.pause = pause;
   }
 
-  async resolveAttacks(random = Math.random) {
+  async resolveAttacks(random = Math.random, { animate = true } = {}) {
     const state = this.getState();
     const attacks = state.orders.filter((item) => item.kind === "attack");
     const results = [];
@@ -50,7 +50,15 @@ export class CombatController {
         if (alreadyUsed + queuedNow >= spec.totalAttackActions) continue;
         lifetimeShotsThisCombat.set(actor.id, queuedNow + 1);
       }
-      const target = this.getAttackTarget(order.x, order.y, actor);
+      const target =
+        order.preciseTarget && !order.targetId
+          ? null
+          : this.getAttackTarget(
+              order.x,
+              order.y,
+              actor,
+              order.targetId,
+            );
       const hit = random() < spec.hitChance;
       const shotDamage = this.damageFor(actor);
       const targetId = target && target.owner !== actor.owner ? target.id : null;
@@ -60,7 +68,12 @@ export class CombatController {
         actorType: actor.type,
         owner: actor.owner,
         from: { x: actor.x, y: actor.y },
-        to: { x: order.x, y: order.y },
+        to: {
+          x: order.x,
+          y: order.y,
+          worldX: order.worldX,
+          worldY: order.worldY,
+        },
         hit,
         damage: shotDamage,
         targetId,
@@ -83,7 +96,7 @@ export class CombatController {
 
     const battlefield = this.getBattlefield();
     const localOwner = this.getLocalOwner();
-    if (battlefield && results.length) {
+    if (animate && battlefield && results.length) {
       const projectileTimeoutMs = results.reduce(
         (total, result) =>
           total +
@@ -105,7 +118,7 @@ export class CombatController {
           ),
         projectileTimeoutMs,
       );
-    } else if (results.length) {
+    } else if (animate && results.length) {
       await this.pause(420);
     }
 
@@ -145,7 +158,7 @@ export class CombatController {
     const destroyedIds = [...state.units, ...state.structures]
       .filter((item) => item.hp <= 0)
       .map((item) => item.id);
-    if (battlefield && destroyedIds.length)
+    if (animate && battlefield && destroyedIds.length)
       await this.runAnimation(
         "destruction",
         () => battlefield.animateDestructions(destroyedIds),

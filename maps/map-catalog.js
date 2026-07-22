@@ -100,32 +100,41 @@ function createHexMapPreset({ cols, rows, tileRadius = 1, ...metadata }) {
 }
 
 export const MAP_CATALOG = Object.freeze([
+  // Object.freeze({
+  //   id: "close-quarters",
+  //   name: "CLOSE QUARTERS",
+  //   theater: "DENSE CONTACT",
+  //   cols: 18,
+  //   rows: 18,
+  //   description: "A compact sector for fast contact and short supply lines.",
+  //   preview: "compact",
+  // }),
+  // Object.freeze({
+  //   id: "kestrel-pass",
+  //   name: "KESTREL PASS",
+  //   theater: "BALANCED FRONT",
+  //   cols: 28,
+  //   rows: 22,
+  //   description: "A balanced field with room for flanking and artillery.",
+  //   preview: "pass",
+  // }),
+  // Object.freeze({
+  //   id: "long-march",
+  //   name: "THE LONG MARCH",
+  //   theater: "DEEP OPERATION",
+  //   cols: 128,
+  //   rows: 64,
+  //   description: "A wide advance where mobility and forward bases matter.",
+  //   preview: "wide",
+  // }),
   Object.freeze({
-    id: "close-quarters",
-    name: "CLOSE QUARTERS",
-    theater: "DENSE CONTACT",
-    cols: 18,
-    rows: 18,
-    description: "A compact sector for fast contact and short supply lines.",
-    preview: "compact",
-  }),
-  Object.freeze({
-    id: "kestrel-pass",
-    name: "KESTREL PASS",
-    theater: "BALANCED FRONT",
-    cols: 28,
-    rows: 22,
-    description: "A balanced field with room for flanking and artillery.",
-    preview: "pass",
-  }),
-  Object.freeze({
-    id: "long-march",
-    name: "THE LONG MARCH",
-    theater: "DEEP OPERATION",
-    cols: 128,
-    rows: 64,
-    description: "A wide advance where mobility and forward bases matter.",
-    preview: "wide",
+    id: "galaxy-front",
+    name: "GALAXY FRONT",
+    theater: "GALAXY CAMPAIGN",
+    cols: 1024,
+    rows: 1024,
+    description: "The full strategic battlefield for galaxy-form campaigns.",
+    preview: "grand",
   }),
   Object.freeze({
     id: "grand-front",
@@ -142,62 +151,59 @@ export const MAP_CATALOG = Object.freeze([
     theater: "FULL CAMPAIGN",
     cols: 512,
     rows: 512,
-    // Render streaming only: change this without changing gameplay topology.
-    // Larger chunks rebuild less often; smaller chunks upload less per pan.
-    renderChunkSize: 128,
     description:
       "A 262,144-tile strategic theater rendered as a moving tactical window.",
     preview: "world",
   }),
-  Object.freeze({
-    id: "broken-front",
-    name: "BROKEN FRONT",
-    theater: "CUSTOM TOPOLOGY",
-    description:
-      "A broad front blending equal-area square and triangular command tiles.",
-    preview: "topology",
-    cols: 18,
-    rows: 10,
-    tileCount: 180,
-    createTiles: brokenFrontTiles,
-  }),
-  createHexMapPreset({
-    id: "honeycomb-front",
-    name: "HONEYCOMB FRONT",
-    theater: "HEX OPERATION",
-    description:
-      "A complete regular-hex battlefield with six-direction navigation.",
-    preview: "hex",
-    cols: 52,
-    rows: 54,
-    tileRadius: 1,
-  }),
-  createHexMapPreset({
-    id: "world-war-hex",
-    name: "World War Hex",
-    theater: "FULL CAMPAIGN HEX",
-    cols: 128,
-    rows: 128,
-    preview: "hex",
-    description: "A strategic theater rendered as a moving tactical window.",
-    preview: "hex",
-    tileRadius: 1,
-  }),
-  createHexMapPreset({
-    id: "long-march-hex",
-    name: "THE LONG MARCH HEX",
-    theater: "DEEP OPERATION HEX",
-    cols: 128,
-    rows: 64,
-    preview: "hex",
-    // Render streaming only: change this without changing gameplay topology.
-    // Larger chunks rebuild less often; smaller chunks upload less per pan.
-    renderChunkSize: 128,
-    description:
-      "A 262,144-tile strategic theater rendered as a moving tactical window.",
-    preview: "world",
-    tileRadius: 1,
-  }),
+  // Object.freeze({
+  //   id: "broken-front",
+  //   name: "BROKEN FRONT",
+  //   theater: "CUSTOM TOPOLOGY",
+  //   description:
+  //     "A broad front blending equal-area square and triangular command tiles.",
+  //   preview: "topology",
+  //   cols: 18,
+  //   rows: 10,
+  //   tileCount: 180,
+  //   createTiles: brokenFrontTiles,
+  // }),
+  // createHexMapPreset({
+  //   id: "honeycomb-front",
+  //   name: "HONEYCOMB FRONT",
+  //   theater: "HEX OPERATION",
+  //   description:
+  //     "A complete regular-hex battlefield with six-direction navigation.",
+  //   preview: "hex",
+  //   cols: 52,
+  //   rows: 54,
+  //   tileRadius: 1,
+  // }),
+  // createHexMapPreset({
+  //   id: "world-war-hex",
+  //   name: "World War Hex",
+  //   theater: "FULL CAMPAIGN HEX",
+  //   cols: 128,
+  //   rows: 128,
+  //   preview: "hex",
+  //   description: "A strategic theater rendered as a moving tactical window.",
+  //   preview: "hex",
+  //   tileRadius: 1,
+  // }),
+  // createHexMapPreset({
+  //   id: "long-march-hex",
+  //   name: "THE LONG MARCH HEX",
+  //   theater: "DEEP OPERATION HEX",
+  //   cols: 128,
+  //   rows: 64,
+  //   preview: "hex",
+  //   // Render streaming only: change this without changing gameplay topology.
+  //   // Larger chunks rebuild less often; smaller chunks upload less per pan.
+  //   renderChunkSize: 128,
+  //   description:
+  //     "A 262,144-tile strategic theater rendered as a moving tactical window.",
+  //   preview: "world",
+  //   tileRadius: 1,
+  // }),
 ]);
 
 export const DEFAULT_MAP_ID = "grand-front";

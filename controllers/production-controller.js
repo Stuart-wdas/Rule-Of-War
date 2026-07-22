@@ -36,7 +36,9 @@ export class ProductionController {
       if (
         this.isFootprintClear(footprint, {
           ignoreJobId: job.id,
-          expectedSize: isBridge ? null : 9,
+          expectedSize: isBridge
+            ? null
+            : (BUILDINGS[job.type]?.footprintSize ?? 3) ** 2,
         })
       ) {
         const structure = createStructure(
@@ -91,7 +93,22 @@ export class ProductionController {
           `u-${job.id}`,
         );
         if (isAirUnit) {
+          const occupiedSlots = new Set(
+            state.units
+              .filter(
+                (unit) =>
+                  unit.homeAirfieldId === producer.id &&
+                  Number.isInteger(unit.parkingSlot),
+              )
+              .map((unit) => unit.parkingSlot),
+          );
+          const parkingSlot = [0, 1, 2].find(
+            (slot) => !occupiedSlots.has(slot),
+          ) ?? 0;
           recruited.homeAirfieldId = producer.id;
+          recruited.parkingSlot = parkingSlot;
+          recruited.worldX = producer.x + [0.1, 1, 1.9][parkingSlot];
+          recruited.worldY = producer.y + 0.8;
           recruited.airborne = false;
           recruited.sortie = null;
         }

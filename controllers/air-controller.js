@@ -46,7 +46,7 @@ export class AirController {
     this.log = log;
   }
 
-  async resolveSorties(random = Math.random) {
+  async resolveSorties(random = Math.random, { animate = true } = {}) {
     const state = this.getState();
     const localOwner = this.getLocalOwner();
     const bombers = state.units.filter(
@@ -101,7 +101,7 @@ export class AirController {
       }
     }
 
-    if (battlefield && interceptionResults.length)
+    if (animate && battlefield && interceptionResults.length)
       await battlefield.animateInterceptions(
         interceptionResults.map((result) => ({
           ...result,
@@ -132,7 +132,7 @@ export class AirController {
     }
 
     const shotDown = bombers.filter((bomber) => bomber.hp <= 0);
-    if (battlefield && shotDown.length)
+    if (animate && battlefield && shotDown.length)
       await battlefield.animateDestructions(shotDown.map((bomber) => bomber.id));
     for (const bomber of shotDown)
       this.log(
@@ -142,6 +142,8 @@ export class AirController {
     const shotDownIds = new Set(shotDown.map((bomber) => bomber.id));
     state.units = state.units.filter((unit) => !shotDownIds.has(unit.id));
     if (shotDownIds.has(state.selectedId)) state.selectedId = null;
+    if (Array.isArray(state.selectedIds))
+      state.selectedIds = state.selectedIds.filter((id) => !shotDownIds.has(id));
 
     const survivors = bombers.filter((bomber) => !shotDownIds.has(bomber.id));
     const bombResults = survivors.map((bomber) => {
@@ -158,7 +160,7 @@ export class AirController {
       };
     });
 
-    if (battlefield && bombResults.length)
+    if (animate && battlefield && bombResults.length)
       await battlefield.animateBomberBombs(
         bombResults.map((result) => ({
           ...result,
@@ -203,15 +205,24 @@ export class AirController {
       returns.push({
         id: bomber.id,
         from: { x: bomber.x, y: bomber.y },
-        to: { x: airfield.x, y: airfield.y },
+        to: {
+          x: airfield.x,
+          y: airfield.y,
+          worldX:
+            airfield.x + [0.1, 1, 1.9][bomber.parkingSlot ?? 0],
+          worldY: airfield.y + 0.8,
+        },
       });
     }
-    if (battlefield && returns.length) await battlefield.animateBomberReturns(returns);
+    if (animate && battlefield && returns.length)
+      await battlefield.animateBomberReturns(returns);
     for (const mission of returns) {
       const bomber = state.units.find((unit) => unit.id === mission.id);
       if (!bomber) continue;
       bomber.x = mission.to.x;
       bomber.y = mission.to.y;
+      bomber.worldX = mission.to.worldX;
+      bomber.worldY = mission.to.worldY;
       bomber.airborne = false;
       bomber.sortie = null;
       this.log(
@@ -220,13 +231,17 @@ export class AirController {
       );
     }
     if (stranded.length) {
-      if (battlefield)
+      if (animate && battlefield)
         await battlefield.animateDestructions(
           stranded.map((bomber) => bomber.id),
         );
       const strandedIds = new Set(stranded.map((bomber) => bomber.id));
       state.units = state.units.filter((unit) => !strandedIds.has(unit.id));
       if (strandedIds.has(state.selectedId)) state.selectedId = null;
+      if (Array.isArray(state.selectedIds))
+        state.selectedIds = state.selectedIds.filter(
+          (id) => !strandedIds.has(id),
+        );
       for (const bomber of stranded)
         this.log(
           `${bomber.owner === localOwner ? "BOMBER" : "Hostile bomber"} was lost because its Airfield was unavailable.`,

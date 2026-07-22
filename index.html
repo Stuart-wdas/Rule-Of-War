@@ -53,7 +53,10 @@
           </div>
 
           <div class="mode-grid">
-            <button class="mode-card mode-card-ai" id="play-ai-button" type="button">
+            <button
+              class="mode-card mode-card-ai"
+              id="play-ai-button"
+              type="button">
               <span class="mode-number">01</span>
               <span class="mode-emblem" aria-hidden="true">AI</span>
               <span class="mode-copy">
@@ -73,7 +76,9 @@
               <span class="mode-copy">
                 <small>SYNCHRONIZED OPERATION</small>
                 <strong>VS HUMAN</strong>
-                <span>Create, join, save, and resume a two-player campaign.</span>
+                <span
+                  >Create, join, save, and resume a two-player campaign.</span
+                >
               </span>
               <span class="mode-arrow" aria-hidden="true">&rarr;</span>
             </button>
@@ -95,17 +100,28 @@
             <span aria-hidden="true">&larr;</span> MODE SELECT
           </button>
           <div class="menu-intro compact">
-            <span class="eyebrow" id="map-menu-eyebrow">SELECT BATTLEFIELD</span>
+            <span class="eyebrow" id="map-menu-eyebrow"
+              >SELECT BATTLEFIELD</span
+            >
             <h2 id="map-menu-title">CHOOSE THE NEXT FRONT.</h2>
             <p id="map-menu-copy">
               Map size changes the campaign sector while preserving your unit,
               supply, range, and fog settings.
             </p>
           </div>
-          <div class="map-card-grid" id="map-card-grid" aria-label="Available maps"></div>
+          <div
+            class="map-card-grid"
+            id="map-card-grid"
+            aria-label="Available maps"></div>
           <div class="map-selection-actions">
-            <span id="selected-map-copy" role="status">SELECT A BATTLEFIELD</span>
-            <button class="primary-action" id="map-confirm-button" type="button" disabled>
+            <span id="selected-map-copy" role="status"
+              >SELECT A BATTLEFIELD</span
+            >
+            <button
+              class="primary-action"
+              id="map-confirm-button"
+              type="button"
+              disabled>
               <span>CONTINUE</span><span aria-hidden="true">&rarr;</span>
             </button>
           </div>
@@ -161,8 +177,13 @@
             <article class="human-action-card create-card">
               <span class="action-index">01 / HOST</span>
               <h3>CREATE CAMPAIGN</h3>
-              <p>Open a new operation and send its match code to your opponent.</p>
-              <button class="primary-action" id="create-match-button" type="button">
+              <p>
+                Open a new operation and send its match code to your opponent.
+              </p>
+              <button
+                class="primary-action"
+                id="create-match-button"
+                type="button">
                 <span>CREATE MATCH</span><span aria-hidden="true">&rarr;</span>
               </button>
             </article>
@@ -170,7 +191,9 @@
             <article class="human-action-card join-card">
               <span class="action-index">02 / JOIN</span>
               <h3>JOIN CAMPAIGN</h3>
-              <p>Enter the six-character code supplied by the host commander.</p>
+              <p>
+                Enter the six-character code supplied by the host commander.
+              </p>
               <form class="join-match-form" id="join-match-form">
                 <label for="join-match-code">MATCH CODE</label>
                 <div>
@@ -188,12 +211,19 @@
                     aria-describedby="join-match-error" />
                   <button id="join-match-button" type="submit">JOIN</button>
                 </div>
-                <p class="menu-error" id="join-match-error" role="alert" hidden></p>
+                <p
+                  class="menu-error"
+                  id="join-match-error"
+                  role="alert"
+                  hidden></p>
               </form>
             </article>
           </div>
 
-          <section class="saved-matches" id="saved-matches" aria-labelledby="saved-matches-title">
+          <section
+            class="saved-matches"
+            id="saved-matches"
+            aria-labelledby="saved-matches-title">
             <div class="saved-matches-heading">
               <div>
                 <span class="eyebrow">LOCAL CHECKPOINTS</span>
@@ -202,7 +232,9 @@
               <span id="saved-match-count">0 SAVED</span>
             </div>
             <div class="saved-match-list" id="saved-match-list">
-              <p class="empty-saves" id="empty-saves">No saved human campaigns on this device.</p>
+              <p class="empty-saves" id="empty-saves">
+                No saved human campaigns on this device.
+              </p>
             </div>
           </section>
         </section>
@@ -234,19 +266,32 @@
           <div class="lobby-peer-grid" aria-label="Lobby players">
             <article class="lobby-peer connected">
               <span class="peer-light" aria-hidden="true"></span>
-              <span><small id="lobby-player-role">HOST COMMAND</small><strong>YOU</strong></span>
+              <span
+                ><small id="lobby-player-role">HOST COMMAND</small
+                ><strong>YOU</strong></span
+              >
               <b>CONNECTED</b>
             </article>
             <article class="lobby-peer" id="lobby-opponent">
               <span class="peer-light" aria-hidden="true"></span>
-              <span><small>SECOND COMMAND</small><strong id="lobby-opponent-name">AWAITING PEER</strong></span>
+              <span
+                ><small>SECOND COMMAND</small
+                ><strong id="lobby-opponent-name">AWAITING PEER</strong></span
+              >
               <b id="lobby-opponent-status">OFFLINE</b>
             </article>
           </div>
 
-          <div class="lobby-connection" id="lobby-connection-status" role="status" aria-live="polite">
+          <div
+            class="lobby-connection"
+            id="lobby-connection-status"
+            role="status"
+            aria-live="polite">
             <span class="connection-pulse" aria-hidden="true"></span>
-            <span><small>NETWORK STATUS</small><strong>OPENING COMMAND CHANNEL&hellip;</strong></span>
+            <span
+              ><small>NETWORK STATUS</small
+              ><strong>OPENING COMMAND CHANNEL&hellip;</strong></span
+            >
           </div>
         </section>
 
@@ -274,7 +319,10 @@
         </div>
 
         <nav class="header-actions" aria-label="Game options">
-          <button class="text-button menu-button" id="menu-button" type="button">
+          <button
+            class="text-button menu-button"
+            id="menu-button"
+            type="button">
             MENU
           </button>
           <button
@@ -305,10 +353,15 @@
         role="status"
         aria-live="polite"
         hidden>
-        <span class="multiplayer-status-dot" id="multiplayer-status-dot" aria-hidden="true"></span>
+        <span
+          class="multiplayer-status-dot"
+          id="multiplayer-status-dot"
+          aria-hidden="true"></span>
         <span class="multiplayer-status-copy">
           <small>HUMAN CAMPAIGN</small>
-          <strong id="multiplayer-status-copy">CONNECTED &middot; SYNCHRONIZED</strong>
+          <strong id="multiplayer-status-copy"
+            >CONNECTED &middot; SYNCHRONIZED</strong
+          >
         </span>
         <span class="multiplayer-match-code">
           MATCH <b id="match-code-display">------</b>
@@ -345,39 +398,69 @@
           </div>
         </section>
 
-        <aside
-          class="navigation-hud panel hud-collapsible"
-          id="navigation-hud"
-          aria-label="Tactical map and unit navigation">
-          <button
-            class="hud-collapse"
-            type="button"
-            data-hud-target="navigation-hud"
-            aria-controls="navigation-hud"
-            aria-expanded="true"
-            aria-label="Collapse tactical navigation"
-            title="Collapse tactical navigation">
-            <span aria-hidden="true"></span>
-          </button>
-          <div class="navigation-heading">
-            <span>
-              <small class="eyebrow">TACTICAL NETWORK</small>
-              <strong>MAP VIEW</strong>
-            </span>
-            <b id="navigation-unit-count">0 UNITS</b>
-          </div>
-          <canvas
-            class="tactical-map"
-            id="tactical-map"
-            width="320"
-            height="120"
-            aria-label="Top-down tactical map. Select a unit marker to focus it."></canvas>
-          <div class="quick-nav-heading">
-            <span class="eyebrow">UNIT QUICK NAV</span>
-            <small>SELECT TO FOCUS</small>
-          </div>
-          <div class="unit-quick-nav" id="unit-quick-nav" aria-label="Friendly unit quick navigation"></div>
-        </aside>
+        <div class="left-menu-dock">
+          <aside
+            class="navigation-hud panel hud-collapsible"
+            id="navigation-hud"
+            aria-label="Tactical map and unit navigation">
+            <button
+              class="hud-collapse"
+              type="button"
+              data-hud-target="navigation-hud"
+              aria-controls="navigation-hud"
+              aria-expanded="true"
+              aria-label="Collapse tactical navigation"
+              title="Collapse tactical navigation">
+              <span aria-hidden="true"></span>
+            </button>
+            <div class="navigation-heading">
+              <span>
+                <small class="eyebrow">TACTICAL NETWORK</small>
+                <strong>MAP VIEW</strong>
+              </span>
+              <b id="navigation-unit-count">0 UNITS</b>
+            </div>
+            <canvas
+              class="tactical-map"
+              id="tactical-map"
+              width="320"
+              height="120"
+              aria-label="Top-down tactical map. Select a unit marker to focus it."></canvas>
+            <div class="quick-nav-heading">
+              <span class="eyebrow">UNIT QUICK NAV</span>
+              <small>SELECT TO FOCUS</small>
+            </div>
+            <div
+              class="unit-quick-nav"
+              id="unit-quick-nav"
+              aria-label="Friendly unit quick navigation"></div>
+          </aside>
+
+          <section
+            class="intel-bar hud-collapsible"
+            id="intel-hud"
+            aria-label="Battlefield intelligence">
+            <button
+              class="hud-collapse"
+              type="button"
+              data-hud-target="intel-hud"
+              aria-controls="intel-hud"
+              aria-expanded="true"
+              aria-label="Collapse battlefield intelligence"
+              title="Collapse battlefield intelligence">
+              <span aria-hidden="true"></span>
+            </button>
+            <div class="intel-heading">
+              <span class="eyebrow">FIELD INTELLIGENCE</span>
+              <strong>UNIT DOCTRINE</strong>
+            </div>
+            <div class="unit-doctrine" id="unit-doctrine"></div>
+            <div class="combat-log-wrap">
+              <span class="eyebrow">COMBAT LOG</span>
+              <div id="combat-log" class="combat-log" aria-live="polite"></div>
+            </div>
+          </section>
+        </div>
 
         <div class="game-layout">
           <section class="map-panel panel" aria-labelledby="map-title">
@@ -450,7 +533,12 @@
                 <span id="map-dimensions">12 &times; 8 GRID</span>
                 <span>DRAG ROTATE · WHEEL ZOOM</span>
                 <span>RIGHT-DRAG PAN</span>
-                <button id="reset-view-button" class="map-view-button" type="button">FIT MAP</button>
+                <button
+                  id="reset-view-button"
+                  class="map-view-button"
+                  type="button">
+                  FIT MAP
+                </button>
               </div>
             </div>
           </section>
@@ -467,6 +555,22 @@
                 <small>INCOME</small>
                 <b id="income-rate">+0 / round</b>
               </span>
+            </div>
+
+            <div class="turn-skip-control" id="turn-skip-control">
+              <span>
+                <small>STRATEGIC TIME</small>
+                <strong>SKIP TURNS</strong>
+              </span>
+              <label for="turn-skip-count">ROUNDS</label>
+              <select id="turn-skip-count" aria-label="Rounds to fast forward">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+              </select>
+              <button id="turn-skip-button" type="button">FAST FORWARD</button>
             </div>
 
             <aside
@@ -511,6 +615,22 @@
                   <span>READY NEXT ROUND</span>
                 </div>
 
+                <div id="commander-construction" class="commander-construction" hidden>
+                  <label>COMMANDER CONSTRUCTION</label>
+                  <div class="purchase-grid buildings">
+                    <button class="purchase-card" data-build="watchtower" type="button">
+                      <span class="purchase-icon watchtower">WT</span>
+                      <span><strong>WATCHTOWER</strong><small>Passive spotting post</small></span>
+                      <b>&#9670; 18</b>
+                    </button>
+                    <button class="purchase-card" data-build="bridge" type="button">
+                      <span class="purchase-icon bridge" aria-hidden="true">BR</span>
+                      <span><strong>BRIDGE</strong><small>Bank-to-bank crossing</small></span>
+                      <b>&#9670; 3 / M</b>
+                    </button>
+                  </div>
+                </div>
+
                 <div class="control-group">
                   <label>CONSTRUCT</label>
                   <div class="purchase-grid buildings">
@@ -547,7 +667,7 @@
                       >
                       <span
                         ><strong>AIRFIELD</strong
-                        ><small>Builds and recovers one bomber</small></span
+                        ><small>Builds aircraft</small></span
                       >
                       <b>◆ 25</b>
                     </button>
@@ -560,7 +680,7 @@
                       >
                       <span
                         ><strong>BRIDGE</strong
-                        ><small>Commander places start and end</small></span
+                        ><small>Commander owned</small></span
                       >
                       <b>◆ 3 / M</b>
                     </button>
@@ -638,13 +758,19 @@
                   <span class="connection-pulse" aria-hidden="true"></span>
                   <span>
                     <small>LOCKSTEP STATUS</small>
-                    <strong id="phase-sync-copy">ISSUE ORDERS, THEN REPORT READY</strong>
+                    <strong id="phase-sync-copy"
+                      >ISSUE ORDERS, THEN REPORT READY</strong
+                    >
                   </span>
                   <b id="phase-ready-count">0 / 2 READY</b>
                 </div>
                 <div class="phase-peer-status">
-                  <span id="local-ready-state"><i aria-hidden="true"></i> YOU &middot; PLANNING</span>
-                  <span id="peer-ready-state"><i aria-hidden="true"></i> OPPONENT &middot; PLANNING</span>
+                  <span id="local-ready-state"
+                    ><i aria-hidden="true"></i> YOU &middot; PLANNING</span
+                  >
+                  <span id="peer-ready-state"
+                    ><i aria-hidden="true"></i> OPPONENT &middot; PLANNING</span
+                  >
                 </div>
               </div>
 
@@ -655,31 +781,6 @@
             </aside>
           </div>
         </div>
-
-        <section
-          class="intel-bar hud-collapsible"
-          id="intel-hud"
-          aria-label="Battlefield intelligence">
-          <button
-            class="hud-collapse"
-            type="button"
-            data-hud-target="intel-hud"
-            aria-controls="intel-hud"
-            aria-expanded="true"
-            aria-label="Collapse battlefield intelligence"
-            title="Collapse battlefield intelligence">
-            <span aria-hidden="true"></span>
-          </button>
-          <div class="intel-heading">
-            <span class="eyebrow">FIELD INTELLIGENCE</span>
-            <strong>UNIT DOCTRINE</strong>
-          </div>
-          <div class="unit-doctrine" id="unit-doctrine"></div>
-          <div class="combat-log-wrap">
-            <span class="eyebrow">COMBAT LOG</span>
-            <div id="combat-log" class="combat-log" aria-live="polite"></div>
-          </div>
-        </section>
       </main>
     </div>
 
@@ -714,8 +815,8 @@
             <h3>MOVE</h3>
             <p>
               Plot a connected destination at any distance. A small flag marks
-              every round of travel; units advance one flag per round and
-              cannot fire after moving. Bombers still complete one sortie.
+              every round of travel; units advance one flag per round and cannot
+              fire after moving. Bombers still complete one sortie.
             </p>
           </article>
           <article>
@@ -738,7 +839,9 @@
         </div>
         <div class="rules-table">
           <span>Movement</span
-          ><strong id="movement-rule">Movement range depends on unit type</strong>
+          ><strong id="movement-rule"
+            >Movement range depends on unit type</strong
+          >
           <span>Combat</span
           ><strong
             >Successful-hit damage depends on unit type; commanders may queue
@@ -1042,7 +1145,9 @@
                   type="checkbox" />
                 <span aria-hidden="true"></span>
                 <strong>ELEVATION VALUES</strong>
-                <small>Print normalized elevation values over visible cells.</small>
+                <small
+                  >Print normalized elevation values over visible cells.</small
+                >
               </label>
               <div class="devtools-range-grid">
                 <label class="devtools-field" for="dev-short-range"

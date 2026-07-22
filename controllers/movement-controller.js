@@ -6,6 +6,7 @@ export class MovementController {
     getUnit,
     pieceAt,
     isGroundOccupied,
+    isGroundPositionOccupied,
     getBattlefield,
     isVisible,
     getLocalOwner,
@@ -17,6 +18,10 @@ export class MovementController {
     this.getUnit = getUnit;
     this.pieceAt = pieceAt;
     this.isGroundOccupied = isGroundOccupied;
+    this.isGroundPositionOccupied =
+      isGroundPositionOccupied ??
+      ((x, y, _worldX, _worldY, _ignoreUnitId, includePending) =>
+        this.isGroundOccupied(x, y, includePending));
     this.getBattlefield = getBattlefield;
     this.isVisible = isVisible;
     this.getLocalOwner = getLocalOwner;
@@ -38,9 +43,19 @@ export class MovementController {
           ? order.waypointIndex
           : 0;
         const waypoint = order.waypoints[waypointIndex];
-        return waypoint
-          ? { ...order, x: waypoint.x, y: waypoint.y }
-          : null;
+        if (!waypoint) return null;
+        const turnOrder = { ...order, x: waypoint.x, y: waypoint.y };
+        turnOrder.via = Array.isArray(waypoint.via)
+          ? waypoint.via.map((point) => ({ ...point }))
+          : [];
+        if (Number.isFinite(waypoint.worldX) && Number.isFinite(waypoint.worldY)) {
+          turnOrder.worldX = waypoint.worldX;
+          turnOrder.worldY = waypoint.worldY;
+        } else {
+          delete turnOrder.worldX;
+          delete turnOrder.worldY;
+        }
+        return turnOrder;
       })
       .filter(Boolean);
   }
@@ -112,22 +127,33 @@ export class MovementController {
 
   /** Rejects occupied destinations and collisions between queued movers. */
   successfulOrders(moveOrders) {
-    const destinations = new Map();
-    for (const order of moveOrders) {
-      const actor = this.getUnit(order.unitId);
-      if (actor && UNIT_TYPES[actor.type]?.airUnit) continue;
-      const key = `${order.x},${order.y}`;
-      destinations.set(key, (destinations.get(key) || 0) + 1);
-    }
+    const destinations = [];
     return moveOrders.filter((order) => {
       const actor = this.getUnit(order.unitId);
       if (!actor) return false;
       if (UNIT_TYPES[actor.type]?.airUnit) return true;
-      const key = `${order.x},${order.y}`;
-      return (
-        destinations.get(key) === 1 &&
-        !this.isGroundOccupied(order.x, order.y, false)
+      const point = {
+        x: Number.isFinite(order.worldX) ? order.worldX : order.x,
+        y: Number.isFinite(order.worldY) ? order.worldY : order.y,
+      };
+      const collidesWithOrder = destinations.some(
+        (destination) =>
+          Math.hypot(destination.x - point.x, destination.y - point.y) < 0.68,
       );
+      if (
+        collidesWithOrder ||
+        this.isGroundPositionOccupied(
+          order.x,
+          order.y,
+          point.x,
+          point.y,
+          actor.id,
+          false,
+        )
+      )
+        return false;
+      destinations.push(point);
+      return true;
     });
   }
 
@@ -143,8 +169,19 @@ export class MovementController {
                 id: actor.id,
                 actorType: actor.type,
                 owner: actor.owner === localOwner ? 0 : 1,
-                from: { x: actor.x, y: actor.y },
-                to: { x: order.x, y: order.y },
+                from: {
+                  x: actor.x,
+                  y: actor.y,
+                  worldX: actor.worldX,
+                  worldY: actor.worldY,
+                },
+                to: {
+                  x: order.x,
+                  y: order.y,
+                  worldX: order.worldX,
+                  worldY: order.worldY,
+                },
+                via: order.via,
               }
             : null;
         })
@@ -242,15 +279,32 @@ export class MovementController {
         continue;
       }
       const isAirUnit = UNIT_TYPES[actor.type]?.airUnit === true;
-      const origin = { x: actor.x, y: actor.y };
+      const origin = {
+        x: actor.x,
+        y: actor.y,
+        worldX: actor.worldX,
+        worldY: actor.worldY,
+      };
       actor.x = order.x;
       actor.y = order.y;
+      if (Number.isFinite(order.worldX) && Number.isFinite(order.worldY)) {
+        actor.worldX = order.worldX;
+        actor.worldY = order.worldY;
+      } else {
+        delete actor.worldX;
+        delete actor.worldY;
+      }
       actor.movedThisRound = true;
       if (isAirUnit) {
         actor.airborne = true;
         actor.sortie = {
           from: origin,
-          target: { x: order.x, y: order.y },
+          target: {
+            x: order.x,
+            y: order.y,
+            worldX: actor.worldX,
+            worldY: actor.worldY,
+          },
         };
       }
       if (actor.owner === localOwner)

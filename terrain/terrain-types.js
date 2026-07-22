@@ -12,7 +12,7 @@ export const TERRAIN_TYPE_VALUES = Object.freeze(Object.values(TERRAIN_TYPES));
 
 export const DEFAULT_TERRAIN_THRESHOLDS = Object.freeze({
   deepWater: 0.2,
-  shallowWater: 0.3,
+  shallowWater: 0.33,
   lowland: 0.42,
   plains: 0.65,
   hill: 0.82,

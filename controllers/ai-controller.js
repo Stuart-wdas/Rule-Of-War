@@ -86,7 +86,8 @@ export class AiController {
       if (tile) this.queueBuilding("airfield", tile.x, tile.y, owner);
     } else if (
       airfieldCount > 0 &&
-      bomberCount < airfieldCount &&
+      bomberCount <
+        airfieldCount * (BUILDINGS.airfield.aircraftCapacity ?? 1) &&
       enemy.resources >= UNIT_TYPES.plane.price
     ) {
       this.queueRecruit("plane", owner);

@@ -26,9 +26,9 @@ const DEFAULT_BOARD_DIAGONAL = Math.hypot(12, 8);
 const HOME_DIRECTION = new THREE.Vector3(0.47, 0.64, 0.61).normalize();
 const DEFAULT_EFFECT_QUALITY = Object.freeze({
   smokePuffs: 8,
-  debrisMultiplier: 1,
-  trailPoints: 42,
-  dynamicLights: true,
+  debrisMultiplier: 0.1,
+  trailPoints: 21,
+  dynamicLights: false,
 });
 
 // Range circles are evaluated analytically in the strategic surface shader.
@@ -36,14 +36,14 @@ const DEFAULT_EFFECT_QUALITY = Object.freeze({
 // a whole-map canvas rebuild when the active tool changes.
 const RANGE_OVERLAY_QUALITY = Object.freeze({
   boundaryWidthInTiles: 0.08,
-  fillAlpha: 0.18,
+  fillAlpha: 0,
   boundaryAlpha: 0.95,
   constructionFillAlpha: 0.3,
   constructionBoundaryAlpha: 1,
   constructionBoundaryWidthInTiles: 0.11,
   constructionGridBoost: 0.72,
   // Movement gets a stronger treatment than construction and attack ranges.
-  movementFillAlpha: 0.36,
+  movementFillAlpha: 0,
   movementBoundaryAlpha: 1,
   movementBoundaryWidthInTiles: 0.12,
   movementTileStrength: 0.66,
@@ -112,7 +112,7 @@ const ROUTE_FLAG_VISIBILITY = Object.freeze({ pixels: 12 });
 /**
  * model = {
  *   tiles: [{ x, y, terrain, water, waterCoverage, visible, selected, available, reachable, targetable, fireCount }],
- *   pieces: [{ id, kind, type, owner, x, y, hp, maxHp, pending, selected, orderKind, heading }],
+ *   pieces: [{ id, kind, type, owner, x, y, worldX, worldY, hp, maxHp, pending, selected, orderKind, heading }],
  *   fog: { enabled, sources: [{ x, y, radius }] },
  *   rangeOverlay: { kind, sources: [{ x, y, radius }] },
  *   orderTargets: [{ id, kind, x, y }],
@@ -134,8 +134,11 @@ export class Battlefield3D {
       renderChunkSize = VIRTUAL_CHUNK_SIZE,
       terrainSeed = "rule-of-war-terrain",
       terrain = null,
+      terrainFlatteningAreas = [],
       terrainDebug = false,
       showElevationValues = false,
+      deferVegetation = false,
+      deferFogClouds = false,
       resolvePlacementPreview = null,
       onPlacementPreviewChange = null,
       onTileClick,
@@ -181,11 +184,20 @@ export class Battlefield3D {
     this.terrainSampler = terrain?.sample
       ? (x, y) => terrain.sample(x, y)
       : createTerrainSampler(this.mapBounds, terrainSeed);
+    this.terrain = terrain?.sample ? terrain : this.terrainSampler.terrain;
     this.terrainDebug = Boolean(terrainDebug);
     this.showElevationValues = Boolean(showElevationValues);
+    this.deferVegetation = Boolean(deferVegetation);
+    this.deferFogClouds = Boolean(deferFogClouds);
     this.terrainElevationScale = Number.isFinite(terrain?.config?.maxElevation)
       ? terrain.config.maxElevation
       : TERRAIN_MAX_ELEVATION;
+    this.terrainFlatteningAreas = this._normalizeTerrainFlatteningAreas(
+      terrainFlatteningAreas,
+    );
+    this.terrainFlatteningSignature = JSON.stringify(
+      this.terrainFlatteningAreas,
+    );
     this.cols = this.mapBounds.maxX - this.mapBounds.minX;
     this.rows = this.mapBounds.maxY - this.mapBounds.minY;
     this.boardDiagonal = Math.hypot(this.cols, this.rows);
@@ -207,6 +219,8 @@ export class Battlefield3D {
     this.spinningObjects = [];
     this.pulsingObjects = [];
     this.routeFlags = [];
+    this.hoveredMapPoint = null;
+    this.hoveredTargetId = null;
     this.debugLabelSignature = "";
     this.clock = new THREE.Clock();
     this.destroyed = false;
@@ -218,6 +232,9 @@ export class Battlefield3D {
     this.proceduralTerrainTexture = null;
     this.proceduralTerrainHeightTexture = null;
     this.proceduralTerrainCanvas = null;
+    this.proceduralTerrainHeightCanvas = null;
+    this.treePlacements = null;
+    this.treeMesh = null;
     this.dynamicModelSignature = "";
     this.routeModelSignature = "";
     this.virtualFogSignature = "";
@@ -284,8 +301,7 @@ export class Battlefield3D {
     this.controls.target.set(0, 0, 0);
     this.controls.update();
     this._onControlsChange = () => {
-      if (!this.virtualized || this.destroyed || this.viewportChangeFrame)
-        return;
+      if (!this.virtualized || this.destroyed) return;
       const tileMinimumX = Math.ceil(this.mapBounds.minX);
       const tileMinimumY = Math.ceil(this.mapBounds.minY);
       const visibleBounds = this._visibleGroundBounds();
@@ -307,16 +323,23 @@ export class Battlefield3D {
         : "strategic";
       if (key === this.viewportWindowKey) return;
       this.viewportWindowKey = key;
-      this.viewportChangeFrame = requestAnimationFrame(() => {
+      if (this.viewportChangeFrame) clearTimeout(this.viewportChangeFrame);
+      // Orbiting changes the projected chunk bounds every few frames on large
+      // maps. Wait briefly for camera motion to settle so those boundary
+      // crossings produce one streamed-tile refresh instead of repeated full
+      // battlefield renders during the gesture.
+      this.viewportChangeFrame = setTimeout(() => {
         this.viewportChangeFrame = null;
         this.onViewportChange?.();
-      });
+      }, 90);
     };
     this.controls.addEventListener("change", this._onControlsChange);
 
     this.boardGroup = new THREE.Group();
     this.routeGroup = new THREE.Group();
+    this.rangeRingGroup = new THREE.Group();
     this.debugLabelGroup = new THREE.Group();
+    this.vegetationGroup = new THREE.Group();
     this.pieceGroup = new THREE.Group();
     this.effectGroup = new THREE.Group();
     this.interactionGroup = new THREE.Group();
@@ -325,7 +348,9 @@ export class Battlefield3D {
     this.scene.add(
       this.boardGroup,
       this.routeGroup,
+      this.rangeRingGroup,
       this.debugLabelGroup,
+      this.vegetationGroup,
       this.pieceGroup,
       this.effectGroup,
       this.interactionGroup,
@@ -422,11 +447,9 @@ export class Battlefield3D {
 
     if (this.virtualized) {
       this._buildVirtualTileLayer();
-      this._buildVirtualFogLayer();
     } else {
       const geometryCache = new Map();
       const instanceGroups = new Map();
-      const borderPositions = [];
       for (const descriptor of this.tileDescriptors) {
         const localVertices = descriptor.vertices.map((vertex) => ({
           x: vertex.x - descriptor.center.x,
@@ -487,20 +510,6 @@ export class Battlefield3D {
         };
         group.descriptors.push(descriptor);
         instanceGroups.set(groupKey, group);
-
-        for (let index = 0; index < descriptor.vertices.length; index += 1) {
-          const start = descriptor.vertices[index];
-          const end =
-            descriptor.vertices[(index + 1) % descriptor.vertices.length];
-          borderPositions.push(
-            start.x - this.mapCenter.x,
-            0.077 + this._terrainHeightAtMapPoint(start.x, start.y),
-            start.y - this.mapCenter.y,
-            end.x - this.mapCenter.x,
-            0.077 + this._terrainHeightAtMapPoint(end.x, end.y),
-            end.y - this.mapCenter.y,
-          );
-        }
       }
 
       for (const group of instanceGroups.values()) {
@@ -537,20 +546,13 @@ export class Battlefield3D {
         this.boardGroup.add(instances);
       }
 
-      const borders = new THREE.LineSegments(
-        new THREE.BufferGeometry().setAttribute(
-          "position",
-          new THREE.Float32BufferAttribute(borderPositions, 3),
-        ),
-        new THREE.LineBasicMaterial({
-          color: 0x354235,
-          transparent: true,
-          opacity: 0.44,
-        }),
-      );
-      borders.raycast = () => {};
-      this.boardGroup.add(borders);
+      // Navigation polygons remain available for rules and ray picking, but
+      // their border geometry is deliberately not rendered on the terrain.
     }
+
+    // Fog is one continuous, elevated cloud sheet for every map size. The
+    // gameplay visibility mask cuts circular holes through it.
+    this._buildVirtualFogLayer();
 
     this._buildTerrainSkirt();
 
@@ -627,10 +629,7 @@ export class Battlefield3D {
       "position",
       new THREE.Float32BufferAttribute(positions, 3),
     );
-    geometry.setAttribute(
-      "color",
-      new THREE.Float32BufferAttribute(colors, 3),
-    );
+    geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
@@ -750,7 +749,9 @@ export class Battlefield3D {
         if (!cutByKey.has(quantize(span.end)))
           cutByKey.set(quantize(span.end), span.end);
       }
-      const cuts = [...cutByKey.values()].sort((first, second) => first - second);
+      const cuts = [...cutByKey.values()].sort(
+        (first, second) => first - second,
+      );
       for (let index = 0; index < cuts.length - 1; index += 1) {
         const first = cuts[index];
         const second = cuts[index + 1];
@@ -762,10 +763,8 @@ export class Battlefield3D {
         ).length;
         if (coverage !== 1) continue;
         const pointAt = (distance) => ({
-          x:
-            line.directionX * distance + line.normalX * line.lineOffset,
-          y:
-            line.directionY * distance + line.normalY * line.lineOffset,
+          x: line.directionX * distance + line.normalX * line.lineOffset,
+          y: line.directionY * distance + line.normalY * line.lineOffset,
         });
         boundaryEdges.push({ start: pointAt(first), end: pointAt(second) });
       }
@@ -774,47 +773,11 @@ export class Battlefield3D {
   }
 
   _buildVirtualTileLayer() {
-    const source = this.tileDescriptors?.[0];
-    const localVertices = source?.vertices?.length
-      ? source.vertices.map((vertex) => ({
-          x: (vertex.x - source.center.x) * 0.965,
-          y: (vertex.y - source.center.y) * 0.965,
-        }))
-      : [
-          { x: -0.4825, y: -0.4825 },
-          { x: 0.4825, y: -0.4825 },
-          { x: 0.4825, y: 0.4825 },
-          { x: -0.4825, y: 0.4825 },
-        ];
-    const faces = THREE.ShapeUtils.triangulateShape(
-      localVertices.map(({ x, y }) => new THREE.Vector2(x, y)),
-      [],
-    );
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(
-        localVertices.flatMap(({ x, y }) => [x, 0, y]),
-        3,
-      ),
-    );
-    geometry.setAttribute(
-      "normal",
-      new THREE.Float32BufferAttribute(
-        localVertices.flatMap(() => [0, 1, 0]),
-        3,
-      ),
-    );
-    geometry.setAttribute(
-      "uv",
-      new THREE.Float32BufferAttribute(
-        localVertices.map(({ x, y }) => [x + 0.5, y + 0.5]).flat(),
-        2,
-      ),
-    );
-    geometry.setIndex(
-      faces.flatMap(([first, second, third]) => [first, third, second]),
-    );
+    // Tiles remain the gameplay/picking units, but each visual tile has a
+    // sub-cell mesh so continuous land noise is not reduced to two triangles.
+    // Full-size geometry also removes the old 3.5% gap between adjacent cells.
+    const geometry = new THREE.PlaneGeometry(1, 1, 8, 8);
+    geometry.rotateX(-Math.PI / 2);
     geometry.computeBoundingBox();
     geometry.computeBoundingSphere();
     const material = this._createTerrainMaterial();
@@ -844,8 +807,8 @@ export class Battlefield3D {
       new THREE.PlaneGeometry(
         this.cols,
         this.rows,
-        Math.min(128, Math.max(1, Math.ceil(this.cols))),
-        Math.min(128, Math.max(1, Math.ceil(this.rows))),
+        Math.min(512, Math.max(1, Math.ceil(this.cols * 4))),
+        Math.min(512, Math.max(1, Math.ceil(this.rows * 4))),
       ),
       new THREE.ShaderMaterial({
         uniforms: {
@@ -1063,16 +1026,97 @@ export class Battlefield3D {
     texture.generateMipmaps = false;
     this.virtualFogCanvas = canvas;
     this.virtualFogTexture = texture;
-    this.virtualFogMesh = null;
     const gridUniforms = this.virtualGrid?.material?.uniforms;
     if (gridUniforms?.fogMask) gridUniforms.fogMask.value = texture;
+    if (this.deferFogClouds) return;
+    const maximumClouds = 30000;
+    const spacing = Math.max(
+      3,
+      Math.sqrt((this.cols * this.rows) / maximumClouds),
+    );
+    this.fogCloudSpacing = spacing;
+    this.fogCloudPlacements = [];
+    let row = 0;
+    for (
+      let mapY = this.mapBounds.minY + spacing / 2;
+      mapY < this.mapBounds.maxY;
+      mapY += spacing
+    ) {
+      let column = 0;
+      for (
+        let mapX = this.mapBounds.minX + spacing / 2;
+        mapX < this.mapBounds.maxX;
+        mapX += spacing
+      ) {
+        this.fogCloudPlacements.push({
+          x: mapX + (this._treeNoise(column, row, 61) - 0.5) * spacing * 0.42,
+          y: mapY + (this._treeNoise(column, row, 67) - 0.5) * spacing * 0.42,
+          height: this._treeNoise(column, row, 71),
+          scale: 0.82 + this._treeNoise(column, row, 73) * 0.42,
+          rotation: this._treeNoise(column, row, 79) * Math.PI * 2,
+        });
+        column += 1;
+      }
+      row += 1;
+    }
+    this.virtualFogMesh = new THREE.InstancedMesh(
+      new THREE.IcosahedronGeometry(1, 0),
+      new THREE.MeshStandardMaterial({
+        color: 0xf2f4ef,
+        roughness: 1,
+        metalness: 0,
+        transparent: true,
+        opacity: 0.93,
+        depthWrite: false,
+      }),
+      this.fogCloudPlacements.length,
+    );
+    this.virtualFogMesh.count = 0;
+    this.virtualFogMesh.frustumCulled = false;
+    this.virtualFogMesh.castShadow = false;
+    this.virtualFogMesh.receiveShadow = false;
+    this.virtualFogMesh.renderOrder = 80;
+    this.virtualFogMesh.raycast = () => {};
+    this.fogGroup.add(this.virtualFogMesh);
+    if (gridUniforms?.fogMask) gridUniforms.fogMask.value = texture;
+  }
+
+  enableFogClouds() {
+    if (!this.deferFogClouds) return;
+    this.deferFogClouds = false;
+    this.virtualFogTexture?.dispose();
+    this._buildVirtualFogLayer();
+    this.virtualFogSignature = "";
+  }
+
+  enableVegetation() {
+    if (!this.deferVegetation) return;
+    this.deferVegetation = false;
+    this._updateTrees();
+  }
+
+  getViewState() {
+    return {
+      position: this.camera.position.toArray(),
+      target: this.controls.target.toArray(),
+    };
+  }
+
+  restoreViewState(viewState) {
+    if (!viewState?.position || !viewState?.target) return;
+    this.camera.position.fromArray(viewState.position);
+    this.controls.target.fromArray(viewState.target);
+    this.controls.update();
   }
 
   _updateVirtualFog(fog) {
     const enabled = Boolean(fog?.enabled);
     if (!this.virtualFogCanvas || !this.virtualFogTexture) return;
     const gridUniforms = this.virtualGrid?.material?.uniforms;
-    if (gridUniforms?.fogEnabled) gridUniforms.fogEnabled.value = enabled;
+    // The mask drives gameplay visibility and cloud-instance removal only;
+    // it is no longer drawn as a flat tint on the terrain surface.
+    if (gridUniforms?.fogEnabled) gridUniforms.fogEnabled.value = false;
+    if (this.virtualFogMesh) this.virtualFogMesh.visible = enabled;
     if (!enabled) {
       this.virtualFogSignature = "disabled";
       return;
@@ -1094,6 +1138,7 @@ export class Battlefield3D {
     const signature = JSON.stringify(sources);
     if (signature === this.virtualFogSignature) return;
     this.virtualFogSignature = signature;
+    this._updateFogCloudInstances(sources);
 
     const canvas = this.virtualFogCanvas;
     const context = canvas.getContext("2d");
@@ -1125,6 +1170,37 @@ export class Battlefield3D {
     }
     context.globalCompositeOperation = "source-over";
     this.virtualFogTexture.needsUpdate = true;
+  }
+
+  _updateFogCloudInstances(sources) {
+    if (!this.virtualFogMesh || !this.fogCloudPlacements) return;
+    const transform = new THREE.Object3D();
+    const spacing = this.fogCloudSpacing ?? 3;
+    let instance = 0;
+    for (const cloud of this.fogCloudPlacements) {
+      const revealed = sources.some(
+        (source) =>
+          Math.hypot(cloud.x - source.x, cloud.y - source.y) <=
+          source.radius + spacing * 0.62,
+      );
+      if (revealed) continue;
+      transform.position.set(
+        cloud.x - this.mapCenter.x,
+        this.terrainElevationScale + 0.5 + cloud.height * 0.72,
+        cloud.y - this.mapCenter.y,
+      );
+      transform.rotation.set(0, cloud.rotation, 0);
+      transform.scale.set(
+        spacing * 0.7 * cloud.scale,
+        0.5 + cloud.height * 0.34,
+        spacing * 0.66 * cloud.scale,
+      );
+      transform.updateMatrix();
+      this.virtualFogMesh.setMatrixAt(instance, transform.matrix);
+      instance += 1;
+    }
+    this.virtualFogMesh.count = instance;
+    this.virtualFogMesh.instanceMatrix.needsUpdate = true;
   }
 
   _updateVirtualRange(rangeOverlay) {
@@ -1209,19 +1285,199 @@ export class Battlefield3D {
     );
   }
 
-  _terrainHeightAtMapPoint(x, y) {
+  _mapPosition(x, y, worldX = null, worldY = null) {
+    if (Number.isFinite(worldX) && Number.isFinite(worldY)) {
+      return new THREE.Vector3(
+        worldX - this.mapCenter.x,
+        0.12 + this._terrainHeightAtMapPoint(worldX, worldY),
+        worldY - this.mapCenter.y,
+      );
+    }
+    return this._cellPosition(x, y);
+  }
+
+  _normalizeTerrainFlatteningAreas(areas = []) {
+    return (Array.isArray(areas) ? areas : [])
+      .filter(
+        (area) =>
+          Number.isFinite(area?.minX) &&
+          Number.isFinite(area?.maxX) &&
+          Number.isFinite(area?.minY) &&
+          Number.isFinite(area?.maxY) &&
+          Number.isFinite(area?.targetElevation),
+      )
+      .map((area) => ({
+        id: String(area.id ?? ""),
+        minX: Math.min(area.minX, area.maxX),
+        maxX: Math.max(area.minX, area.maxX),
+        minY: Math.min(area.minY, area.maxY),
+        maxY: Math.max(area.minY, area.maxY),
+        targetElevation: THREE.MathUtils.clamp(area.targetElevation, 0, 1),
+        edge: Number.isFinite(area.edge) ? Math.max(0, area.edge) : 0.75,
+      }))
+      .sort((first, second) => first.id.localeCompare(second.id));
+  }
+
+  _setTerrainFlatteningAreas(areas = [], { refresh = true } = {}) {
+    const normalized = this._normalizeTerrainFlatteningAreas(areas);
+    const signature = JSON.stringify(normalized);
+    if (signature === this.terrainFlatteningSignature) return;
+    const previous = this.terrainFlatteningAreas;
+    this.terrainFlatteningAreas = normalized;
+    this.terrainFlatteningSignature = signature;
+    if (!refresh) return;
+
+    const previousKeys = new Set(previous.map((area) => JSON.stringify(area)));
+    const nextKeys = new Set(normalized.map((area) => JSON.stringify(area)));
+    const changedAreas = [
+      ...previous.filter((area) => !nextKeys.has(JSON.stringify(area))),
+      ...normalized.filter((area) => !previousKeys.has(JSON.stringify(area))),
+    ];
+    if (
+      this.proceduralTerrainCanvas &&
+      this.proceduralTerrainHeightCanvas &&
+      this.proceduralTerrainTexture &&
+      this.proceduralTerrainHeightTexture
+    )
+      this._updateProceduralTerrainRegions(changedAreas);
+    else this._getProceduralTerrainTexture();
+    this.dynamicModelSignature = "";
+    this.routeModelSignature = "";
+  }
+
+  _updateProceduralTerrainRegions(areas) {
+    if (!areas.length) return;
+    const colorCanvas = this.proceduralTerrainCanvas;
+    const heightCanvas = this.proceduralTerrainHeightCanvas;
+    const colorContext = colorCanvas.getContext("2d");
+    const heightContext = heightCanvas.getContext("2d");
+    const spanX = this.mapBounds.maxX - this.mapBounds.minX;
+    const spanY = this.mapBounds.maxY - this.mapBounds.minY;
+    for (const area of areas) {
+      const padding = (area.edge ?? 0) + 0.2;
+      const minPixelX = THREE.MathUtils.clamp(
+        Math.floor(
+          ((area.minX - padding - this.mapBounds.minX) / spanX) *
+            colorCanvas.width,
+        ) - 1,
+        0,
+        colorCanvas.width - 1,
+      );
+      const maxPixelX = THREE.MathUtils.clamp(
+        Math.ceil(
+          ((area.maxX + padding - this.mapBounds.minX) / spanX) *
+            colorCanvas.width,
+        ) + 1,
+        minPixelX + 1,
+        colorCanvas.width,
+      );
+      const minPixelY = THREE.MathUtils.clamp(
+        Math.floor(
+          ((area.minY - padding - this.mapBounds.minY) / spanY) *
+            colorCanvas.height,
+        ) - 1,
+        0,
+        colorCanvas.height - 1,
+      );
+      const maxPixelY = THREE.MathUtils.clamp(
+        Math.ceil(
+          ((area.maxY + padding - this.mapBounds.minY) / spanY) *
+            colorCanvas.height,
+        ) + 1,
+        minPixelY + 1,
+        colorCanvas.height,
+      );
+      const regionWidth = maxPixelX - minPixelX;
+      const regionHeight = maxPixelY - minPixelY;
+      const colorImage = colorContext.createImageData(
+        regionWidth,
+        regionHeight,
+      );
+      const heightImage = heightContext.createImageData(
+        regionWidth,
+        regionHeight,
+      );
+      for (let localY = 0; localY < regionHeight; localY += 1) {
+        const pixelY = minPixelY + localY;
+        const mapY =
+          this.mapBounds.minY + ((pixelY + 0.5) / colorCanvas.height) * spanY;
+        for (let localX = 0; localX < regionWidth; localX += 1) {
+          const pixelX = minPixelX + localX;
+          const mapX =
+            this.mapBounds.minX + ((pixelX + 0.5) / colorCanvas.width) * spanX;
+          const sample = this._terrainSampleAtMapPoint(mapX, mapY);
+          const color = terrainColor(sample, { debug: this.terrainDebug });
+          const offset = (localY * regionWidth + localX) * 4;
+          colorImage.data[offset] = color[0];
+          colorImage.data[offset + 1] = color[1];
+          colorImage.data[offset + 2] = color[2];
+          colorImage.data[offset + 3] = 255;
+          const elevation = Math.round(
+            (sample.surfaceElevation ?? sample.elevation) * 255,
+          );
+          heightImage.data[offset] = elevation;
+          heightImage.data[offset + 1] = elevation;
+          heightImage.data[offset + 2] = elevation;
+          heightImage.data[offset + 3] = 255;
+        }
+      }
+      colorContext.putImageData(colorImage, minPixelX, minPixelY);
+      heightContext.putImageData(heightImage, minPixelX, minPixelY);
+    }
+    this.proceduralTerrainTexture.needsUpdate = true;
+    this.proceduralTerrainHeightTexture.needsUpdate = true;
+  }
+
+  _flattenedElevationAt(x, y, baseElevation) {
+    let elevation = baseElevation;
+    for (const area of this.terrainFlatteningAreas) {
+      const outsideDistance = Math.max(
+        area.minX - x,
+        x - area.maxX,
+        area.minY - y,
+        y - area.maxY,
+        0,
+      );
+      if (outsideDistance <= 0) {
+        elevation = area.targetElevation;
+        continue;
+      }
+      if (outsideDistance >= area.edge || area.edge <= 0) continue;
+      const amount = 1 - outsideDistance / area.edge;
+      const smoothed = amount * amount * (3 - 2 * amount);
+      elevation = THREE.MathUtils.lerp(
+        elevation,
+        area.targetElevation,
+        smoothed,
+      );
+    }
+    return elevation;
+  }
+
+  _terrainSampleAtMapPoint(x, y) {
     const sample = this.terrainSampler(x, y);
+    const baseElevation = sample.surfaceElevation ?? sample.elevation ?? 0;
+    const flattenedElevation = this._flattenedElevationAt(x, y, baseElevation);
+    if (Math.abs(flattenedElevation - baseElevation) <= 1e-5) return sample;
+    return {
+      ...sample,
+      elevation: flattenedElevation,
+      surfaceElevation: flattenedElevation,
+    };
+  }
+
+  _terrainHeightAtMapPoint(x, y) {
+    const sample = this._terrainSampleAtMapPoint(x, y);
     return (
-      (sample.surfaceElevation ?? sample.elevation) *
-      this.terrainElevationScale
+      (sample.surfaceElevation ?? sample.elevation) * this.terrainElevationScale
     );
   }
 
   update(model) {
     this.model = model;
+    this._setTerrainFlatteningAreas(model.terrainFlatteningAreas ?? []);
     if (this.virtualized) {
       this._updateVirtualTiles(model.tiles);
-      this._updateVirtualFog(model.fog);
       this._updateVirtualRange(model.rangeOverlay);
     } else
       for (const tileState of model.tiles) {
@@ -1231,7 +1487,11 @@ export class Battlefield3D {
         this._applyTileAppearance(tile, tile === this.hoveredTile);
       }
 
+    this._updateVirtualFog(model.fog);
+
     this._updateTerrainDebugLabels(model.tiles);
+    this._updateRangeRings(model.rangeOverlay);
+    this._updateTrees(model.tiles, model.pieces);
 
     const routeModelSignature = JSON.stringify(model.movementRoutes ?? []);
     if (routeModelSignature !== this.routeModelSignature) {
@@ -1245,9 +1505,6 @@ export class Battlefield3D {
     const dynamicModelSignature = JSON.stringify({
       pieces: model.pieces,
       orderTargets: model.orderTargets ?? [],
-      fire: model.tiles
-        .filter((tile) => tile.fireCount)
-        .map((tile) => [tile.x, tile.y, tile.fireCount]),
     });
     if (dynamicModelSignature !== this.dynamicModelSignature) {
       this.dynamicModelSignature = dynamicModelSignature;
@@ -1256,8 +1513,6 @@ export class Battlefield3D {
       this.pieceMeshes.clear();
       this.spinningObjects.length = 0;
       this.pulsingObjects.length = 0;
-      for (const tile of model.tiles)
-        if (tile.fireCount) this._addFireMarker(tile);
       for (const marker of model.orderTargets ?? [])
         this._addOrderTargetMarker(marker);
       for (const piece of model.pieces) this._addPiece(piece);
@@ -1266,6 +1521,192 @@ export class Battlefield3D {
     this._updatePlacementPreview(this.hoveredTile);
     if (!this.hasFocusedInitialView && this._focusPlayerUnits())
       this.hasFocusedInitialView = true;
+  }
+
+  _treeNoise(x, y, salt = 0) {
+    const value = Math.sin(x * 127.1 + y * 311.7 + salt * 74.7) * 43758.5453;
+    return value - Math.floor(value);
+  }
+
+  _updateRangeRings(rangeOverlay) {
+    const kind = rangeOverlay?.kind ?? null;
+    const sources = (rangeOverlay?.sources ?? []).filter(
+      (source) =>
+        Number.isFinite(source.x) &&
+        Number.isFinite(source.y) &&
+        Number.isFinite(source.radius) &&
+        source.radius > 0,
+    );
+    const signature = JSON.stringify({
+      kind,
+      sources,
+      terrain: this.terrainFlatteningSignature,
+    });
+    if (signature === this.rangeRingSignature) return;
+    this.rangeRingSignature = signature;
+    this._clearDynamicGroup(this.rangeRingGroup);
+    if (kind !== "reachable" && kind !== "targetable") return;
+    for (const source of sources) {
+      const positions = [];
+      const segments = 128;
+      for (let index = 0; index < segments; index += 1) {
+        const angle = (index / segments) * Math.PI * 2;
+        const mapX = source.x + Math.cos(angle) * source.radius;
+        const mapY = source.y + Math.sin(angle) * source.radius;
+        positions.push(
+          mapX - this.mapCenter.x,
+          this._terrainHeightAtMapPoint(mapX, mapY) + 0.16,
+          mapY - this.mapCenter.y,
+        );
+      }
+      const line = new THREE.LineLoop(
+        new THREE.BufferGeometry().setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(positions, 3),
+        ),
+        new THREE.LineBasicMaterial({
+          color: kind === "targetable" ? COLORS.target : COLORS.paper,
+          transparent: true,
+          opacity: 0.95,
+          depthTest: false,
+          toneMapped: false,
+        }),
+      );
+      line.renderOrder = 91;
+      line.raycast = () => {};
+      this.rangeRingGroup.add(line);
+    }
+  }
+
+  _updateTrees() {
+    if (this.deferVegetation) return;
+    if (!this.treePlacements) {
+      const terrain = this.terrain;
+      if (!terrain?.cellAtMapPoint) return;
+      const placements = [];
+      const cellCount = terrain.width * terrain.height;
+      const densityScale = Math.min(1, 60000 / Math.max(cellCount * 0.16, 1));
+      // Large maps keep a bounded vegetation candidate set. Tree placement is
+      // visual only, so sampling representative cells avoids a multi-million
+      // cell main-thread scan without changing terrain or gameplay data.
+      const vegetationStride = Math.max(
+        1,
+        Math.ceil(Math.sqrt(cellCount / 250000)),
+      );
+      const sampledDensityScale = Math.min(
+        1,
+        densityScale * vegetationStride * vegetationStride,
+      );
+      const spanX = this.mapBounds.maxX - this.mapBounds.minX;
+      const spanY = this.mapBounds.maxY - this.mapBounds.minY;
+      for (
+        let gridY = 0;
+        gridY < terrain.height;
+        gridY += vegetationStride
+      ) {
+        const centerY =
+          this.mapBounds.minY + ((gridY + 0.5) / terrain.height) * spanY;
+        for (
+          let gridX = 0;
+          gridX < terrain.width;
+          gridX += vegetationStride
+        ) {
+          const centerX =
+            this.mapBounds.minX + ((gridX + 0.5) / terrain.width) * spanX;
+          const cell = terrain.cellAtMapPoint(centerX, centerY);
+          if (
+            cell.water ||
+            !["lowland", "plains", "hill"].includes(cell.terrainType) ||
+            cell.moisture < 0.48
+          )
+            continue;
+          const clusterNoise = this._treeNoise(
+            Math.floor(centerX / 3),
+            Math.floor(centerY / 3),
+            2,
+          );
+          const density =
+            THREE.MathUtils.clamp(
+              (cell.moisture - 0.44) * 0.75 + clusterNoise * 0.18,
+              0.04,
+              0.34,
+            ) * sampledDensityScale;
+          if (this._treeNoise(gridX, gridY, 5) > density) continue;
+          const point = {
+            x: centerX + (this._treeNoise(gridX, gridY, 7) - 0.5) * 0.5,
+            y: centerY + (this._treeNoise(gridX, gridY, 11) - 0.5) * 0.5,
+          };
+          const sample = this.terrainSampler(point.x, point.y);
+          placements.push({
+            point,
+            baseElevation: sample.surfaceElevation ?? sample.elevation ?? 0,
+            scale: 0.75 + this._treeNoise(gridX, gridY, 17) * 0.42,
+            rotation: this._treeNoise(gridX, gridY, 19) * Math.PI * 2,
+            colorAmount: this._treeNoise(gridX, gridY, 23),
+          });
+        }
+      }
+      this.treePlacements = placements;
+      if (!placements.length) return;
+      const geometry = new THREE.ConeGeometry(0.23, 0.74, 4);
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x2b5427,
+        roughness: 1,
+      });
+      this.treeMesh = new THREE.InstancedMesh(
+        geometry,
+        material,
+        placements.length,
+      );
+      // One global draw call intentionally replaces viewport/chunk tree
+      // rebuilding. Let the GPU clip instances instead of culling the mesh as
+      // one enormous, frequently changing chunk.
+      this.treeMesh.frustumCulled = false;
+      this.treeMesh.castShadow = false;
+      this.treeMesh.receiveShadow = false;
+      this.vegetationGroup.add(this.treeMesh);
+    }
+
+    if (this.treeModelSignature === this.terrainFlatteningSignature) return;
+    this.treeModelSignature = this.terrainFlatteningSignature;
+    const transform = new THREE.Object3D();
+    let visibleIndex = 0;
+    for (const placement of this.treePlacements) {
+      const insideFoundation = this.terrainFlatteningAreas.some(
+        (area) =>
+          placement.point.x >= area.minX &&
+          placement.point.x <= area.maxX &&
+          placement.point.y >= area.minY &&
+          placement.point.y <= area.maxY,
+      );
+      if (insideFoundation) continue;
+      const elevation = this._flattenedElevationAt(
+        placement.point.x,
+        placement.point.y,
+        placement.baseElevation,
+      );
+      transform.position.set(
+        placement.point.x - this.mapCenter.x,
+        0.12 + elevation * this.terrainElevationScale + 0.37 * placement.scale,
+        placement.point.y - this.mapCenter.y,
+      );
+      transform.scale.setScalar(placement.scale);
+      transform.rotation.set(0, placement.rotation, 0);
+      transform.updateMatrix();
+      this.treeMesh.setMatrixAt(visibleIndex, transform.matrix);
+      this.treeMesh.setColorAt(
+        visibleIndex,
+        new THREE.Color(0x244923).lerp(
+          new THREE.Color(0x3b642e),
+          placement.colorAmount,
+        ),
+      );
+      visibleIndex += 1;
+    }
+    this.treeMesh.count = visibleIndex;
+    this.treeMesh.instanceMatrix.needsUpdate = true;
+    if (this.treeMesh.instanceColor)
+      this.treeMesh.instanceColor.needsUpdate = true;
   }
 
   _updateVirtualTiles(tileStates) {
@@ -1320,36 +1761,23 @@ export class Battlefield3D {
     const appearanceKey =
       Number(state.visible) |
       (Number(state.available) << 1) |
-      (Number(state.reachable) << 2) |
-      (Number(state.targetable) << 3) |
-      (Number(state.selected) << 4) |
-      (Number(hovered) << 5);
+      (Number(state.selected) << 4);
     if (tile.appearanceKey === appearanceKey) return;
     tile.appearanceKey = appearanceKey;
     // The map-spanning procedural texture supplies terrain colour. Instance
     // colour is now reserved for fog and interaction overlays.
     const color = new THREE.Color(0xffffff);
-    // Retain a little terrain hue under fog so texture and topology remain
-    // readable while unit visibility is still fully concealed.
-    if (!state.visible) color.lerp(new THREE.Color(COLORS.fog), 0.55);
+    // Fog presentation is handled by one continuous cloud mesh. Tile state
+    // still controls contact visibility without introducing square tinting.
     let accent = null;
     let strength = 0;
     if (state.available) {
       accent = COLORS.lime;
       strength = 0.54;
-    } else if (state.reachable) {
-      accent = COLORS.player;
-      strength = RANGE_OVERLAY_QUALITY.movementTileStrength;
-    } else if (state.targetable) {
-      accent = COLORS.target;
-      strength = 0.42;
     }
     if (state.selected) {
       accent = COLORS.lime;
       strength = 0.68;
-    } else if (hovered) {
-      accent = state.visible ? COLORS.paper : COLORS.fogGlow;
-      strength = state.visible ? 0.25 : 0.16;
     }
     if (accent !== null) color.lerp(new THREE.Color(accent), strength);
     tile.mesh.setColorAt(tile.instanceId, color);
@@ -1419,6 +1847,7 @@ export class Battlefield3D {
           #endif`,
         );
     };
+    material.userData.terrainMaterial = true;
     material.customProgramCacheKey = () => "continuous-terrain-elevation-v4";
     return material;
   }
@@ -1455,7 +1884,7 @@ export class Battlefield3D {
       for (let pixelX = 0; pixelX < canvas.width; pixelX += 1) {
         const mapX =
           this.mapBounds.minX + ((pixelX + 0.5) / canvas.width) * spanX;
-        const sample = this.terrainSampler(mapX, mapY);
+        const sample = this._terrainSampleAtMapPoint(mapX, mapY);
         const color = terrainColor(sample, { debug: this.terrainDebug });
         const offset = (pixelY * canvas.width + pixelX) * 4;
         image.data[offset] = color[0];
@@ -1491,6 +1920,7 @@ export class Battlefield3D {
     this.proceduralTerrainTexture = texture;
     this.proceduralTerrainHeightTexture = heightTexture;
     this.proceduralTerrainCanvas = canvas;
+    this.proceduralTerrainHeightCanvas = heightCanvas;
     return texture;
   }
 
@@ -1535,8 +1965,8 @@ export class Battlefield3D {
   }
 
   _addOrderTargetMarker(marker) {
-    const bombingRun = marker.kind === "bomb";
-    const color = bombingRun ? COLORS.target : COLORS.lime;
+    const hostileTarget = marker.kind === "bomb" || marker.kind === "attack";
+    const color = hostileTarget ? COLORS.target : COLORS.lime;
     const group = new THREE.Group();
     const material = new THREE.MeshBasicMaterial({
       color,
@@ -1560,7 +1990,12 @@ export class Battlefield3D {
     pin.position.y = 0.22;
     pin.renderOrder = 92;
     group.add(pin);
-    const position = this._cellPosition(marker.x, marker.y);
+    const position = this._mapPosition(
+      marker.x,
+      marker.y,
+      marker.worldX,
+      marker.worldY,
+    );
     group.position.set(position.x, position.y + 0.12, position.z);
     group.userData.pulse = true;
     group.userData.markerPixels = TARGET_MARKER_VISIBILITY.queuedPixels;
@@ -1571,7 +2006,12 @@ export class Battlefield3D {
   _addMovementRoute(route) {
     if (!Array.isArray(route.points) || route.points.length < 2) return;
     const routePoints = route.points.map((point) => {
-      const position = this._cellPosition(point.x, point.y);
+      const position = this._mapPosition(
+        point.x,
+        point.y,
+        point.worldX,
+        point.worldY,
+      );
       position.y += 0.11;
       return position;
     });
@@ -1591,7 +2031,12 @@ export class Battlefield3D {
 
     const flagPoints = Array.isArray(route.flagPoints)
       ? route.flagPoints.map((point) => {
-          const position = this._cellPosition(point.x, point.y);
+          const position = this._mapPosition(
+            point.x,
+            point.y,
+            point.worldX,
+            point.worldY,
+          );
           position.y += 0.11;
           return position;
         })
@@ -1610,7 +2055,9 @@ export class Battlefield3D {
   _updateTerrainDebugLabels(tileStates) {
     if (!this.showElevationValues) return;
     const visible = tileStates
-      .filter((tile) => tile.visible !== false && Number.isFinite(tile.elevation))
+      .filter(
+        (tile) => tile.visible !== false && Number.isFinite(tile.elevation),
+      )
       .slice(0, 2500);
     const signature = visible
       .map((tile) => `${tile.x},${tile.y}:${tile.elevation.toFixed(3)}`)
@@ -1700,22 +2147,23 @@ export class Battlefield3D {
       toneMapped: false,
     });
     const group = new THREE.Group();
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(0.46, 0.055, 8, 36),
+    const arrowHead = new THREE.Mesh(
+      new THREE.ConeGeometry(0.13, 0.32, 12),
       material,
     );
-    ring.rotation.x = Math.PI / 2;
-    ring.renderOrder = 94;
-    group.add(ring);
-    const pin = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.1, 0),
+    arrowHead.rotation.z = Math.PI;
+    arrowHead.position.y = 0.16;
+    arrowHead.renderOrder = 94;
+    group.add(arrowHead);
+    const stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.025, 0.28, 8),
       material.clone(),
     );
-    pin.position.y = 0.2;
-    pin.renderOrder = 95;
-    group.add(pin);
+    stem.position.y = 0.43;
+    stem.renderOrder = 95;
+    group.add(stem);
     group.visible = false;
-    group.userData.materials = [ring.material, pin.material];
+    group.userData.materials = [arrowHead.material, stem.material];
     group.userData.markerPixels = TARGET_MARKER_VISIBILITY.hoverPixels;
     this.hoverReticle = group;
     this.interactionGroup.add(group);
@@ -1759,8 +2207,54 @@ export class Battlefield3D {
             : COLORS.paper;
     for (const material of this.hoverReticle.userData.materials)
       material.color.setHex(color);
-    const position = this._cellPosition(tile.x, tile.y);
-    this.hoverReticle.position.set(position.x, position.y + 0.13, position.z);
+    const lockedTarget = this.hoveredTargetId
+      ? this.model.pieces.find((piece) => piece.id === this.hoveredTargetId)
+      : null;
+    const position = lockedTarget
+      ? this._mapPosition(
+          lockedTarget.x,
+          lockedTarget.y,
+          lockedTarget.worldX,
+          lockedTarget.worldY,
+        )
+      : this._mapPosition(
+          tile.x,
+          tile.y,
+          this.hoveredMapPoint?.x,
+          this.hoveredMapPoint?.y,
+        );
+    this.hoverReticle.position.set(position.x, position.y + 0.05, position.z);
+  }
+
+  _attackTargetUnderPointer() {
+    if (this.model.rangeOverlay?.kind !== "targetable" || !this.hoveredMapPoint)
+      return null;
+    const pointer = this.hoveredMapPoint;
+    return (
+      this.model.pieces
+        .map((piece) => {
+          if (piece.owner !== 1 || piece.pending || piece.hp <= 0) return false;
+          const targetTile = this.tileByKey.get(`${piece.x},${piece.y}`);
+          if (!targetTile?.state?.targetable) return false;
+          const center =
+            Number.isFinite(piece.worldX) && Number.isFinite(piece.worldY)
+              ? { x: piece.worldX, y: piece.worldY }
+              : (this.tileDescriptorByKey.get(`${piece.x},${piece.y}`)
+                  ?.center ?? { x: piece.x, y: piece.y });
+          const lockRadius =
+            piece.kind === "structure"
+              ? Math.max(0.8, (piece.footprintSize ?? 1) * 0.42)
+              : 0.72;
+          const distance = Math.hypot(
+            pointer.x - center.x,
+            pointer.y - center.y,
+          );
+          return distance <= lockRadius ? { piece, distance } : null;
+        })
+        .filter(Boolean)
+        .sort((first, second) => first.distance - second.distance)[0]?.piece ??
+      null
+    );
   }
 
   _markerScale(marker) {
@@ -1782,7 +2276,10 @@ export class Battlefield3D {
 
   _addPiece(piece) {
     const group = new THREE.Group();
-    const position = this._cellPosition(piece.x, piece.y);
+    const position =
+      piece.kind === "unit"
+        ? this._mapPosition(piece.x, piece.y, piece.worldX, piece.worldY)
+        : this._cellPosition(piece.x, piece.y);
     group.position.set(
       position.x,
       position.y + (piece.airborne && piece.type === "plane" ? 1.6 : 0.01),
@@ -1899,6 +2396,8 @@ export class Battlefield3D {
     if (piece.type !== "plane") group.add(base);
 
     if (piece.type === "plane") {
+      const aircraftModel = new THREE.Group();
+      aircraftModel.scale.setScalar(0.9);
       const fuselage = new THREE.Mesh(
         new THREE.CylinderGeometry(0.085, 0.13, 0.9, 10),
         materials.primary,
@@ -1941,7 +2440,7 @@ export class Battlefield3D {
       engineLeft.position.set(0.03, 0.18, -0.34);
       const engineRight = engineLeft.clone();
       engineRight.position.z = 0.34;
-      group.add(
+      aircraftModel.add(
         fuselage,
         nose,
         wing,
@@ -1951,6 +2450,7 @@ export class Battlefield3D {
         engineLeft,
         engineRight,
       );
+      group.add(aircraftModel);
     } else if (piece.type === "short" || piece.type === "commander") {
       const isCommander = piece.type === "commander";
       const leftLeg = new THREE.Mesh(
@@ -2279,8 +2779,10 @@ export class Battlefield3D {
       return;
     }
     const span = Math.max(1, piece.footprintSize ?? 1);
+    const modelWidth = Math.max(span, piece.modelWidth ?? span);
+    const modelDepth = Math.max(span, piece.modelDepth ?? span);
     const foundation = new THREE.Mesh(
-      new THREE.BoxGeometry(span * 0.92, 0.14, span * 0.92),
+      new THREE.BoxGeometry(modelWidth * 0.92, 0.14, modelDepth * 0.92),
       materials.secondary,
     );
     foundation.position.y = 0.09;
@@ -2288,10 +2790,10 @@ export class Battlefield3D {
 
     if (piece.type === "airfield") {
       const runway = new THREE.Mesh(
-        new THREE.BoxGeometry(span * 0.86, 0.055, span * 0.42),
+        new THREE.BoxGeometry(modelWidth * 0.58, 0.055, modelDepth * 0.42),
         materials.dark,
       );
-      runway.position.set(0, 0.18, -span * 0.16);
+      runway.position.set(modelWidth * 0.17, 0.18, -modelDepth * 0.16);
       const stripeMaterial = piece.pending
         ? materials.pale
         : new THREE.MeshStandardMaterial({
@@ -2299,19 +2801,23 @@ export class Battlefield3D {
             roughness: 0.7,
             metalness: 0.05,
           });
-      const stripes = [-0.85, -0.42, 0, 0.42, 0.85].map((x) => {
+      const stripes = [-0.95, -0.48, 0, 0.48, 0.95].map((x) => {
         const stripe = new THREE.Mesh(
           new THREE.BoxGeometry(0.18, 0.012, 0.045),
           stripeMaterial,
         );
-        stripe.position.set(x, 0.214, -span * 0.16);
+        stripe.position.set(
+          modelWidth * 0.17 + x,
+          0.214,
+          -modelDepth * 0.16,
+        );
         return stripe;
       });
       const hangar = new THREE.Mesh(
         new THREE.BoxGeometry(span * 0.42, 0.58, span * 0.3),
         materials.canvas,
       );
-      hangar.position.set(-span * 0.18, 0.45, span * 0.25);
+      hangar.position.set(-modelWidth * 0.3, 0.45, modelDepth * 0.25);
       const hangarRoof = new THREE.Mesh(
         new THREE.CylinderGeometry(
           span * 0.15,
@@ -2326,18 +2832,88 @@ export class Battlefield3D {
         materials.primary,
       );
       hangarRoof.rotation.z = Math.PI / 2;
-      hangarRoof.position.set(-span * 0.18, 0.74, span * 0.25);
+      hangarRoof.position.set(-modelWidth * 0.3, 0.74, modelDepth * 0.25);
       const tower = new THREE.Mesh(
         new THREE.BoxGeometry(0.34, 0.78, 0.34),
         materials.secondary,
       );
-      tower.position.set(span * 0.32, 0.56, span * 0.25);
+      tower.position.set(-modelWidth * 0.08, 0.56, modelDepth * 0.28);
       const towerCab = new THREE.Mesh(
         new THREE.BoxGeometry(0.52, 0.24, 0.52),
         materials.pale,
       );
-      towerCab.position.set(span * 0.32, 1.02, span * 0.25);
-      group.add(runway, ...stripes, hangar, hangarRoof, tower, towerCab);
+      towerCab.position.set(-modelWidth * 0.08, 1.02, modelDepth * 0.28);
+
+      const apron = new THREE.Mesh(
+        new THREE.BoxGeometry(modelWidth * 0.48, 0.045, modelDepth * 0.35),
+        materials.dark,
+      );
+      apron.position.set(modelWidth * 0.22, 0.18, modelDepth * 0.27);
+      const bayLines = [];
+      for (let bay = 0; bay < 3; bay += 1) {
+        const bayX = modelWidth * 0.02 + bay * modelWidth * 0.2;
+        for (const offsetX of [-0.075, 0.075]) {
+          const line = new THREE.Mesh(
+            new THREE.BoxGeometry(0.025, 0.012, modelDepth * 0.25),
+            stripeMaterial,
+          );
+          line.position.set(
+            bayX + offsetX,
+            0.209,
+            modelDepth * 0.27,
+          );
+          bayLines.push(line);
+        }
+        const stopLine = new THREE.Mesh(
+          new THREE.BoxGeometry(0.18, 0.012, 0.025),
+          stripeMaterial,
+        );
+        stopLine.position.set(bayX, 0.21, modelDepth * 0.39);
+        bayLines.push(stopLine);
+      }
+      group.add(
+        runway,
+        ...stripes,
+        apron,
+        ...bayLines,
+        hangar,
+        hangarRoof,
+        tower,
+        towerCab,
+      );
+    } else if (piece.type === "watchtower") {
+      const legs = [];
+      for (const x of [-0.27, 0.27])
+        for (const z of [-0.27, 0.27]) {
+          const leg = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.045, 0.065, 1.45, 5),
+            materials.wood,
+          );
+          leg.position.set(x, 0.82, z);
+          legs.push(leg);
+        }
+      const platform = new THREE.Mesh(
+        new THREE.BoxGeometry(0.82, 0.12, 0.82),
+        materials.secondary,
+      );
+      platform.position.y = 1.48;
+      const cabin = new THREE.Mesh(
+        new THREE.BoxGeometry(0.62, 0.42, 0.62),
+        materials.canvas,
+      );
+      cabin.position.y = 1.74;
+      const roof = new THREE.Mesh(
+        new THREE.ConeGeometry(0.58, 0.32, 4),
+        materials.primary,
+      );
+      roof.position.y = 2.1;
+      roof.rotation.y = Math.PI / 4;
+      const antenna = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.018, 0.018, 0.72, 5),
+        materials.pale,
+      );
+      antenna.position.set(0.2, 2.45, 0.08);
+      group.add(...legs, platform, cabin, roof, antenna);
     } else if (piece.type === "barracks") {
       const building = new THREE.Mesh(
         new THREE.BoxGeometry(span * 0.62, 0.68, span * 0.56),
@@ -2460,12 +3036,32 @@ export class Battlefield3D {
     const active = moves
       .map((move) => {
         const object = this.pieceMeshes.get(move.id);
-        const end = this._cellPosition(move.to.x, move.to.y);
-        end.y += move.actorType === "plane" ? 1.6 : 0.01;
+        const end = this._mapPosition(
+          move.to.x,
+          move.to.y,
+          move.to.worldX,
+          move.to.worldY,
+        );
         const start = object?.position.clone();
-        const flightDistance = start
-          ? Math.hypot(end.x - start.x, end.z - start.z)
-          : 0;
+        const routeHeight = move.actorType === "plane" ? 1.6 : 0.01;
+        end.y += routeHeight;
+        const via = (Array.isArray(move.via) ? move.via : []).map((point) => {
+          const position = this._mapPosition(
+            point.x,
+            point.y,
+            point.worldX,
+            point.worldY,
+          );
+          position.y += routeHeight;
+          return position;
+        });
+        const route = [start, ...via, end].filter(Boolean);
+        const cumulative = [0];
+        for (let index = 1; index < route.length; index += 1)
+          cumulative.push(
+            cumulative[index - 1] + route[index - 1].distanceTo(route[index]),
+          );
+        const flightDistance = cumulative[cumulative.length - 1] ?? 0;
         const duration =
           move.actorType === "plane"
             ? THREE.MathUtils.clamp(
@@ -2476,7 +3072,7 @@ export class Battlefield3D {
                 BOMBER_FLIGHT_TIMING.outboundMaximumMs,
               )
             : 760;
-        return { move, object, start, end, duration };
+        return { move, object, start, end, route, cumulative, duration };
       })
       .filter((item) => item.object);
     for (const item of active) item.facing = item.object.rotation.y;
@@ -2503,9 +3099,30 @@ export class Battlefield3D {
         for (const item of active) {
           const progress = Math.min((now - started) / item.duration, 1);
           const eased = 1 - Math.pow(1 - progress, 3);
-          item.object.position.lerpVectors(item.start, item.end, eased);
+          const routeDistance =
+            item.cumulative[item.cumulative.length - 1] * eased;
+          let routeIndex = 1;
+          while (
+            routeIndex < item.cumulative.length - 1 &&
+            item.cumulative[routeIndex] < routeDistance
+          )
+            routeIndex += 1;
+          const segmentStart = item.cumulative[routeIndex - 1] ?? 0;
+          const segmentLength = Math.max(
+            (item.cumulative[routeIndex] ?? segmentStart) - segmentStart,
+            1e-6,
+          );
+          item.object.position.lerpVectors(
+            item.route[routeIndex - 1],
+            item.route[routeIndex],
+            THREE.MathUtils.clamp(
+              (routeDistance - segmentStart) / segmentLength,
+              0,
+              1,
+            ),
+          );
           item.object.position.y =
-            THREE.MathUtils.lerp(item.start.y, item.end.y, eased) +
+            item.object.position.y +
             Math.sin(progress * Math.PI) *
               (item.move.actorType === "plane" ? 0.35 : 0.25);
           item.object.rotation.y =
@@ -2569,7 +3186,12 @@ export class Battlefield3D {
         const bomber = this.pieceMeshes.get(mission.id);
         if (!bomber) return Promise.resolve();
         const start = bomber.position.clone();
-        const destination = this._cellPosition(mission.to.x, mission.to.y);
+        const destination = this._mapPosition(
+          mission.to.x,
+          mission.to.y,
+          mission.to.worldX,
+          mission.to.worldY,
+        );
         destination.y += 0.01;
         start.y = Math.max(start.y, destination.y + 1.59);
         const facing = Math.atan2(
@@ -2672,7 +3294,12 @@ export class Battlefield3D {
 
   _animateAttack(attack, quality = DEFAULT_EFFECT_QUALITY) {
     const shooter = this.pieceMeshes.get(attack.actorId);
-    const target = this._cellPosition(attack.to.x, attack.to.y);
+    const target = this._mapPosition(
+      attack.to.x,
+      attack.to.y,
+      attack.to.worldX,
+      attack.to.worldY,
+    );
     target.y += Number.isFinite(attack.targetAltitude)
       ? attack.targetAltitude - 0.12
       : 0.12;
@@ -3384,23 +4011,34 @@ export class Battlefield3D {
     this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    const hit = this._tileUnderTerrainPoint(
-      this._terrainSurfaceUnderPointer(),
-    );
+    const terrainPoint = this._terrainSurfaceUnderPointer();
+    const hit = this._tileUnderTerrainPoint(terrainPoint);
+    this.hoveredMapPoint =
+      hit && terrainPoint
+        ? {
+            x: terrainPoint.x + this.mapCenter.x,
+            y: terrainPoint.z + this.mapCenter.y,
+          }
+        : null;
+    this.hoveredTargetId = this._attackTargetUnderPointer()?.id ?? null;
     if (hit !== this.hoveredTile) {
       if (this.hoveredTile) this._applyTileAppearance(this.hoveredTile, false);
       this.hoveredTile = hit;
       if (this.hoveredTile) this._applyTileAppearance(this.hoveredTile, true);
-      this._updateHoverReticle(this.hoveredTile);
       this._updatePlacementPreview(this.hoveredTile);
     }
+    // Movement targeting follows the exact terrain intersection instead of
+    // snapping its marker to the navigation cell centre.
+    this._updateHoverReticle(this.hoveredTile);
     this.renderer.domElement.style.cursor = this.pointerDown?.dragged
       ? "grabbing"
-      : this.placementPreviewGroup.children.length
-        ? "crosshair"
-        : hit
-          ? "grab"
-          : "default";
+      : this.model.routePlanning && hit
+        ? "none"
+        : this.placementPreviewGroup.children.length
+          ? "crosshair"
+          : hit
+            ? "grab"
+            : "default";
   }
 
   _terrainSurfaceUnderPointer() {
@@ -3433,8 +4071,7 @@ export class Battlefield3D {
       far = Math.min(far, Math.max(first, second));
     }
     const surfaceBase = this.virtualized ? 0.02 : 0.06;
-    const belowBoard =
-      (surfaceBase - 0.08 - ray.origin.y) / ray.direction.y;
+    const belowBoard = (surfaceBase - 0.08 - ray.origin.y) / ray.direction.y;
     far = Math.min(far, belowBoard);
     if (!Number.isFinite(far) || far <= near) return null;
 
@@ -3454,7 +4091,10 @@ export class Battlefield3D {
     if (previousDelta < 0) return null;
     const horizontalDistance =
       Math.hypot(ray.direction.x, ray.direction.z) * (far - near);
-    const steps = Math.max(32, Math.min(256, Math.ceil(horizontalDistance * 2)));
+    const steps = Math.max(
+      32,
+      Math.min(256, Math.ceil(horizontalDistance * 2)),
+    );
     let lower = null;
     let upper = null;
     for (let step = 1; step <= steps; step += 1) {
@@ -3524,6 +4164,8 @@ export class Battlefield3D {
   _onPointerLeave() {
     if (this.hoveredTile) this._applyTileAppearance(this.hoveredTile, false);
     this.hoveredTile = null;
+    this.hoveredMapPoint = null;
+    this.hoveredTargetId = null;
     this._updateHoverReticle(null);
     this._updatePlacementPreview(null);
   }
@@ -3536,7 +4178,11 @@ export class Battlefield3D {
       dragged: false,
     };
     this.renderer.domElement.style.cursor =
-      event.button === 0 || event.button === 2 ? "grabbing" : "default";
+      this.model.routePlanning && event.button === 0
+        ? "none"
+        : event.button === 0 || event.button === 2
+          ? "grabbing"
+          : "default";
   }
 
   _onPointerUp(event) {
@@ -3554,6 +4200,10 @@ export class Battlefield3D {
     this.onTileClick?.(x, y, {
       clientX: event.clientX,
       clientY: event.clientY,
+      shiftKey: event.shiftKey,
+      worldX: this.hoveredMapPoint?.x,
+      worldY: this.hoveredMapPoint?.y,
+      targetId: this.hoveredTargetId,
     });
   }
 
@@ -3895,7 +4545,7 @@ export class Battlefield3D {
       if (this.virtualTileMesh) this.virtualTileMesh.visible = nextVisible;
     }
     const uniforms = this.virtualGrid?.material?.uniforms;
-    if (uniforms?.gridEnabled) uniforms.gridEnabled.value = !nextVisible;
+    if (uniforms?.gridEnabled) uniforms.gridEnabled.value = false;
   }
 
   _updateVirtualGridStep(cameraDistance) {
@@ -4039,8 +4689,7 @@ export class Battlefield3D {
       this._onPointerUp,
     );
     this.controls.removeEventListener("change", this._onControlsChange);
-    if (this.viewportChangeFrame)
-      cancelAnimationFrame(this.viewportChangeFrame);
+    if (this.viewportChangeFrame) clearTimeout(this.viewportChangeFrame);
     this.controls.dispose();
     this.scene.traverse((object) => {
       object.dispose?.();
@@ -4055,8 +4704,11 @@ export class Battlefield3D {
     this.proceduralTerrainHeightTexture?.dispose();
     this.proceduralTerrainHeightTexture = null;
     this.proceduralTerrainCanvas = null;
+    this.proceduralTerrainHeightCanvas = null;
     this.virtualFogTexture?.dispose();
     this.virtualFogTexture = null;
+    this.virtualCloudTexture?.dispose();
+    this.virtualCloudTexture = null;
     this.virtualRangeTexture?.dispose();
     this.virtualRangeTexture = null;
     this.missTexture?.dispose();

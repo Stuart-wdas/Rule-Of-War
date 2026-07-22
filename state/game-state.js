@@ -61,6 +61,12 @@ export function createStartingForces({
   const units = [];
   const reservedTiles = new Set();
   const keyOf = ({ x, y }) => `${x},${y}`;
+  const reserveWithPerimeter = (tiles) => {
+    for (const tile of tiles)
+      for (let offsetY = -1; offsetY <= 1; offsetY += 1)
+        for (let offsetX = -1; offsetX <= 1; offsetX += 1)
+          reservedTiles.add(`${tile.x + offsetX},${tile.y + offsetY}`);
+  };
   for (const owner of [0, 1]) {
     const prefix = owner === 0 ? "player" : "enemy";
     const cells = deploymentByOwner?.[owner] ?? deploymentCells(cols, rows, owner);
@@ -74,7 +80,7 @@ export function createStartingForces({
           footprint.length === 9 &&
           footprint.every((tile) => !reservedTiles.has(keyOf(tile)))
         ) {
-          for (const tile of footprint) reservedTiles.add(keyOf(tile));
+          reserveWithPerimeter(footprint);
           return { cell, footprint };
         }
       }
@@ -84,7 +90,7 @@ export function createStartingForces({
       while (cursor < cells.length) {
         const cell = cells[cursor++];
         if (reservedTiles.has(keyOf(cell))) continue;
-        reservedTiles.add(keyOf(cell));
+        reserveWithPerimeter([cell]);
         return cell;
       }
       return null;
@@ -149,6 +155,7 @@ export function createFreshState({
     resolutionStep: null,
     winner: null,
     selectedId: null,
+    selectedIds: [],
     intent: null,
     buildMode: null,
     bridgeStart: null,

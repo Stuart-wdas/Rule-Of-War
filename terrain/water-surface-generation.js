@@ -18,12 +18,13 @@ const DIAGONAL_NEIGHBOURS = Object.freeze([
 function isOpenWater(terrainType) {
   return (
     terrainType === TERRAIN_TYPES.DEEP_WATER ||
-    terrainType === TERRAIN_TYPES.SHALLOW_WATER
+    terrainType === TERRAIN_TYPES.SHALLOW_WATER ||
+    terrainType === TERRAIN_TYPES.RIVER
   );
 }
 
 /**
- * Levels the rendered surface of sufficiently large connected water bodies.
+ * Levels the rendered surface of connected water bodies, including rivers.
  * Underlying elevation is left untouched, preserving deep/shallow terrain
  * classification and gameplay data while lakes and seas render as one plane.
  */

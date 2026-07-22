@@ -30,15 +30,16 @@ export class PhaseController {
     this.pause = pause;
   }
 
-  async beginAttackPhase({ includeAi = false } = {}) {
+  async beginAttackPhase({ includeAi = false, present = true } = {}) {
     const activeCampaign = this.getCampaignVersion();
     const state = this.getState();
     state.resolving = true;
     state.resolutionStep = "movement";
     state.selectedId = null;
+    state.selectedIds = [];
     state.intent = null;
     if (includeAi) this.aiController.planDeploymentAndMoves();
-    this.render();
+    if (present) this.render();
 
     const moveOrders = state.orders.filter((item) => item.kind === "move");
     const fundedMoveOrders = this.movementController.fundedOrdersForTurn(
@@ -48,9 +49,9 @@ export class PhaseController {
     const turnOrders = this.movementController.turnOrders(fundedMoveOrders);
     const successfulMoves =
       this.movementController.successfulOrders(turnOrders);
-    await this.pause(180);
+    if (present) await this.pause(180);
     if (activeCampaign !== this.getCampaignVersion()) return;
-    await this.movementController.animate(successfulMoves);
+    if (present) await this.movementController.animate(successfulMoves);
     if (activeCampaign !== this.getCampaignVersion()) return;
     this.movementController.apply(turnOrders, successfulMoves);
     this.movementController.chargeSuccessfulRouteSegments(
@@ -82,27 +83,32 @@ export class PhaseController {
           ? `Movement complete. ${movedCount} repositioned unit${movedCount === 1 ? " is" : "s are"} unavailable to fire this round.`
           : "Movement complete. Designate attack targets.",
     );
-    this.render();
+    if (present) this.render();
   }
 
-  async resolveRound({ includeAi = false, random = Math.random } = {}) {
+  async resolveRound({
+    includeAi = false,
+    random = Math.random,
+    present = true,
+  } = {}) {
     const activeCampaign = this.getCampaignVersion();
     const state = this.getState();
     state.resolving = true;
     state.resolutionStep = "combat";
     state.selectedId = null;
+    state.selectedIds = [];
     state.intent = null;
     try {
       if (includeAi) this.aiController.planAttacks();
-      this.render();
-      await this.pause(480);
+      if (present) this.render();
+      if (present) await this.pause(480);
       if (activeCampaign !== this.getCampaignVersion()) return;
-      await this.airController.resolveSorties(random);
+      await this.airController.resolveSorties(random, { animate: present });
       if (activeCampaign !== this.getCampaignVersion()) return;
-      await this.combatController.resolveAttacks(random);
+      await this.combatController.resolveAttacks(random, { animate: present });
       if (activeCampaign !== this.getCampaignVersion()) return;
-      this.render();
-      await this.pause(360);
+      if (present) this.render();
+      if (present) await this.pause(360);
       if (activeCampaign !== this.getCampaignVersion()) return;
 
       this.productionController.completeJobs();
@@ -136,7 +142,7 @@ export class PhaseController {
       if (activeCampaign !== this.getCampaignVersion()) return;
       state.resolving = false;
       state.resolutionStep = null;
-      this.render();
+      if (present) this.render();
     }
   }
 }
