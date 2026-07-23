@@ -215,12 +215,16 @@ export class AiController {
       actor.movementRange ?? UNIT_TYPES[actor.type].movementRange;
     const searchTiles =
       this.getTilesInRange?.(actor, movementRange) ?? this.getNavigableTiles();
-    const candidates = searchTiles.filter((tile) =>
-      this.isValidMove(actor, tile.x, tile.y),
-    );
-    candidates.sort(
+    // Rank cheaply first, then stop at the first valid route. The previous
+    // filter validated every nearby tile, triggering hundreds of full terrain
+    // path searches per unit on large maps.
+    const candidates = [...searchTiles].sort(
       (a, b) => this.distance(a, target) - this.distance(b, target),
     );
-    return candidates[0] || null;
+    return (
+      candidates.find((tile) =>
+        this.isValidMove(actor, tile.x, tile.y),
+      ) ?? null
+    );
   }
 }

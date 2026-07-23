@@ -53,6 +53,7 @@ import {
   cacheTerrain,
   getCachedTerrain,
 } from "./terrain/terrain-cache.js";
+import { loadPrebuiltTerrain } from "./terrain/terrain-binary.js";
 import { createFreshState } from "./state/game-state.js";
 import { SavedMatchStore } from "./storage/saved-match-store.js";
 import { collectDomElements } from "./ui/dom-elements.js";
@@ -69,6 +70,7 @@ let terrainTileCache = new Map();
 
 const CONFIG_STORAGE_KEY = "result-of-war:developer-config:v1";
 const MATCH_STORAGE_KEY = "result-of-war:saved-matches:v1";
+const UI_SETTINGS_STORAGE_KEY = "result-of-war:ui-settings:v1";
 const MAX_DETAILED_TILES = 30000;
 const MAX_FALLBACK_TILES = 2000;
 const VIRTUAL_RENDER_THRESHOLD = 20000;
@@ -91,6 +93,7 @@ let intentionalSocketClose = false;
 let pendingGameMode = null;
 let preparedMapId = null;
 let fastForwarding = false;
+let settingsReturnView = "home";
 let multiplayer = createEmptyMultiplayerState();
 const uid = (prefix) =>
   `${prefix}-${localOwner}-${Date.now().toString(36)}-${++idCounter}`;
@@ -279,9 +282,16 @@ const phaseController = new PhaseController({
   airController,
   combatController,
   productionController,
+  refreshMovementRoutes: refreshBlockedMovementRoutes,
   incomeFor,
   checkWinner,
   render,
+  renderTransition: () => {
+    renderPhase();
+    renderQueue();
+    renderLog();
+    renderMultiplayerStatus();
+  },
   log,
   pause,
 });
@@ -445,6 +455,7 @@ function sampleGroundSegment(start, end, { collect = false } = {}) {
     };
     const tile = tileAtMapPoint(point);
     if (!tile) return null;
+    if (isStructureTileBlocked(tile.x, tile.y)) return null;
     const movementCost = groundMovementCostAt(tile.x, tile.y);
     if (!Number.isFinite(movementCost)) return null;
     const stepCost = euclideanDistance(previous, point) * movementCost;
@@ -553,7 +564,13 @@ function movementRoutePlan(actor, x, y, targetPoint = null) {
     graph: navigationGraph,
     start: current,
     goal: destination,
-    movementCostAt: (tile) => groundMovementCostAt(tile.x, tile.y),
+    movementCostAt: (tile) =>
+      isStructureTileBlocked(tile.x, tile.y, {
+        x: actor.x,
+        y: actor.y,
+      })
+        ? Number.POSITIVE_INFINITY
+        : groundMovementCostAt(tile.x, tile.y),
     distance,
     maximumVisited: Math.max(10000, Math.min(runtimeMap.tileCount, 1000000)),
   });
@@ -567,6 +584,57 @@ function movementRoutePlan(actor, x, y, targetPoint = null) {
   if (!planned?.waypoints.length) return null;
   const path = continuousPath.slice(1).map(routePoint).filter(Boolean);
   return { path, ...planned };
+}
+
+function refreshBlockedMovementRoutes() {
+  const cancelledOrderIds = new Set();
+  for (const order of state.orders) {
+    if (order.kind !== "move") continue;
+    const actor = getUnit(order.unitId);
+    if (!actor || UNIT_TYPES[actor.type]?.airUnit === true) continue;
+    const waypointIndex = Number.isInteger(order.waypointIndex)
+      ? order.waypointIndex
+      : 0;
+    const waypoint = order.waypoints?.[waypointIndex];
+    if (!waypoint) continue;
+    const nextPoint = {
+      x: Number.isFinite(waypoint.worldX) ? waypoint.worldX : waypoint.x,
+      y: Number.isFinite(waypoint.worldY) ? waypoint.worldY : waypoint.y,
+    };
+    const routeStillClear =
+      !isStructureTileBlocked(waypoint.x, waypoint.y) &&
+      Boolean(sampleGroundSegment(mapPositionFor(actor), nextPoint));
+    if (routeStillClear) continue;
+    const destinationPoint = {
+      x: Number.isFinite(order.worldX) ? order.worldX : order.x,
+      y: Number.isFinite(order.worldY) ? order.worldY : order.y,
+    };
+    const replacement = movementRoutePlan(
+      actor,
+      order.x,
+      order.y,
+      destinationPoint,
+    );
+    if (!replacement?.waypoints.length) {
+      cancelledOrderIds.add(order.id);
+      if ((order.waypointIndex ?? 0) === 0)
+        state.players[order.owner].resources += order.cost;
+      if (order.owner === localOwner)
+        log(
+          `${UNIT_TYPES[actor.type].label} route cancelled because structures block every path.`,
+          true,
+        );
+      continue;
+    }
+    order.path = replacement.path;
+    order.waypoints = replacement.waypoints;
+    order.waypointIndex = 0;
+    order.paidWaypointIndex = 0;
+  }
+  if (cancelledOrderIds.size)
+    state.orders = state.orders.filter(
+      (order) => !cancelledOrderIds.has(order.id),
+    );
 }
 
 function buildingFootprintTiles(x, y, type = null) {
@@ -706,6 +774,24 @@ function piecesAt(x, y, includePending = true) {
 
 function pieceAt(x, y, includePending = true) {
   return piecesAt(x, y, includePending)[0] ?? null;
+}
+
+function isStructureTileBlocked(x, y, ignoreOrigin = null) {
+  if (ignoreOrigin?.x === x && ignoreOrigin?.y === y) return false;
+  return (
+    state.structures.some(
+      (piece) =>
+        piece.type !== "bridge" &&
+        piece.hp > 0 &&
+        occupiesTile(piece, x, y),
+    ) ||
+    state.jobs.some(
+      (job) =>
+        job.kind === "building" &&
+        job.type !== "bridge" &&
+        occupiesTile(job, x, y),
+    )
+  );
 }
 
 function isGroundOccupied(x, y, includePending = true) {
@@ -906,7 +992,11 @@ function isVisibleToPlayer(x, y) {
   const occupant = pieceAt(x, y);
   if (occupant && occupant.owner === localOwner) return true;
   return [...state.units, ...state.structures]
-    .filter((piece) => piece.owner === localOwner && piece.revealsFog === true)
+    .filter((piece) => {
+      if (piece.owner !== localOwner || piece.revealsFog !== true) return false;
+      const spec = UNIT_TYPES[piece.type] ?? BUILDINGS[piece.type];
+      return spec?.airUnit !== true || piece.airborne === true;
+    })
     .some((piece) => {
       const spec = UNIT_TYPES[piece.type] ?? BUILDINGS[piece.type];
       const visionRange = spec.visionRange ?? spec.range ?? 0;
@@ -1137,6 +1227,7 @@ function createStaticUI() {
   document
     .querySelector("#result-restart")
     .addEventListener("click", restartGame);
+  els.resultMainMenu.addEventListener("click", leaveToMainMenu);
   els.developerButton.addEventListener("click", openDeveloperTools);
   els.resetViewButton.addEventListener("click", () =>
     battlefield3D?.resetView(),
@@ -1149,6 +1240,25 @@ function createStaticUI() {
   els.developerForm.addEventListener("submit", applyDeveloperSettings);
   els.playAiButton.addEventListener("click", () => showMapMenu("ai"));
   els.playHumanButton.addEventListener("click", () => showMapMenu("human"));
+  els.mainSavesButton.addEventListener("click", () => showGameMenu("saves"));
+  els.mainSettingsButton.addEventListener("click", () => openSettings("home"));
+  els.savesBackButton.addEventListener("click", showMainMenu);
+  els.settingsBackButton.addEventListener("click", () =>
+    showGameMenu(settingsReturnView),
+  );
+  els.settingsForm.addEventListener("submit", applyMenuSettings);
+  els.settingsOptionsTab.addEventListener("click", () =>
+    showSettingsTab("options"),
+  );
+  els.settingsControlsTab.addEventListener("click", () =>
+    showSettingsTab("controls"),
+  );
+  els.pauseResumeButton.addEventListener("click", enterBattlefield);
+  els.pauseSaveButton.addEventListener("click", saveCurrentGame);
+  els.pauseSettingsButton.addEventListener("click", () =>
+    openSettings("pause"),
+  );
+  els.pauseLeaveButton.addEventListener("click", leaveToMainMenu);
   els.mapBackButton.addEventListener("click", showMainMenu);
   els.mapCardGrid.addEventListener("click", handleMapSelection);
   els.mapConfirmButton.addEventListener("click", confirmMapSelection);
@@ -1172,12 +1282,12 @@ function createStaticUI() {
     if (button)
       resumeHumanMatch(button.dataset.resumeCode, button.dataset.resumeToken);
   });
+  els.mainSavedMatchList.addEventListener("click", handleSavedMatchAction);
   els.copyMatchCode.addEventListener("click", copyCurrentMatchCode);
   els.cancelLobbyButton.addEventListener("click", leaveHumanMatch);
   els.leaveGameButton.addEventListener("click", leaveHumanMatch);
   els.menuButton.addEventListener("click", () => {
-    if (isHumanGame()) leaveHumanMatch();
-    else showGameMenu();
+    showPauseMenu();
   });
   document.addEventListener("keydown", handleGlobalShortcut, true);
   window.addEventListener("beforeunload", () => {
@@ -1268,7 +1378,38 @@ function handleGlobalShortcut(event) {
     closeDeveloperTools();
   } else if (!els.developerModal.hidden && event.key === "Tab") {
     trapDeveloperFocus(event);
+  } else if (
+    event.key === "Escape" &&
+    gameMode !== "menu" &&
+    els.gameMenu.hidden &&
+    state.buildMode
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+    cancelBuildPlacement();
+  } else if (
+    event.key === "Escape" &&
+    gameMode !== "menu" &&
+    els.helpModal.hidden &&
+    els.resultModal.hidden
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (els.gameMenu.hidden) showPauseMenu();
+    else if (!els.menuPause.hidden) enterBattlefield();
+    else if (!els.menuSettings.hidden && settingsReturnView === "pause")
+      showGameMenu("pause");
   }
+}
+
+function cancelBuildPlacement() {
+  if (!state.buildMode) return false;
+  const label = BUILDINGS[state.buildMode]?.label ?? "construction";
+  state.buildMode = null;
+  state.bridgeStart = null;
+  log(`${label} placement cancelled.`);
+  render();
+  return true;
 }
 
 function readDeveloperForm() {
@@ -1499,23 +1640,61 @@ function saveMatchReference(snapshot = createNetworkSnapshot()) {
   renderSavedMatches();
 }
 
-function renderSavedMatches() {
-  const saved = savedMatchStore.load();
-  els.savedMatchCount.textContent = `${saved.length} SAVED`;
-  if (!saved.length) {
-    els.savedMatchList.innerHTML =
-      '<p class="empty-saves" id="empty-saves">No saved human campaigns on this device.</p>';
-    return;
+function createLocalSaveToken() {
+  const randomPart =
+    globalThis.crypto?.randomUUID?.().replaceAll("-", "") ??
+    Math.random().toString(36).slice(2).padEnd(24, "0");
+  return `local_${Date.now().toString(36)}_${randomPart}`;
+}
+
+function saveCurrentGame() {
+  if (gameMode === "menu") return;
+  const snapshot = createNetworkSnapshot();
+  if (isHumanGame() && multiplayer.code && multiplayer.token) {
+    sendPlanUpdate();
+    saveMatchReference(snapshot);
+  } else {
+    savedMatchStore.upsert({
+      code: "SOLO01",
+      token: createLocalSaveToken(),
+      mode: "ai",
+      mapId: selectedMapId,
+      owner: localOwner,
+      round: snapshot.game.round,
+      phase: snapshot.game.phase,
+      updatedAt: new Date().toISOString(),
+      state: snapshot,
+    });
+    renderSavedMatches();
   }
-  els.savedMatchList.innerHTML = saved
+  els.pauseMenuStatus.textContent = `CHECKPOINT SAVED · ROUND ${String(
+    state.round,
+  ).padStart(2, "0")}`;
+}
+
+function savedMatchMarkup(saved) {
+  if (!saved.length)
+    return '<p class="empty-saves">No saved operations on this device.</p>';
+  return saved
     .map((item) => {
       const date = new Date(item.updatedAt);
       const dateLabel = Number.isNaN(date.valueOf())
         ? "LOCAL CHECKPOINT"
         : date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
-      return `<article class="saved-match-card"><span><strong>${item.code} · ROUND ${String(item.round || 1).padStart(2, "0")}</strong><small>${item.owner === 0 ? "HOST COMMAND" : "SECOND COMMAND"} · ${String(item.phase || "deployment").toUpperCase()} · ${dateLabel}</small></span><button type="button" data-resume-code="${item.code}" data-resume-token="${item.token}">RESUME</button><button class="delete-save" type="button" data-delete-code="${item.code}" data-delete-token="${item.token}" aria-label="Remove saved match ${item.code}">×</button></article>`;
+      const solo = item.mode === "ai";
+      return `<article class="saved-match-card"><span><strong>${solo ? "SOLO OPERATION" : item.code} · ROUND ${String(item.round || 1).padStart(2, "0")}</strong><small>${solo ? "FIELD COMMAND" : item.owner === 0 ? "HOST COMMAND" : "SECOND COMMAND"} · ${String(item.phase || "deployment").toUpperCase()} · ${dateLabel}</small></span><button type="button" ${solo ? "data-resume-local" : "data-resume-code=\"" + item.code + "\""} data-resume-token="${item.token}">RESUME</button><button class="delete-save" type="button" data-delete-code="${item.code}" data-delete-token="${item.token}" aria-label="Remove saved operation">×</button></article>`;
     })
     .join("");
+}
+
+function renderSavedMatches() {
+  const saved = savedMatchStore.load();
+  els.savedMatchCount.textContent = `${saved.length} SAVED`;
+  els.savedMatchList.innerHTML = savedMatchMarkup(
+    saved.filter((item) => item.mode !== "ai"),
+  );
+  els.mainSavedMatchCount.textContent = `${saved.length} SAVED`;
+  els.mainSavedMatchList.innerHTML = savedMatchMarkup(saved);
 }
 
 function deleteSavedMatch(code, token) {
@@ -1529,19 +1708,151 @@ function setMenuView(view) {
   els.menuLoading.hidden = view !== "loading";
   els.menuHuman.hidden = view !== "human";
   els.lobbyPanel.hidden = view !== "lobby";
+  els.menuSaves.hidden = view !== "saves";
+  els.menuSettings.hidden = view !== "settings";
+  els.menuPause.hidden = view !== "pause";
 }
 
 function showGameMenu(view = "home") {
   els.gameMenu.hidden = false;
   document.querySelector(".app-shell").inert = true;
   setMenuView(view);
-  if (view === "human") renderSavedMatches();
+  if (view === "human" || view === "saves") renderSavedMatches();
 }
 
 function showMainMenu() {
   clearJoinError();
   pendingGameMode = null;
   showGameMenu("home");
+}
+
+function showPauseMenu() {
+  if (gameMode === "menu") {
+    showMainMenu();
+    return;
+  }
+  els.pauseMenuStatus.textContent = "";
+  showGameMenu("pause");
+}
+
+function leaveToMainMenu() {
+  if (isHumanGame() && multiplayer.code && multiplayer.token) {
+    sendPlanUpdate();
+    saveMatchReference();
+  }
+  campaignVersion += 1;
+  closeMatchSocket(true);
+  gameMode = "menu";
+  localOwner = 0;
+  multiplayer = createEmptyMultiplayerState();
+  els.resultModal.hidden = true;
+  showMainMenu();
+  render();
+}
+
+function readUiSettings() {
+  try {
+    return JSON.parse(localStorage.getItem(UI_SETTINGS_STORAGE_KEY)) ?? {};
+  } catch {
+    return {};
+  }
+}
+
+function openSettings(returnView = "home") {
+  settingsReturnView = returnView;
+  const uiSettings = readUiSettings();
+  els.settingsForm.elements.fogEnabled.checked = gameConfig.fogEnabled;
+  els.settingsForm.elements.terrainDebug.checked = gameConfig.terrainDebug;
+  els.settingsForm.elements.terrainDebugElevation.checked =
+    gameConfig.terrainDebugElevation;
+  els.settingsForm.elements.reducedMotion.checked =
+    Boolean(uiSettings.reducedMotion);
+  showSettingsTab("options");
+  showGameMenu("settings");
+}
+
+function showSettingsTab(tab) {
+  const controls = tab === "controls";
+  els.settingsForm.hidden = controls;
+  els.settingsControlsPanel.hidden = !controls;
+  els.settingsOptionsTab.setAttribute("aria-selected", String(!controls));
+  els.settingsControlsTab.setAttribute("aria-selected", String(controls));
+}
+
+function applyMenuSettings(event) {
+  event.preventDefault();
+  const form = els.settingsForm.elements;
+  gameConfig = {
+    ...gameConfig,
+    fogEnabled: form.fogEnabled.checked,
+    terrainDebug: form.terrainDebug.checked,
+    terrainDebugElevation: form.terrainDebugElevation.checked,
+  };
+  developerConfigStore.save(gameConfig);
+  const reducedMotion = form.reducedMotion.checked;
+  try {
+    localStorage.setItem(
+      UI_SETTINGS_STORAGE_KEY,
+      JSON.stringify({ reducedMotion }),
+    );
+  } catch {
+    // The setting still applies for this session when storage is unavailable.
+  }
+  document.body.classList.toggle("reduced-motion", reducedMotion);
+  if (gameMode !== "menu") {
+    const viewState = battlefield3D?.getViewState?.();
+    syncConfigDependentUI();
+    initializeBattlefield3D({ viewState });
+    render();
+  }
+  showGameMenu(settingsReturnView);
+}
+
+async function handleSavedMatchAction(event) {
+  const deleteButton = event.target.closest("[data-delete-code]");
+  if (deleteButton) {
+    deleteSavedMatch(
+      deleteButton.dataset.deleteCode,
+      deleteButton.dataset.deleteToken,
+    );
+    return;
+  }
+  const button = event.target.closest("[data-resume-token]");
+  if (!button) return;
+  if (!button.hasAttribute("data-resume-local")) {
+    resumeHumanMatch(button.dataset.resumeCode, button.dataset.resumeToken);
+    return;
+  }
+  const saved = savedMatchStore
+    .load()
+    .find(
+      (item) =>
+        item.mode === "ai" && item.token === button.dataset.resumeToken,
+    );
+  if (!saved?.state) return;
+  gameMode = "ai";
+  localOwner = saved.owner ?? 0;
+  multiplayer = createEmptyMultiplayerState();
+  selectedMapId = saved.mapId ?? selectedMapId;
+  const resumeMap = getMapPreset(selectedMapId);
+  showLoadingScreen(resumeMap);
+  updateLoadingProgress(12, "CHECKPOINT · OPENING SAVED OPERATION");
+  await yieldLoadingFrame();
+  updateLoadingProgress(34, "TERRAIN · RESTORING BATTLEFIELD SEED");
+  await yieldLoadingFrame();
+  if (!applyNetworkSnapshot(saved.state)) {
+    gameMode = "menu";
+    showGameMenu("saves");
+    return;
+  }
+  updateLoadingProgress(82, "BATTLEFIELD · RESTORING UNITS AND ORDERS");
+  await yieldLoadingFrame();
+  syncConfigDependentUI();
+  initializeBattlefield3D();
+  render();
+  updateLoadingProgress(100, "CHECKPOINT · OPERATION RESTORED");
+  await yieldLoadingFrame();
+  enterBattlefield();
 }
 
 function renderMapOptions() {
@@ -1627,7 +1938,7 @@ function showLoadingScreen(map) {
 }
 
 function terrainCacheKey(map, seed, terrainConfig) {
-  return `v2:${map.id}:${map.cols}x${map.rows}:${seed}:${JSON.stringify(terrainConfig ?? {})}`;
+  return `v3:${map.id}:${map.cols}x${map.rows}:${seed}:${JSON.stringify(terrainConfig ?? {})}`;
 }
 
 function generateTerrainInWorker(bounds, seed, config) {
@@ -1677,6 +1988,23 @@ async function prepareBattlefieldAssets(mapId) {
     serializedTerrain = await getCachedTerrain(cacheKey);
   } catch (error) {
     console.warn("Terrain cache read skipped.", error);
+  }
+  if (!serializedTerrain && activeTerrainSeed === map.id) {
+    updateLoadingProgress(30, "TERRAIN · STREAMING PREBUILT HEIGHT FIELD");
+    try {
+      const prebuilt = await loadPrebuiltTerrain(map.id);
+      if (
+        prebuilt?.width === runtimeMap.cols &&
+        prebuilt?.height === runtimeMap.rows
+      ) {
+        serializedTerrain = prebuilt;
+        cacheTerrain(cacheKey, serializedTerrain).catch((error) =>
+          console.warn("Terrain cache write skipped.", error),
+        );
+      }
+    } catch (error) {
+      console.warn("Prebuilt terrain unavailable; using worker fallback.", error);
+    }
   }
   if (!serializedTerrain) {
     updateLoadingProgress(32, "TERRAIN · GENERATING DETAILED HEIGHT FIELD");
@@ -1956,11 +2284,12 @@ function handleMatchMessage(message) {
   }
 }
 
-function handleSessionMessage(message) {
+async function handleSessionMessage(message) {
   if (!isValidNetworkSnapshot(message.state)) {
     showConnectionError("The server returned an invalid campaign checkpoint.");
     return;
   }
+  const resuming = multiplayer.pendingRequest?.type === "resume-match";
   gameMode = "human";
   localOwner = message.playerIndex;
   multiplayer.code = message.code;
@@ -1972,9 +2301,24 @@ function handleSessionMessage(message) {
   );
   multiplayer.reconnecting = false;
   multiplayer.pendingRequest = null;
+  if (resuming) {
+    const resumeMap = findMapPresetByDimensions(
+      message.state.config.cols,
+      message.state.config.rows,
+    );
+    showLoadingScreen(resumeMap);
+    updateLoadingProgress(18, "CHECKPOINT · DOWNLOADING SHARED OPERATION");
+    await yieldLoadingFrame();
+    updateLoadingProgress(42, "TERRAIN · RESTORING BATTLEFIELD SEED");
+    await yieldLoadingFrame();
+  }
   updateReadyState(message.ready, message.connected);
   updatePeerNames(message.players || []);
   applyNetworkSnapshot(message.state);
+  if (resuming) {
+    updateLoadingProgress(88, "BATTLEFIELD · SYNCHRONIZING COMMAND STATE");
+    await yieldLoadingFrame();
+  }
   saveMatchReference(message.state);
   updateLobbyStatus();
 
@@ -1983,8 +2327,12 @@ function handleSessionMessage(message) {
   } else if (message.pendingAdvance) {
     multiplayer.synchronizing = true;
   }
-  maybeEnterHumanGame();
   render();
+  if (resuming) {
+    updateLoadingProgress(100, "CHECKPOINT · COMMAND LINK RESTORED");
+    await yieldLoadingFrame();
+  }
+  maybeEnterHumanGame();
 }
 
 function updateReadyState(ready = [false, false], connected = [false, false]) {
@@ -4506,6 +4854,18 @@ function initializeBattlefield3D({
         };
       },
       onPlacementPreviewChange: updateBridgePlacementReadout,
+      onBoxSelect: (unitIds) => {
+        if (isInteractionLocked() || !unitIds.length) return;
+        closeStructurePopover();
+        selectedStructureId = null;
+        state.selectedIds = unitIds.filter((id) => {
+          const unit = getUnit(id);
+          return unit?.owner === localOwner && unit.hp > 0;
+        });
+        state.selectedId = state.selectedIds[0] ?? null;
+        state.intent = defaultSelectionIntentForUnits(selectedUnits());
+        render();
+      },
       onTileClick: (x, y, pointer) => {
         if (isInteractionLocked()) return;
         handleTileClick(x, y, pointer);
@@ -4530,5 +4890,9 @@ function initializeBattlefield3D({
 
 createStaticUI();
 renderSavedMatches();
+document.body.classList.toggle(
+  "reduced-motion",
+  Boolean(readUiSettings().reducedMotion),
+);
 showGameMenu("home");
 render();

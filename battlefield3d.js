@@ -27,7 +27,7 @@ const HOME_DIRECTION = new THREE.Vector3(0.47, 0.64, 0.61).normalize();
 const DEFAULT_EFFECT_QUALITY = Object.freeze({
   smokePuffs: 8,
   debrisMultiplier: 0.1,
-  trailPoints: 21,
+  trailPoints: 5,
   dynamicLights: false,
 });
 
@@ -89,14 +89,14 @@ const VIRTUAL_GRID_QUALITY = Object.freeze({
 // Bomber flight timing is distance-based so long sorties remain readable.
 // Increase millisecondsPerTile or the minimum values to slow them further.
 const BOMBER_FLIGHT_TIMING = Object.freeze({
-  outboundBaseMs: 1200,
-  outboundMillisecondsPerTile: 70,
-  outboundMinimumMs: 1600,
-  outboundMaximumMs: 4200,
-  returnBaseMs: 1400,
-  returnMillisecondsPerTile: 75,
-  returnMinimumMs: 1900,
-  returnMaximumMs: 4800,
+  outboundBaseMs: 1500,
+  outboundMillisecondsPerTile: 105,
+  outboundMinimumMs: 2200,
+  outboundMaximumMs: 6000,
+  returnBaseMs: 1750,
+  returnMillisecondsPerTile: 112,
+  returnMinimumMs: 2500,
+  returnMaximumMs: 6800,
 });
 
 // Reticles preserve an approximate on-screen size at strategic zoom. Increase
@@ -141,6 +141,7 @@ export class Battlefield3D {
       deferFogClouds = false,
       resolvePlacementPreview = null,
       onPlacementPreviewChange = null,
+      onBoxSelect = null,
       onTileClick,
       onViewportChange,
     },
@@ -153,6 +154,7 @@ export class Battlefield3D {
     this.renderChunkSize = Math.max(8, Math.floor(renderChunkSize));
     this.resolvePlacementPreview = resolvePlacementPreview;
     this.onPlacementPreviewChange = onPlacementPreviewChange;
+    this.onBoxSelect = onBoxSelect;
     this.onViewportChange = onViewportChange;
     this.viewportWindowKey = null;
     this.viewportChangeFrame = null;
@@ -281,6 +283,10 @@ export class Battlefield3D {
       "Interactive 3D battlefield",
     );
     container.appendChild(this.renderer.domElement);
+    this.selectionBox = document.createElement("div");
+    this.selectionBox.className = "unit-selection-box";
+    this.selectionBox.hidden = true;
+    container.appendChild(this.selectionBox);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
@@ -369,6 +375,7 @@ export class Battlefield3D {
     this.renderer.domElement.addEventListener(
       "pointermove",
       this._onPointerMove,
+      true,
     );
     this.renderer.domElement.addEventListener(
       "pointerleave",
@@ -377,8 +384,13 @@ export class Battlefield3D {
     this.renderer.domElement.addEventListener(
       "pointerdown",
       this._onPointerDown,
+      true,
     );
-    this.renderer.domElement.addEventListener("pointerup", this._onPointerUp);
+    this.renderer.domElement.addEventListener(
+      "pointerup",
+      this._onPointerUp,
+      true,
+    );
 
     this.resizeObserver = new ResizeObserver(() => this._resize());
     this.resizeObserver.observe(container);
@@ -1599,18 +1611,10 @@ export class Battlefield3D {
       );
       const spanX = this.mapBounds.maxX - this.mapBounds.minX;
       const spanY = this.mapBounds.maxY - this.mapBounds.minY;
-      for (
-        let gridY = 0;
-        gridY < terrain.height;
-        gridY += vegetationStride
-      ) {
+      for (let gridY = 0; gridY < terrain.height; gridY += vegetationStride) {
         const centerY =
           this.mapBounds.minY + ((gridY + 0.5) / terrain.height) * spanY;
-        for (
-          let gridX = 0;
-          gridX < terrain.width;
-          gridX += vegetationStride
-        ) {
+        for (let gridX = 0; gridX < terrain.width; gridX += vegetationStride) {
           const centerX =
             this.mapBounds.minX + ((gridX + 0.5) / terrain.width) * spanX;
           const cell = terrain.cellAtMapPoint(centerX, centerY);
@@ -2229,27 +2233,49 @@ export class Battlefield3D {
   _attackTargetUnderPointer() {
     if (this.model.rangeOverlay?.kind !== "targetable" || !this.hoveredMapPoint)
       return null;
-    const pointer = this.hoveredMapPoint;
+    const overlay = this.model.rangeOverlay;
+    const viewport = this.renderer.domElement.getBoundingClientRect();
+    const pointerPixels = {
+      x: ((this.pointer.x + 1) / 2) * viewport.width,
+      y: ((1 - this.pointer.y) / 2) * viewport.height,
+    };
     return (
       this.model.pieces
         .map((piece) => {
           if (piece.owner !== 1 || piece.pending || piece.hp <= 0) return false;
-          const targetTile = this.tileByKey.get(`${piece.x},${piece.y}`);
-          if (!targetTile?.state?.targetable) return false;
           const center =
             Number.isFinite(piece.worldX) && Number.isFinite(piece.worldY)
               ? { x: piece.worldX, y: piece.worldY }
               : (this.tileDescriptorByKey.get(`${piece.x},${piece.y}`)
                   ?.center ?? { x: piece.x, y: piece.y });
-          const lockRadius =
-            piece.kind === "structure"
-              ? Math.max(0.8, (piece.footprintSize ?? 1) * 0.42)
-              : 0.72;
-          const distance = Math.hypot(
-            pointer.x - center.x,
-            pointer.y - center.y,
+          const inRange = (overlay.sources ?? []).some(
+            (source) =>
+              Math.hypot(center.x - source.x, center.y - source.y) <=
+              source.radius,
           );
-          return distance <= lockRadius ? { piece, distance } : null;
+          if (!inRange) return null;
+          const projected = this._mapPosition(
+            piece.x,
+            piece.y,
+            piece.worldX,
+            piece.worldY,
+          );
+          projected.y += piece.kind === "structure" ? 0.35 : 0.42;
+          projected.project(this.camera);
+          if (projected.z < -1 || projected.z > 1) return null;
+          const targetPixels = {
+            x: ((projected.x + 1) / 2) * viewport.width,
+            y: ((1 - projected.y) / 2) * viewport.height,
+          };
+          const distance = Math.hypot(
+            pointerPixels.x - targetPixels.x,
+            pointerPixels.y - targetPixels.y,
+          );
+          const snapPixels =
+            piece.kind === "structure"
+              ? Math.max(34, (piece.footprintSize ?? 1) * 12)
+              : 28;
+          return distance <= snapPixels ? { piece, distance } : null;
         })
         .filter(Boolean)
         .sort((first, second) => first.distance - second.distance)[0]?.piece ??
@@ -2806,11 +2832,7 @@ export class Battlefield3D {
           new THREE.BoxGeometry(0.18, 0.012, 0.045),
           stripeMaterial,
         );
-        stripe.position.set(
-          modelWidth * 0.17 + x,
-          0.214,
-          -modelDepth * 0.16,
-        );
+        stripe.position.set(modelWidth * 0.17 + x, 0.214, -modelDepth * 0.16);
         return stripe;
       });
       const hangar = new THREE.Mesh(
@@ -2857,11 +2879,7 @@ export class Battlefield3D {
             new THREE.BoxGeometry(0.025, 0.012, modelDepth * 0.25),
             stripeMaterial,
           );
-          line.position.set(
-            bayX + offsetX,
-            0.209,
-            modelDepth * 0.27,
-          );
+          line.position.set(bayX + offsetX, 0.209, modelDepth * 0.27);
           bayLines.push(line);
         }
         const stopLine = new THREE.Mesh(
@@ -4006,6 +4024,11 @@ export class Battlefield3D {
         event.clientY - this.pointerDown.y,
       );
       if (movement > 5) this.pointerDown.dragged = true;
+      if (this.pointerDown.boxSelecting && this.pointerDown.dragged) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        this._updateSelectionBox(event.clientX, event.clientY);
+      }
     }
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -4032,6 +4055,8 @@ export class Battlefield3D {
     this._updateHoverReticle(this.hoveredTile);
     this.renderer.domElement.style.cursor = this.pointerDown?.dragged
       ? "grabbing"
+      : this.hoveredTargetId
+        ? "none"
       : this.model.routePlanning && hit
         ? "none"
         : this.placementPreviewGroup.children.length
@@ -4171,12 +4196,21 @@ export class Battlefield3D {
   }
 
   _onPointerDown(event) {
+    const boxSelecting = event.button === 0 && event.shiftKey;
     this.pointerDown = {
       x: event.clientX,
       y: event.clientY,
       button: event.button,
       dragged: false,
+      boxSelecting,
     };
+    if (boxSelecting) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this.controls.enabled = false;
+      this.renderer.domElement.setPointerCapture?.(event.pointerId);
+      this._updateSelectionBox(event.clientX, event.clientY);
+    }
     this.renderer.domElement.style.cursor =
       this.model.routePlanning && event.button === 0
         ? "none"
@@ -4188,6 +4222,17 @@ export class Battlefield3D {
   _onPointerUp(event) {
     const gesture = this.pointerDown;
     this.pointerDown = null;
+    if (gesture?.boxSelecting) {
+      this.controls.enabled = true;
+      this.renderer.domElement.releasePointerCapture?.(event.pointerId);
+      this.selectionBox.hidden = true;
+      if (gesture.dragged) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        this._selectUnitsInScreenBox(gesture, event);
+        return;
+      }
+    }
     this._onPointerMove(event);
     if (
       !gesture ||
@@ -4205,6 +4250,48 @@ export class Battlefield3D {
       worldY: this.hoveredMapPoint?.y,
       targetId: this.hoveredTargetId,
     });
+  }
+
+  _updateSelectionBox(clientX, clientY) {
+    if (!this.pointerDown?.boxSelecting) return;
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const startX = this.pointerDown.x - rect.left;
+    const startY = this.pointerDown.y - rect.top;
+    const endX = clientX - rect.left;
+    const endY = clientY - rect.top;
+    this.selectionBox.hidden = false;
+    this.selectionBox.style.left = `${Math.min(startX, endX)}px`;
+    this.selectionBox.style.top = `${Math.min(startY, endY)}px`;
+    this.selectionBox.style.width = `${Math.abs(endX - startX)}px`;
+    this.selectionBox.style.height = `${Math.abs(endY - startY)}px`;
+  }
+
+  _selectUnitsInScreenBox(start, end) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const minimumX = Math.min(start.x, end.clientX);
+    const maximumX = Math.max(start.x, end.clientX);
+    const minimumY = Math.min(start.y, end.clientY);
+    const maximumY = Math.max(start.y, end.clientY);
+    const worldPosition = new THREE.Vector3();
+    const selectedIds = [];
+    for (const piece of this.model.pieces) {
+      if (piece.kind !== "unit" || piece.owner !== 0) continue;
+      const object = this.pieceMeshes.get(piece.id);
+      if (!object) continue;
+      object.getWorldPosition(worldPosition);
+      const projected = worldPosition.clone().project(this.camera);
+      if (projected.z < -1 || projected.z > 1) continue;
+      const screenX = rect.left + ((projected.x + 1) / 2) * rect.width;
+      const screenY = rect.top + ((1 - projected.y) / 2) * rect.height;
+      if (
+        screenX >= minimumX &&
+        screenX <= maximumX &&
+        screenY >= minimumY &&
+        screenY <= maximumY
+      )
+        selectedIds.push(piece.id);
+    }
+    this.onBoxSelect?.(selectedIds);
   }
 
   _resize() {
@@ -4675,6 +4762,7 @@ export class Battlefield3D {
     this.renderer.domElement.removeEventListener(
       "pointermove",
       this._onPointerMove,
+      true,
     );
     this.renderer.domElement.removeEventListener(
       "pointerleave",
@@ -4683,11 +4771,14 @@ export class Battlefield3D {
     this.renderer.domElement.removeEventListener(
       "pointerdown",
       this._onPointerDown,
+      true,
     );
     this.renderer.domElement.removeEventListener(
       "pointerup",
       this._onPointerUp,
+      true,
     );
+    this.selectionBox?.remove();
     this.controls.removeEventListener("change", this._onControlsChange);
     if (this.viewportChangeFrame) clearTimeout(this.viewportChangeFrame);
     this.controls.dispose();

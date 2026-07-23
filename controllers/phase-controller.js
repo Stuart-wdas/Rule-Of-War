@@ -9,9 +9,11 @@ export class PhaseController {
     airController,
     combatController,
     productionController,
+    refreshMovementRoutes = null,
     incomeFor,
     checkWinner,
     render,
+    renderTransition = render,
     log,
     pause,
   }) {
@@ -23,9 +25,11 @@ export class PhaseController {
     this.airController = airController;
     this.combatController = combatController;
     this.productionController = productionController;
+    this.refreshMovementRoutes = refreshMovementRoutes;
     this.incomeFor = incomeFor;
     this.checkWinner = checkWinner;
     this.render = render;
+    this.renderTransition = renderTransition;
     this.log = log;
     this.pause = pause;
   }
@@ -39,7 +43,8 @@ export class PhaseController {
     state.selectedIds = [];
     state.intent = null;
     if (includeAi) this.aiController.planDeploymentAndMoves();
-    if (present) this.render();
+    this.refreshMovementRoutes?.();
+    if (present) this.renderTransition();
 
     const moveOrders = state.orders.filter((item) => item.kind === "move");
     const fundedMoveOrders = this.movementController.fundedOrdersForTurn(

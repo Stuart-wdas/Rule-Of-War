@@ -84,11 +84,84 @@
             </button>
           </div>
 
+          <div class="menu-secondary-actions">
+            <button id="main-saves-button" type="button">
+              <span>SAVED OPERATIONS</span><small>RESUME OR REMOVE CHECKPOINTS</small>
+            </button>
+            <button id="main-settings-button" type="button">
+              <span>SETTINGS</span><small>DISPLAY AND BATTLEFIELD OPTIONS</small>
+            </button>
+          </div>
+
           <div class="menu-doctrine">
             <span><b>04</b> COMMAND PHASES</span>
             <span><b>02</b> SYNCHRONIZED PLAYERS</span>
             <span><b>&infin;</b> SAVED CHECKPOINTS</span>
           </div>
+        </section>
+
+        <section class="menu-view utility-menu" id="menu-saves" hidden>
+          <button class="menu-back" id="saves-back-button" type="button">
+            <span aria-hidden="true">&larr;</span> MAIN MENU
+          </button>
+          <div class="menu-intro compact">
+            <span class="eyebrow">LOCAL ARCHIVE</span>
+            <h2>SAVED OPERATIONS.</h2>
+            <p>Resume a solo operation or reconnect to a synchronized campaign.</p>
+          </div>
+          <div class="saved-matches">
+            <div class="saved-matches-heading">
+              <span><small>CHECKPOINT STORAGE</small><h3>CAMPAIGNS</h3></span>
+              <span id="main-saved-match-count">0 SAVED</span>
+            </div>
+            <div class="saved-match-list" id="main-saved-match-list"></div>
+          </div>
+        </section>
+
+        <section class="menu-view utility-menu" id="menu-settings" hidden>
+          <button class="menu-back" id="settings-back-button" type="button">
+            <span aria-hidden="true">&larr;</span> BACK
+          </button>
+          <div class="menu-intro compact">
+            <span class="eyebrow">COMMAND SYSTEM</span>
+            <h2>SETTINGS.</h2>
+            <p>Changes are stored on this device and apply to the active battlefield.</p>
+          </div>
+          <div class="settings-tabs" role="tablist" aria-label="Settings sections">
+            <button id="settings-options-tab" type="button" role="tab" aria-selected="true">SETTINGS</button>
+            <button id="settings-controls-tab" type="button" role="tab" aria-selected="false">CONTROLS</button>
+          </div>
+          <form class="settings-form" id="settings-form" role="tabpanel">
+            <label><span><b>FOG OF WAR</b><small>Hide territory outside friendly vision.</small></span><input name="fogEnabled" type="checkbox" /></label>
+            <label><span><b>TERRAIN DEBUG COLOURS</b><small>Show distinct procedural terrain classifications.</small></span><input name="terrainDebug" type="checkbox" /></label>
+            <label><span><b>ELEVATION VALUES</b><small>Display numeric height values during terrain debugging.</small></span><input name="terrainDebugElevation" type="checkbox" /></label>
+            <label><span><b>REDUCED MOTION</b><small>Reduce interface transitions and loading animation.</small></span><input name="reducedMotion" type="checkbox" /></label>
+            <button class="primary-action" type="submit">APPLY SETTINGS</button>
+          </form>
+          <div class="controls-reference" id="settings-controls-panel" role="tabpanel" hidden>
+            <div><kbd>ESC</kbd><span><b>CANCEL / MENU</b><small>Cancels active construction first; otherwise opens or closes the field menu.</small></span></div>
+            <div><kbd>SHIFT</kbd><span><b>BOX / MULTI-SELECT</b><small>Shift-drag a box around units, or Shift-click units to adjust a platoon selection.</small></span></div>
+            <div><kbd>LMB</kbd><span><b>SELECT / DESIGNATE</b><small>Select units and structures, place construction, or designate movement and fire points.</small></span></div>
+            <div><kbd>DRAG</kbd><span><b>ORBIT CAMERA</b><small>Drag across the battlefield to rotate the tactical camera.</small></span></div>
+            <div><kbd>RMB</kbd><span><b>PAN CAMERA</b><small>Right-drag to move the camera across the battlefield.</small></span></div>
+            <div><kbd>WHEEL</kbd><span><b>ZOOM CAMERA</b><small>Scroll to zoom in or out.</small></span></div>
+            <div><kbd>F12</kbd><span><b>DEVELOPER CONFIGURATION</b><small>Open campaign configuration. Ctrl + Shift + D is an alternative shortcut.</small></span></div>
+          </div>
+        </section>
+
+        <section class="menu-view pause-menu" id="menu-pause" hidden>
+          <div class="menu-intro compact">
+            <span class="eyebrow">OPERATION PAUSED</span>
+            <h2>FIELD MENU.</h2>
+            <p>Your battlefield remains loaded while this menu is open.</p>
+          </div>
+          <div class="pause-actions">
+            <button class="primary-action" id="pause-resume-button" type="button">RESUME OPERATION</button>
+            <button id="pause-save-button" type="button">SAVE CHECKPOINT</button>
+            <button id="pause-settings-button" type="button">SETTINGS</button>
+            <button class="danger-action" id="pause-leave-button" type="button">LEAVE TO MAIN MENU</button>
+          </div>
+          <p class="menu-status" id="pause-menu-status" role="status"></p>
         </section>
 
         <section
@@ -322,8 +395,10 @@
           <button
             class="text-button menu-button"
             id="menu-button"
-            type="button">
-            MENU
+            type="button"
+            aria-keyshortcuts="Escape"
+            title="Game menu (Esc)">
+            MENU <kbd>ESC</kbd>
           </button>
           <button
             class="icon-button devtools-trigger"
@@ -1237,9 +1312,14 @@
         <span class="eyebrow">AFTER ACTION REPORT</span>
         <h2 id="result-title">VICTORY</h2>
         <p id="result-copy">The enemy command has fallen.</p>
-        <button id="result-restart" class="primary-action" type="button">
-          BEGIN NEW CAMPAIGN
-        </button>
+        <div class="result-actions">
+          <button id="result-restart" class="primary-action" type="button">
+            BEGIN NEW CAMPAIGN
+          </button>
+          <button id="result-main-menu" type="button">
+            BACK TO MAIN MENU
+          </button>
+        </div>
       </section>
     </div>
 

@@ -24,6 +24,7 @@ const mime = {
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.terrain': 'application/octet-stream',
 };
 
 function isRecord(value) {
@@ -767,7 +768,14 @@ function serveStatic(request, response) {
     return;
   }
 
-  fs.readFile(filePath, (error, data) => {
+  const acceptsGzip = /\bgzip\b/.test(request.headers['accept-encoding'] || '');
+  const compressedPath =
+    acceptsGzip && path.extname(filePath) === '.terrain'
+      ? `${filePath}.gz`
+      : null;
+  const responsePath =
+    compressedPath && fs.existsSync(compressedPath) ? compressedPath : filePath;
+  fs.readFile(responsePath, (error, data) => {
     if (error) {
       response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Not found');
       return;
@@ -775,6 +783,8 @@ function serveStatic(request, response) {
     response.writeHead(200, {
       'Content-Type': mime[path.extname(filePath)] || 'application/octet-stream',
       'Cache-Control': 'no-store',
+      Vary: 'Accept-Encoding',
+      ...(responsePath === compressedPath ? { 'Content-Encoding': 'gzip' } : {}),
     });
     if (request.method === 'HEAD') response.end();
     else response.end(data);

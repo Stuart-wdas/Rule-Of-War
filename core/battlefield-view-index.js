@@ -71,6 +71,10 @@ export function createBattlefieldViewIndex({
       if (piece.revealsFog !== true) continue;
       const spec = unitTypes[piece.type] ?? buildings[piece.type];
       if (!spec) continue;
+      // Bombers only act as reconnaissance sources while airborne. A parked
+      // aircraft remains visible to its owner but does not clear surrounding
+      // fog or reveal hostile units around its Airfield.
+      if (spec.airUnit === true && piece.airborne !== true) continue;
       const visionRange = spec.visionRange ?? spec.range ?? 0;
       const center =
         getWorldPoint?.(piece) ??
