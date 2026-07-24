@@ -207,17 +207,33 @@ export const MAP_CATALOG = Object.freeze([
 ]);
 
 export const DEFAULT_MAP_ID = "grand-front";
+const customMapCatalog = [];
+
+export function registerCustomMaps(maps = []) {
+  customMapCatalog.splice(0, customMapCatalog.length);
+  for (const map of maps)
+    if (
+      map?.id?.startsWith("custom-") &&
+      Number.isInteger(map.cols) &&
+      Number.isInteger(map.rows)
+    )
+      customMapCatalog.push(map);
+}
+
+export function allMapPresets() {
+  return [...MAP_CATALOG, ...customMapCatalog];
+}
 
 export function getMapPreset(id) {
   return (
-    MAP_CATALOG.find((map) => map.id === id) ??
+    allMapPresets().find((map) => map.id === id) ??
     MAP_CATALOG.find((map) => map.id === DEFAULT_MAP_ID)
   );
 }
 
 export function findMapPresetByDimensions(cols, rows) {
   return (
-    MAP_CATALOG.find((map) => map.cols === cols && map.rows === rows) ??
+    allMapPresets().find((map) => map.cols === cols && map.rows === rows) ??
     getMapPreset(DEFAULT_MAP_ID)
   );
 }

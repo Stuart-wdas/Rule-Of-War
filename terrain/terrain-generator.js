@@ -173,6 +173,8 @@ function mixColor(first, second, amount) {
 }
 
 export function terrainColor(sample, { debug = false } = {}) {
+  if (!debug && Array.isArray(sample.authoredColor))
+    return [...sample.authoredColor];
   const terrainType = sample.terrainType ?? sample.type ?? TERRAIN_TYPES.PLAINS;
   const palette = debug ? TERRAIN_DEBUG_PALETTE : TERRAIN_PALETTE;
   if (debug) return [...(palette[terrainType] ?? palette.plains)];
@@ -541,6 +543,25 @@ export function serializeTerrain(terrain) {
 export function hydrateTerrain(data) {
   if (!data || data.version !== 1) return null;
   const { bounds, width, height } = data;
+  const hexColor = (value, fallback) => {
+    const match = /^#?([0-9a-f]{6})$/i.exec(String(value ?? ""));
+    if (!match) return fallback;
+    const number = Number.parseInt(match[1], 16);
+    return [(number >> 16) & 255, (number >> 8) & 255, number & 255];
+  };
+  const lowColor = hexColor(data.config.heightColors?.low, [72, 111, 48]);
+  const middleColor = hexColor(data.config.heightColors?.mid, [126, 139, 69]);
+  const highColor = hexColor(data.config.heightColors?.high, [181, 171, 126]);
+  const authoredColor = (elevation) => {
+    if (!data.config.heightColors) return undefined;
+    const lowBoundary = data.config.heightColors.lowBoundary ?? 0.45;
+    const highBoundary = data.config.heightColors.highBoundary ?? 0.72;
+    return elevation < lowBoundary
+      ? lowColor
+      : elevation < highBoundary
+        ? middleColor
+        : highColor;
+  };
   const indexAt = (x, y) => y * width + x;
   const gridCoordinates = (mapX, mapY) => ({
     x: clamp(
@@ -590,6 +611,9 @@ export function hydrateTerrain(data) {
       passable: gameplay.passable,
       water: gameplay.water,
       waterCoverage: Number(gameplay.water),
+      authoredColor: gameplay.water
+        ? undefined
+        : authoredColor(data.elevation[index]),
     };
   };
   const sample = (mapX, mapY) => {
@@ -601,6 +625,9 @@ export function hydrateTerrain(data) {
       elevation: interpolate(data.elevation, grid.x, grid.y),
       surfaceElevation: interpolate(data.surfaceElevation, grid.x, grid.y),
       moisture: interpolate(data.moisture, grid.x, grid.y),
+      authoredColor: nearest.water
+        ? undefined
+        : authoredColor(interpolate(data.elevation, grid.x, grid.y)),
       river: riverCoverage >= 0.5,
       riverCoverage,
       riverFlow:

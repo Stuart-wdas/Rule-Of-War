@@ -139,6 +139,7 @@ export class Battlefield3D {
       showElevationValues = false,
       deferVegetation = false,
       deferFogClouds = false,
+      authoredTreeDensity = null,
       resolvePlacementPreview = null,
       onPlacementPreviewChange = null,
       onBoxSelect = null,
@@ -191,6 +192,7 @@ export class Battlefield3D {
     this.showElevationValues = Boolean(showElevationValues);
     this.deferVegetation = Boolean(deferVegetation);
     this.deferFogClouds = Boolean(deferFogClouds);
+    this.authoredTreeDensity = authoredTreeDensity;
     this.terrainElevationScale = Number.isFinite(terrain?.config?.maxElevation)
       ? terrain.config.maxElevation
       : TERRAIN_MAX_ELEVATION;
@@ -1618,10 +1620,12 @@ export class Battlefield3D {
           const centerX =
             this.mapBounds.minX + ((gridX + 0.5) / terrain.width) * spanX;
           const cell = terrain.cellAtMapPoint(centerX, centerY);
+          const authoredTree =
+            this.authoredTreeDensity?.[gridY * terrain.width + gridX] ?? 0;
           if (
             cell.water ||
             !["lowland", "plains", "hill"].includes(cell.terrainType) ||
-            cell.moisture < 0.48
+            (!authoredTree && cell.moisture < 0.48)
           )
             continue;
           const clusterNoise = this._treeNoise(
@@ -1635,7 +1639,12 @@ export class Battlefield3D {
               0.04,
               0.34,
             ) * sampledDensityScale;
-          if (this._treeNoise(gridX, gridY, 5) > density) continue;
+          if (
+            authoredTree
+              ? this._treeNoise(gridX, gridY, 5) > authoredTree / 255
+              : this._treeNoise(gridX, gridY, 5) > density
+          )
+            continue;
           const point = {
             x: centerX + (this._treeNoise(gridX, gridY, 7) - 0.5) * 0.5,
             y: centerY + (this._treeNoise(gridX, gridY, 11) - 0.5) * 0.5,

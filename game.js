@@ -1,4 +1,5 @@
 import { Battlefield3D } from "./battlefield3d.js";
+import { MapBuilder3D } from "./map-builder3d.js";
 import { AiController } from "./controllers/ai-controller.js";
 import { AirController } from "./controllers/air-controller.js";
 import { CombatController } from "./controllers/combat-controller.js";
@@ -36,9 +37,11 @@ import {
 import {
   DEFAULT_MAP_ID,
   MAP_CATALOG,
+  allMapPresets,
   applyMapPreset,
   findMapPresetByDimensions,
   getMapPreset,
+  registerCustomMaps,
 } from "./maps/map-catalog.js";
 import { createRuntimeMap, deploymentTiles } from "./maps/runtime-map.js";
 import {
@@ -56,6 +59,11 @@ import {
 import { loadPrebuiltTerrain } from "./terrain/terrain-binary.js";
 import { createFreshState } from "./state/game-state.js";
 import { SavedMatchStore } from "./storage/saved-match-store.js";
+import {
+  loadCustomMaps,
+  saveCustomMap,
+} from "./storage/custom-map-store.js";
+import { createAuthoredTerrainData } from "./terrain/authored-terrain.js";
 import { collectDomElements } from "./ui/dom-elements.js";
 
 let COLS = 48;
@@ -67,6 +75,7 @@ let runtimeMap = null;
 let terrainSampler = null;
 let terrainGenerator = null;
 let terrainTileCache = new Map();
+const customMapsReady = loadCustomMaps();
 
 const CONFIG_STORAGE_KEY = "result-of-war:developer-config:v1";
 const MATCH_STORAGE_KEY = "result-of-war:saved-matches:v1";
@@ -94,6 +103,9 @@ let pendingGameMode = null;
 let preparedMapId = null;
 let fastForwarding = false;
 let settingsReturnView = "home";
+let mapBuilderState = null;
+let mapBuilder3D = null;
+let mapBuilderSculptMode = "add";
 let multiplayer = createEmptyMultiplayerState();
 const uid = (prefix) =>
   `${prefix}-${localOwner}-${Date.now().toString(36)}-${++idCounter}`;
@@ -1242,6 +1254,40 @@ function createStaticUI() {
   els.playHumanButton.addEventListener("click", () => showMapMenu("human"));
   els.mainSavesButton.addEventListener("click", () => showGameMenu("saves"));
   els.mainSettingsButton.addEventListener("click", () => openSettings("home"));
+  els.mainMapBuilderButton.addEventListener("click", openMapBuilder);
+  els.mapBuilderBack.addEventListener("click", showMainMenu);
+  els.mapBuilderSize.addEventListener("change", resetMapBuilder);
+  els.mapBuilderClear.addEventListener("click", resetMapBuilder);
+  els.mapBuilderSave.addEventListener("click", saveMapBuilder);
+  els.mapBuilderPickHeight.addEventListener("click", () => {
+    mapBuilder3D?.beginHeightPick();
+    els.mapBuilderPickHeight.classList.add("active");
+    els.mapBuilderStatus.textContent =
+      "Click a terrain point to use its height for flattening.";
+  });
+  for (const button of els.mapBuilderModeButtons)
+    button.addEventListener("click", () => {
+      mapBuilderSculptMode = button.dataset.mapBuilderMode;
+      for (const modeButton of els.mapBuilderModeButtons)
+        modeButton.classList.toggle(
+          "active",
+          modeButton === button,
+        );
+    });
+  els.mapBuilderStrength.addEventListener("input", updateMapBuilderReadouts);
+  for (const input of [
+    els.mapBuilderHeight,
+    els.mapBuilderWater,
+    els.mapBuilderLowColor,
+    els.mapBuilderMidColor,
+    els.mapBuilderHighColor,
+    els.mapBuilderLowBoundary,
+    els.mapBuilderHighBoundary,
+  ])
+    input.addEventListener("input", () => {
+      updateMapBuilderReadouts();
+      mapBuilder3D?.refreshColors();
+    });
   els.savesBackButton.addEventListener("click", showMainMenu);
   els.settingsBackButton.addEventListener("click", () =>
     showGameMenu(settingsReturnView),
@@ -1494,7 +1540,7 @@ function createNetworkSnapshot() {
     gameConfig,
     Object.keys(DEFAULT_GAME_CONFIG),
   );
-  snapshot.terrain = { seed: activeTerrainSeed };
+  snapshot.terrain = { seed: activeTerrainSeed, mapId: selectedMapId };
   return snapshot;
 }
 
@@ -1537,10 +1583,11 @@ function applyNetworkSnapshot(snapshot, { cancelAnimations = true } = {}) {
     logs: state.logs,
   };
   gameConfig = { ...DEFAULT_GAME_CONFIG, ...snapshot.config };
-  selectedMapId = findMapPresetByDimensions(
-    gameConfig.cols,
-    gameConfig.rows,
-  ).id;
+  selectedMapId =
+    snapshot.terrain?.mapId &&
+    getMapPreset(snapshot.terrain.mapId).id === snapshot.terrain.mapId
+      ? snapshot.terrain.mapId
+      : findMapPresetByDimensions(gameConfig.cols, gameConfig.rows).id;
   activeTerrainSeed = snapshot.terrain?.seed ?? null;
   applyRuntimeRules();
   const game = cloneJson(snapshot.game);
@@ -1711,6 +1758,7 @@ function setMenuView(view) {
   els.menuSaves.hidden = view !== "saves";
   els.menuSettings.hidden = view !== "settings";
   els.menuPause.hidden = view !== "pause";
+  els.menuMapBuilder.hidden = view !== "map-builder";
 }
 
 function showGameMenu(view = "home") {
@@ -1855,8 +1903,122 @@ async function handleSavedMatchAction(event) {
   enterBattlefield();
 }
 
+function resetMapBuilder() {
+  const size = Number(els.mapBuilderSize.value) || 64;
+  const elevation = new Float32Array(size * size);
+  const trees = new Uint8Array(size * size);
+  for (let y = 0; y < size; y += 1)
+    for (let x = 0; x < size; x += 1) {
+      const broad =
+        Math.sin(x * 0.14) * 0.08 +
+        Math.cos(y * 0.11) * 0.08 +
+        Math.sin((x + y) * 0.055) * 0.09;
+      elevation[y * size + x] = Math.max(0, Math.min(1, 0.52 + broad));
+    }
+  mapBuilderState = { size, elevation, trees };
+  els.mapBuilderStatus.textContent = "Drag on the map to paint terrain.";
+  mapBuilder3D?.setMap(mapBuilderState);
+}
+
+function openMapBuilder() {
+  if (!mapBuilder3D)
+    mapBuilder3D = new MapBuilder3D(
+      els.mapBuilderCanvas,
+      () => ({
+        tool: els.mapBuilderTool.value,
+        mode: mapBuilderSculptMode,
+        radius: Number(els.mapBuilderBrush.value) || 1,
+        strength: Number(els.mapBuilderStrength.value) / 100,
+        height: Number(els.mapBuilderHeight.value) / 100,
+        water: Number(els.mapBuilderWater.value) / 100,
+        lowBoundary: Number(els.mapBuilderLowBoundary.value) / 100,
+        highBoundary: Number(els.mapBuilderHighBoundary.value) / 100,
+        lowColor: els.mapBuilderLowColor.value,
+        midColor: els.mapBuilderMidColor.value,
+        highColor: els.mapBuilderHighColor.value,
+      }),
+      {
+        onHeightPicked: (height) => {
+          els.mapBuilderHeight.value = String(Math.round(height * 100));
+          els.mapBuilderTool.value = "flatten";
+          els.mapBuilderPickHeight.classList.remove("active");
+          els.mapBuilderStatus.textContent =
+            `Flatten height sampled at ${height.toFixed(2)}. Drag to level terrain.`;
+          updateMapBuilderReadouts();
+        },
+      },
+    );
+  if (!mapBuilderState) resetMapBuilder();
+  else mapBuilder3D.setMap(mapBuilderState);
+  updateMapBuilderReadouts();
+  showGameMenu("map-builder");
+  requestAnimationFrame(() => mapBuilder3D?.resize());
+}
+
+function updateMapBuilderReadouts() {
+  els.mapBuilderStrengthValue.value =
+    `${Math.round(Number(els.mapBuilderStrength.value))}%`;
+  els.mapBuilderHeightValue.value = (
+    Number(els.mapBuilderHeight.value) / 100
+  ).toFixed(2);
+  els.mapBuilderWaterValue.value = (
+    Number(els.mapBuilderWater.value) / 100
+  ).toFixed(2);
+}
+
+async function saveMapBuilder() {
+  if (!mapBuilderState) return;
+  els.mapBuilderSave.disabled = true;
+  els.mapBuilderStatus.textContent = "Saving map terrain...";
+  const waterLevel = Number(els.mapBuilderWater.value) / 100;
+  let waterCount = 0;
+  for (const value of mapBuilderState.elevation)
+    if (value < waterLevel) waterCount += 1;
+  if (waterCount / mapBuilderState.elevation.length > 0.3) {
+    els.mapBuilderStatus.textContent =
+      "Water exceeds the 30% map limit. Raise terrain or lower water height.";
+    els.mapBuilderSave.disabled = false;
+    return;
+  }
+  const id = `custom-${Date.now().toString(36)}`;
+  const name = els.mapBuilderName.value.trim() || "CUSTOM FRONT";
+  const map = {
+    id,
+    name: name.toUpperCase(),
+    theater: "AUTHORED BATTLEFIELD",
+    cols: mapBuilderState.size,
+    rows: mapBuilderState.size,
+    preview: "custom",
+    description: "A locally authored terrain map.",
+    authoredTerrain: {
+      elevation: mapBuilderState.elevation,
+      treeDensity: mapBuilderState.trees,
+      waterLevel,
+      heightColors: {
+        low: els.mapBuilderLowColor.value,
+        mid: els.mapBuilderMidColor.value,
+        high: els.mapBuilderHighColor.value,
+        lowBoundary: Number(els.mapBuilderLowBoundary.value) / 100,
+        highBoundary: Number(els.mapBuilderHighBoundary.value) / 100,
+      },
+    },
+  };
+  try {
+    registerCustomMaps(await saveCustomMap(map));
+  } catch {
+    els.mapBuilderStatus.textContent =
+      "The browser could not save this map. Check available device storage.";
+    els.mapBuilderSave.disabled = false;
+    return;
+  }
+  selectedMapId = id;
+  renderMapOptions();
+  els.mapBuilderStatus.textContent = `${map.name} saved and ready to play.`;
+  els.mapBuilderSave.disabled = false;
+}
+
 function renderMapOptions() {
-  els.mapCardGrid.innerHTML = MAP_CATALOG.map((map, index) => {
+  els.mapCardGrid.innerHTML = allMapPresets().map((map, index) => {
     const selected = map.id === selectedMapId;
     const playable = isPlayableMap(map);
     const dimensions = map.tileCount
@@ -1971,7 +2133,14 @@ async function prepareBattlefieldAssets(mapId) {
   updateLoadingProgress(10, "TERRAIN · BUILDING COARSE PREVIEW");
   gameConfig = applyMapPreset(developerConfigStore.load(), mapId);
   activeTerrainSeed = null;
-  applyRuntimeRules({ resolutionScale: 0.08 });
+  const authoredTerrainData = map.authoredTerrain
+    ? createAuthoredTerrainData(map)
+    : null;
+  applyRuntimeRules(
+    authoredTerrainData
+      ? { terrain: hydrateTerrain(authoredTerrainData) }
+      : { resolutionScale: 0.08 },
+  );
   state = freshState();
   battlefieldView = null;
   syncConfigDependentUI();
@@ -1983,12 +2152,13 @@ async function prepareBattlefieldAssets(mapId) {
 
   const cacheKey = terrainCacheKey(map, activeTerrainSeed, map.terrainConfig);
   updateLoadingProgress(24, "TERRAIN · CHECKING SEED CACHE");
-  let serializedTerrain = null;
-  try {
-    serializedTerrain = await getCachedTerrain(cacheKey);
-  } catch (error) {
-    console.warn("Terrain cache read skipped.", error);
-  }
+  let serializedTerrain = authoredTerrainData;
+  if (!serializedTerrain)
+    try {
+      serializedTerrain = await getCachedTerrain(cacheKey);
+    } catch (error) {
+      console.warn("Terrain cache read skipped.", error);
+    }
   if (!serializedTerrain && activeTerrainSeed === map.id) {
     updateLoadingProgress(30, "TERRAIN · STREAMING PREBUILT HEIGHT FIELD");
     try {
@@ -4782,6 +4952,8 @@ function initializeBattlefield3D({
       showElevationValues: gameConfig.terrainDebugElevation,
       deferVegetation,
       deferFogClouds,
+      authoredTreeDensity: getMapPreset(selectedMapId).authoredTerrain
+        ?.treeDensity,
       resolvePlacementPreview: (x, y) => {
         const type = state.buildMode;
         const spec = BUILDINGS[type];
@@ -4890,6 +5062,12 @@ function initializeBattlefield3D({
 
 createStaticUI();
 renderSavedMatches();
+customMapsReady
+  .then((maps) => {
+    registerCustomMaps(maps);
+    renderMapOptions();
+  })
+  .catch((error) => console.warn("Custom maps could not be loaded.", error));
 document.body.classList.toggle(
   "reduced-motion",
   Boolean(readUiSettings().reducedMotion),
