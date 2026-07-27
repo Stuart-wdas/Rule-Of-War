@@ -278,6 +278,11 @@ let battlefieldViewUiSignature = "";
 let navigationMarkerHits = [];
 let navigationMapProjection = null;
 let navigationResizeFrame = null;
+let navigationRenderSignature = "";
+let navigationUiSignature = "";
+let navigationLastRenderTime = 0;
+const movementPathCache = new Map();
+let movementPathObstacleSignature = "";
 let selectedStructureId = null;
 let structurePopoverAnchor = null;
 const UNIT_COLLISION_RADIUS = 0.34;
@@ -855,20 +860,42 @@ function movementRoutePlan(actor, x, y, targetPoint = null) {
       totalMovementCost: localRoute.totalMovementCost,
     };
   }
-  const result = findTerrainPath({
-    graph: navigationGraph,
-    start: current,
-    goal: destination,
-    movementCostAt: (tile) =>
-      isStructureTileBlocked(tile.x, tile.y, {
-        x: actor.x,
-        y: actor.y,
-      })
-        ? Number.POSITIVE_INFINITY
-        : groundMovementCostAt(tile.x, tile.y),
-    distance,
-    maximumVisited: Math.max(10000, Math.min(runtimeMap.tileCount, 1000000)),
-  });
+  const obstacleSignature = [
+    ...state.structures.map(
+      (structure) =>
+        `${structure.id}:${structure.x}:${structure.y}:${structure.hp}`,
+    ),
+    ...state.jobs
+      .filter((job) => job.kind === "building")
+      .map((job) => `${job.id}:${job.x}:${job.y}`),
+  ].join("|");
+  if (obstacleSignature !== movementPathObstacleSignature) {
+    movementPathObstacleSignature = obstacleSignature;
+    movementPathCache.clear();
+  }
+  const cacheKey = `${current.id}>${destination.id}`;
+  let result = movementPathCache.get(cacheKey);
+  if (!result) {
+    result = findTerrainPath({
+      graph: navigationGraph,
+      start: current,
+      goal: destination,
+      movementCostAt: (tile) =>
+        isStructureTileBlocked(tile.x, tile.y, {
+          x: actor.x,
+          y: actor.y,
+        })
+          ? Number.POSITIVE_INFINITY
+          : groundMovementCostAt(tile.x, tile.y),
+      distance,
+      maximumVisited: Math.max(10000, Math.min(runtimeMap.tileCount, 1000000)),
+    });
+    if (result) {
+      if (movementPathCache.size >= 512)
+        movementPathCache.delete(movementPathCache.keys().next().value);
+      movementPathCache.set(cacheKey, result);
+    }
+  }
   if (!result || result.path.length < 2) return null;
 
   const continuousPath = smoothGroundPath(actor, result.path, destinationPoint);
@@ -3580,6 +3607,33 @@ function niceMapGridStep(span) {
 
 function renderTacticalNavigation(view) {
   if (!els.tacticalMap || !els.unitQuickNav || !runtimeMap || !view) return;
+  const selectedIds = selectedUnitIdSet();
+  const nextUiSignature = `${[...selectedIds].join(",")}:${els.navigationHud?.classList.contains("collapsed")}`;
+  const nextRenderSignature = [
+    nextUiSignature,
+    ...state.units.map(
+      (unit) =>
+        `${unit.id}:${Number(unit.worldX ?? unit.x).toFixed(1)}:${Number(unit.worldY ?? unit.y).toFixed(1)}:${unit.hp}`,
+    ),
+    ...state.structures.map(
+      (structure) =>
+        `${structure.id}:${structure.owner}:${structure.hp}`,
+    ),
+    ...view.visibilitySources.map(
+      (source) =>
+        `${source.id}:${source.x.toFixed(1)}:${source.y.toFixed(1)}:${source.radius}`,
+    ),
+  ].join("|");
+  if (nextRenderSignature === navigationRenderSignature) return;
+  const now = performance.now();
+  if (
+    nextUiSignature === navigationUiSignature &&
+    now - navigationLastRenderTime < 250
+  )
+    return;
+  navigationRenderSignature = nextRenderSignature;
+  navigationUiSignature = nextUiSignature;
+  navigationLastRenderTime = now;
   const friendlyUnits = state.units
     .filter((unit) => unit.owner === localOwner && UNIT_TYPES[unit.type])
     .sort((first, second) => {
@@ -3593,7 +3647,6 @@ function renderTacticalNavigation(view) {
         String(first.id).localeCompare(String(second.id))
       );
     });
-  const selectedIds = selectedUnitIdSet();
   els.navigationUnitCount.textContent = `${friendlyUnits.length} UNIT${friendlyUnits.length === 1 ? "" : "S"}`;
   els.unitQuickNav.innerHTML = friendlyUnits.length
     ? friendlyUnits

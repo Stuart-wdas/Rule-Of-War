@@ -81,6 +81,7 @@ export function createBattlefieldViewIndex({
         runtimeMap.tileByCoordinate.get(keyOf(piece.x, piece.y))?.center ??
         { x: piece.x, y: piece.y };
       visibilitySources.push({
+        id: piece.id,
         x: center.x,
         y: center.y,
         radius: visionRange,
