@@ -2378,8 +2378,17 @@ export class Battlefield3D {
   }
 
   _pieceMaterials(piece) {
-    const primary = piece.owner === 0 ? COLORS.player : COLORS.enemy;
-    const secondary = piece.owner === 0 ? COLORS.playerDark : COLORS.enemyDark;
+    const neutral = piece.owner < 0;
+    const primary = neutral
+      ? 0x777d72
+      : piece.owner === 0
+        ? COLORS.player
+        : COLORS.enemy;
+    const secondary = neutral
+      ? 0x404640
+      : piece.owner === 0
+        ? COLORS.playerDark
+        : COLORS.enemyDark;
     const pendingColor =
       piece.previewValid === false ? COLORS.target : COLORS.lime;
     const options = piece.pending
@@ -2486,8 +2495,15 @@ export class Battlefield3D {
         engineRight,
       );
       group.add(aircraftModel);
-    } else if (piece.type === "short" || piece.type === "commander") {
+    } else if (
+      piece.type === "short" ||
+      piece.type === "commander" ||
+      piece.type === "medic" ||
+      piece.type === "scout" ||
+      piece.type === "engineer"
+    ) {
       const isCommander = piece.type === "commander";
+      const isMedic = piece.type === "medic";
       const leftLeg = new THREE.Mesh(
         new THREE.BoxGeometry(0.09, 0.28, 0.1),
         materials.secondary,
@@ -2534,7 +2550,11 @@ export class Battlefield3D {
         : null;
       if (capBrim) capBrim.position.set(0.055, 0.795, 0);
       const weaponStock = new THREE.Mesh(
-        new THREE.BoxGeometry(isCommander ? 0.24 : 0.46, 0.055, 0.065),
+        new THREE.BoxGeometry(
+          isMedic ? 0.12 : isCommander ? 0.24 : 0.46,
+          0.055,
+          0.065,
+        ),
         isCommander ? materials.dark : materials.wood,
       );
       weaponStock.position.set(isCommander ? 0.13 : 0.17, 0.55, 0.17);
@@ -2543,7 +2563,7 @@ export class Battlefield3D {
         new THREE.CylinderGeometry(
           isCommander ? 0.018 : 0.014,
           isCommander ? 0.018 : 0.014,
-          isCommander ? 0.16 : 0.34,
+          isMedic ? 0.08 : isCommander ? 0.16 : 0.34,
           7,
         ),
         materials.dark,
@@ -2556,6 +2576,21 @@ export class Battlefield3D {
             materials.pale,
           )
         : null;
+      const medicalMark = isMedic
+        ? new THREE.Mesh(
+            new THREE.BoxGeometry(0.025, 0.16, 0.055),
+            new THREE.MeshBasicMaterial({ color: 0xf2f0dc }),
+          )
+        : null;
+      const medicalMarkCross = isMedic
+        ? new THREE.Mesh(
+            new THREE.BoxGeometry(0.025, 0.055, 0.16),
+            new THREE.MeshBasicMaterial({ color: 0xf2f0dc }),
+          )
+        : null;
+      if (medicalMark) medicalMark.position.set(-0.225, 0.52, 0);
+      if (medicalMarkCross)
+        medicalMarkCross.position.set(-0.226, 0.52, 0);
       if (insignia) insignia.position.set(0.135, 0.56, -0.065);
       let commandStar = null;
       if (isCommander) {
@@ -2594,8 +2629,10 @@ export class Battlefield3D {
       );
       if (capBrim) group.add(capBrim);
       if (insignia) group.add(insignia);
+      if (medicalMark) group.add(medicalMark);
+      if (medicalMarkCross) group.add(medicalMarkCross);
       if (commandStar) group.add(commandStar);
-    } else if (piece.type === "medium") {
+    } else if (piece.type === "medium" || piece.type === "antiAir") {
       const leftTrack = new THREE.Mesh(
         new THREE.BoxGeometry(0.62, 0.18, 0.13),
         materials.dark,
@@ -2823,7 +2860,24 @@ export class Battlefield3D {
     foundation.position.y = 0.09;
     group.add(foundation);
 
-    if (piece.type === "airfield") {
+    if (piece.type === "objective") {
+      const mast = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.035, 0.05, 1.85, 8),
+        materials.pale,
+      );
+      mast.position.y = 1;
+      const flag = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.82, 0.48),
+        materials.primary,
+      );
+      flag.position.set(0.42, 1.65, 0);
+      const beacon = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.18, 0.28, 0.32, 8),
+        materials.secondary,
+      );
+      beacon.position.y = 0.26;
+      group.add(mast, flag, beacon);
+    } else if (piece.type === "airfield") {
       const runway = new THREE.Mesh(
         new THREE.BoxGeometry(modelWidth * 0.58, 0.055, modelDepth * 0.42),
         materials.dark,
@@ -2908,6 +2962,24 @@ export class Battlefield3D {
         tower,
         towerCab,
       );
+    } else if (piece.type === "fieldHospital") {
+      const tent = new THREE.Mesh(
+        new THREE.CylinderGeometry(span * 0.34, span * 0.52, 0.82, 4),
+        materials.canvas,
+      );
+      tent.position.y = 0.52;
+      tent.rotation.y = Math.PI / 4;
+      const crossVertical = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 0.42, 0.05),
+        materials.pale,
+      );
+      crossVertical.position.set(0, 0.62, span * 0.49);
+      const crossHorizontal = new THREE.Mesh(
+        new THREE.BoxGeometry(0.32, 0.09, 0.05),
+        materials.pale,
+      );
+      crossHorizontal.position.copy(crossVertical.position);
+      group.add(tent, crossVertical, crossHorizontal);
     } else if (piece.type === "watchtower") {
       const legs = [];
       for (const x of [-0.27, 0.27])

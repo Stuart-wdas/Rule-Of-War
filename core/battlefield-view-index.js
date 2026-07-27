@@ -111,7 +111,8 @@ export function createBattlefieldViewIndex({
     for (const commander of state.units) {
       if (
         commander.owner !== localOwner ||
-        commander.type !== "commander" ||
+        (commander.type !== "commander" &&
+          unitTypes[commander.type]?.engineer !== true) ||
         (state.bridgeStart?.commanderId &&
           commander.id !== state.bridgeStart.commanderId)
       )

@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#171b18" />
     <meta
       name="description"
-      content="Result of War — a turn-based battlefield strategy game." />
-    <title>Result of War</title>
+      content="Rule of War — a turn-based battlefield strategy game." />
+    <title>Rule of War</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
     <script type="importmap">
@@ -29,10 +29,10 @@
         aria-modal="true"
         aria-labelledby="menu-title">
         <header class="menu-header">
-          <div class="brand menu-brand" aria-label="Result of War">
+          <div class="brand menu-brand" aria-label="Rule of War">
             <span class="brand-mark" aria-hidden="true">R</span>
             <span>
-              <strong>RESULT <i>OF</i> WAR</strong>
+              <strong>RULE <i>OF</i> WAR</strong>
               <small>FIELD COMMAND</small>
             </span>
           </div>
@@ -97,12 +97,55 @@
               <span>MAP BUILDER</span
               ><small>PAINT AND SAVE A CUSTOM BATTLEFIELD</small>
             </button>
+            <button id="world-campaign-button" type="button">
+              <span>WORLD CAMPAIGN</span
+              ><small>CAPTURE A PERSISTENT MULTI-SECTOR FRONT</small>
+            </button>
           </div>
 
           <div class="menu-doctrine">
             <span><b>04</b> COMMAND PHASES</span>
             <span><b>02</b> SYNCHRONIZED PLAYERS</span>
             <span><b>&infin;</b> SAVED CHECKPOINTS</span>
+          </div>
+        </section>
+
+        <section class="menu-view world-campaign-menu" id="menu-world" hidden>
+          <div class="world-campaign-header">
+            <button class="menu-back" id="world-back-button" type="button">
+              <span>&larr;</span> MAIN MENU
+            </button>
+            <div>
+              <span class="eyebrow">STRATEGIC COMMAND</span>
+              <h2>WORLD CAMPAIGN.</h2>
+              <p>
+                Select a sector, enter its tactical battlefield, and expand
+                the front. Logistics remain automatic.
+              </p>
+            </div>
+          </div>
+          <div class="world-campaign-layout">
+            <div
+              class="world-sector-grid"
+              id="world-sector-grid"
+              aria-label="Strategic campaign sectors"></div>
+            <aside class="world-sector-panel">
+              <small id="world-sector-biome">SELECT A SECTOR</small>
+              <h3 id="world-sector-name">THEATER OVERVIEW</h3>
+              <p id="world-sector-description">
+                Owned sectors provide supply automatically. Capture neutral or
+                hostile sectors to extend the front.
+              </p>
+              <dl>
+                <div><dt>CONTROL</dt><dd id="world-sector-owner">UNCLAIMED</dd></div>
+                <div><dt>OBJECTIVE</dt><dd id="world-sector-objective">—</dd></div>
+                <div><dt>SUPPLY</dt><dd id="world-sector-supply">—</dd></div>
+              </dl>
+              <button id="world-enter-sector" class="primary-action" type="button" disabled>
+                ENTER SECTOR
+              </button>
+              <button id="world-new-campaign" type="button">RESET WORLD</button>
+            </aside>
           </div>
         </section>
 
@@ -651,7 +694,7 @@
         </section>
 
         <footer class="menu-footer">
-          <span>RESULT OF WAR / FIELD COMMAND</span>
+          <span>RULE OF WAR / FIELD COMMAND</span>
           <span>LOCAL STATE + SERVER CHECKPOINT</span>
         </footer>
       </main>
@@ -659,10 +702,10 @@
 
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="#" aria-label="Result of War home">
+        <a class="brand" href="#" aria-label="Rule of War home">
           <span class="brand-mark" aria-hidden="true">R</span>
           <span>
-            <strong>RESULT <i>OF</i> WAR</strong>
+            <strong>RULE <i>OF</i> WAR</strong>
             <small>FIELD COMMAND</small>
           </span>
         </a>
@@ -1044,6 +1087,21 @@
                         ><small>Builds aircraft</small></span
                       >
                       <b>◆ 25</b>
+                    </button>
+                    <button
+                      class="purchase-card"
+                      data-build="fieldHospital"
+                      type="button">
+                      <span
+                        class="purchase-icon field-hospital"
+                        aria-hidden="true"
+                        >FH</span
+                      >
+                      <span
+                        ><strong>FIELD HOSPITAL</strong
+                        ><small>Automatic nearby healing</small></span
+                      >
+                      <b>◆ 30</b>
                     </button>
                     <button
                       class="purchase-card"

@@ -213,7 +213,7 @@ export function registerCustomMaps(maps = []) {
   customMapCatalog.splice(0, customMapCatalog.length);
   for (const map of maps)
     if (
-      map?.id?.startsWith("custom-") &&
+      /^custom-[a-z0-9-]+$/i.test(map?.id) &&
       Number.isInteger(map.cols) &&
       Number.isInteger(map.rows)
     )

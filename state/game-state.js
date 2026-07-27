@@ -12,6 +12,10 @@ export function createUnit(
   movementRange = UNIT_TYPES[type].movementRange,
   damage = UNIT_TYPES[type].damage,
 ) {
+  const formationStrength = Math.max(
+    1,
+    Number(UNIT_TYPES[type].formationStrength) || 1,
+  );
   return {
     id,
     type,
@@ -24,6 +28,8 @@ export function createUnit(
     damage,
     movedThisRound: false,
     attackActionsUsed: 0,
+    strength: formationStrength,
+    maxStrength: formationStrength,
   };
 }
 
@@ -139,6 +145,7 @@ export function createFreshState({
   createId,
   deploymentByOwner,
   getBuildingFootprint,
+  objectiveCells = [],
 }) {
   const startingForces = createStartingForces({
     config,
@@ -148,12 +155,26 @@ export function createFreshState({
     deploymentByOwner,
     getBuildingFootprint,
   });
+  for (const [index, cell] of objectiveCells.entries())
+    startingForces.structures.push(
+      createStructure(
+        "objective",
+        -1,
+        cell.x,
+        cell.y,
+        createId("cp"),
+        false,
+        [{ x: cell.x, y: cell.y }],
+      ),
+    );
   return {
     round: 1,
     phase: "deployment",
     resolving: false,
     resolutionStep: null,
     winner: null,
+    objectiveControl: { owner: null, rounds: 0 },
+    objectiveWinner: null,
     selectedId: null,
     selectedIds: [],
     intent: null,

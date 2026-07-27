@@ -51,6 +51,7 @@ import {
   terrainGameplayProperties,
 } from "./maps/procedural-terrain.js";
 import { findTerrainPath } from "./terrain/terrain-pathfinding.js";
+import { createChunkedTerrainSampler } from "./terrain/chunked-terrain.js";
 import { hydrateTerrain } from "./terrain/terrain-generator.js";
 import {
   cacheTerrain,
@@ -58,6 +59,11 @@ import {
 } from "./terrain/terrain-cache.js";
 import { loadPrebuiltTerrain } from "./terrain/terrain-binary.js";
 import { createFreshState } from "./state/game-state.js";
+import { createEntityIndex } from "./simulation/entity-index.js";
+import {
+  applySectorOutcome,
+  createWorldState,
+} from "./simulation/world-state.js";
 import { SavedMatchStore } from "./storage/saved-match-store.js";
 import {
   loadCustomMaps,
@@ -75,11 +81,17 @@ let runtimeMap = null;
 let terrainSampler = null;
 let terrainGenerator = null;
 let terrainTileCache = new Map();
+let activeTerrainModifications = [];
+let pendingTerrainSeed = null;
+let worldState = null;
+let selectedWorldSectorId = null;
+let activeWorldSectorId = null;
 const customMapsReady = loadCustomMaps();
 
 const CONFIG_STORAGE_KEY = "result-of-war:developer-config:v1";
 const MATCH_STORAGE_KEY = "result-of-war:saved-matches:v1";
 const UI_SETTINGS_STORAGE_KEY = "result-of-war:ui-settings:v1";
+const WORLD_STORAGE_KEY = "result-of-war:world:v1";
 const MAX_DETAILED_TILES = 30000;
 const MAX_FALLBACK_TILES = 2000;
 const VIRTUAL_RENDER_THRESHOLD = 20000;
@@ -125,7 +137,6 @@ function isInteractionLocked() {
     Boolean(state.winner) ||
     (isHumanGame() &&
       (!multiplayer.connected ||
-        !multiplayer.opponentConnected ||
         multiplayer.localReady ||
         multiplayer.synchronizing))
   );
@@ -144,15 +155,21 @@ function applyRuntimeRules({ terrain = null, resolutionScale = 1 } = {}) {
   activeTerrainSeed ??= runtimeMap.id ?? selectedMapId;
   if (terrain) {
     terrainGenerator = terrain;
-    terrainSampler = (x, y) => terrain.sample(x, y);
-    terrainSampler.terrain = terrain;
+    const baseSampler = (x, y) => terrain.sample(x, y);
+    baseSampler.terrain = terrain;
+    terrainSampler = createChunkedTerrainSampler(baseSampler, {
+      modifications: activeTerrainModifications,
+    });
   } else {
-    terrainSampler = createTerrainSampler(
+    const baseSampler = createTerrainSampler(
       runtimeMap.bounds,
       activeTerrainSeed,
       { ...preset.terrainConfig, resolutionScale },
     );
-    terrainGenerator = terrainSampler.terrain;
+    terrainGenerator = baseSampler.terrain;
+    terrainSampler = createChunkedTerrainSampler(baseSampler, {
+      modifications: activeTerrainModifications,
+    });
   }
   terrainTileCache = new Map();
   navigationGraph = runtimeMap.graph;
@@ -168,6 +185,15 @@ function axisLabels(count, formatLabel) {
       (index % step === 0 && last - index >= step);
     return `<span class="${visible ? "axis-label-visible" : "axis-label-minor"}">${visible ? formatLabel(index) : ""}</span>`;
   }).join("");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function freshState() {
@@ -192,10 +218,35 @@ function freshState() {
         ? footprint
         : [];
     },
+    objectiveCells: [0.25, 0.5, 0.75].flatMap((ratio) => {
+      const target = {
+        x: Math.floor(COLS / 2),
+        y: Math.floor((ROWS - 1) * ratio),
+      };
+      for (let radius = 0; radius <= 12; radius += 1)
+        for (let offsetY = -radius; offsetY <= radius; offsetY += 1)
+          for (let offsetX = -radius; offsetX <= radius; offsetX += 1) {
+            const x = target.x + offsetX;
+            const y = target.y + offsetY;
+            const terrain = terrainProperties(x, y);
+            if (
+              navigationGraph.resolve({ x, y }) &&
+              terrain.passable &&
+              !terrain.water
+            )
+              return [{ x, y }];
+          }
+      return [];
+    }),
   });
 }
 
 let state = freshState();
+let entityIndex = null;
+let indexedUnits = null;
+let indexedStructures = null;
+let indexedUnitCount = -1;
+let indexedStructureCount = -1;
 let battlefield3D = null;
 let battlefieldView = null;
 let navigationMarkerHits = [];
@@ -239,6 +290,17 @@ const movementController = new MovementController({
   coord,
   log,
   pause,
+  modifyTerrain: (x, y, effect) => {
+    if (!terrainSampler?.setModification) return;
+    const current = terrainSampler(x, y);
+    terrainSampler.setModification(x, y, {
+      crater: Boolean(effect.crater),
+      movementCost: Number.isFinite(current.movementCost)
+        ? current.movementCost + (effect.movementCostDelta ?? 0)
+        : current.movementCost,
+    });
+    terrainTileCache.delete(`${x},${y}`);
+  },
 });
 
 const combatController = new CombatController({
@@ -869,12 +931,18 @@ function isFootprintClear(
 
 function getAttackTarget(x, y, actor, targetId = null) {
   const hostile = piecesAt(x, y, false).filter(
-    (piece) => piece.owner !== actor.owner && piece.hp > 0,
+    (piece) =>
+      piece.owner !== actor.owner &&
+      piece.hp > 0 &&
+      BUILDINGS[piece.type]?.capturable !== true,
   );
   const locked = targetId
     ? [...state.units, ...state.structures].find(
         (piece) =>
-          piece.id === targetId && piece.owner !== actor.owner && piece.hp > 0,
+          piece.id === targetId &&
+          piece.owner !== actor.owner &&
+          piece.hp > 0 &&
+          BUILDINGS[piece.type]?.capturable !== true,
       )
     : null;
   if (locked) return locked;
@@ -896,11 +964,28 @@ function isPieceVisible(piece, view = battlefieldView) {
 }
 
 function getUnit(id) {
-  return state.units.find((item) => item.id === id);
+  return ensureEntityIndex().unit(id);
 }
 
 function getStructure(id) {
-  return state.structures.find((item) => item.id === id);
+  return ensureEntityIndex().structure(id);
+}
+
+function ensureEntityIndex() {
+  if (
+    !entityIndex ||
+    indexedUnits !== state.units ||
+    indexedStructures !== state.structures ||
+    indexedUnitCount !== state.units.length ||
+    indexedStructureCount !== state.structures.length
+  ) {
+    entityIndex = createEntityIndex(state);
+    indexedUnits = state.units;
+    indexedStructures = state.structures;
+    indexedUnitCount = state.units.length;
+    indexedStructureCount = state.structures.length;
+  }
+  return entityIndex;
 }
 
 function movementRangeFor(unitItem) {
@@ -940,13 +1025,16 @@ function canQueueUnitOrder(unitItem, kind) {
 
 function damageFor(unitItem) {
   const damage = unitItem?.damage ?? UNIT_TYPES[unitItem?.type]?.damage;
-  return Number.isInteger(damage) && damage > 0 ? damage : 1;
+  return Number.isInteger(damage) && damage >= 0 ? damage : 1;
 }
 
 function canUnitAttack(unitItem) {
+  const spec = UNIT_TYPES[unitItem?.type];
   return (
     Boolean(unitItem) &&
-    UNIT_TYPES[unitItem.type]?.automaticAttack !== true &&
+    spec?.automaticAttack !== true &&
+    (spec?.damage ?? 0) > 0 &&
+    (spec?.range ?? 0) > 0 &&
     unitItem.movedThisRound !== true
   );
 }
@@ -1255,6 +1343,11 @@ function createStaticUI() {
   els.mainSavesButton.addEventListener("click", () => showGameMenu("saves"));
   els.mainSettingsButton.addEventListener("click", () => openSettings("home"));
   els.mainMapBuilderButton.addEventListener("click", openMapBuilder);
+  els.worldCampaignButton.addEventListener("click", openWorldCampaign);
+  els.worldBackButton.addEventListener("click", showMainMenu);
+  els.worldSectorGrid.addEventListener("click", handleWorldSectorSelection);
+  els.worldEnterSector.addEventListener("click", enterSelectedWorldSector);
+  els.worldNewCampaign.addEventListener("click", resetWorldCampaign);
   els.mapBuilderBack.addEventListener("click", showMainMenu);
   els.mapBuilderSize.addEventListener("change", resetMapBuilder);
   els.mapBuilderClear.addEventListener("click", resetMapBuilder);
@@ -1511,7 +1604,8 @@ function applyDeveloperSettings(event) {
   campaignVersion += 1;
   gameConfig = config;
   developerConfigStore.save(gameConfig);
-  activeTerrainSeed = null;
+  activeTerrainSeed = pendingTerrainSeed;
+  pendingTerrainSeed = null;
   applyRuntimeRules();
   state = freshState();
   els.resultModal.hidden = true;
@@ -1541,6 +1635,8 @@ function createNetworkSnapshot() {
     Object.keys(DEFAULT_GAME_CONFIG),
   );
   snapshot.terrain = { seed: activeTerrainSeed, mapId: selectedMapId };
+  snapshot.terrain.modifications =
+    terrainSampler?.serializeModifications?.() ?? [];
   return snapshot;
 }
 
@@ -1589,8 +1685,19 @@ function applyNetworkSnapshot(snapshot, { cancelAnimations = true } = {}) {
       ? snapshot.terrain.mapId
       : findMapPresetByDimensions(gameConfig.cols, gameConfig.rows).id;
   activeTerrainSeed = snapshot.terrain?.seed ?? null;
+  activeTerrainModifications = Array.isArray(snapshot.terrain?.modifications)
+    ? cloneJson(snapshot.terrain.modifications)
+    : [];
   applyRuntimeRules();
   const game = cloneJson(snapshot.game);
+  for (const unit of game.units) {
+    const maximum = Math.max(
+      1,
+      Number(UNIT_TYPES[unit.type]?.formationStrength) || 1,
+    );
+    if (!Number.isInteger(unit.maxStrength)) unit.maxStrength = maximum;
+    if (!Number.isInteger(unit.strength)) unit.strength = unit.maxStrength;
+  }
   for (const structure of game.structures) {
     if (
       structure.type === "bridge" &&
@@ -1729,7 +1836,12 @@ function savedMatchMarkup(saved) {
         ? "LOCAL CHECKPOINT"
         : date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
       const solo = item.mode === "ai";
-      return `<article class="saved-match-card"><span><strong>${solo ? "SOLO OPERATION" : item.code} · ROUND ${String(item.round || 1).padStart(2, "0")}</strong><small>${solo ? "FIELD COMMAND" : item.owner === 0 ? "HOST COMMAND" : "SECOND COMMAND"} · ${String(item.phase || "deployment").toUpperCase()} · ${dateLabel}</small></span><button type="button" ${solo ? "data-resume-local" : "data-resume-code=\"" + item.code + "\""} data-resume-token="${item.token}">RESUME</button><button class="delete-save" type="button" data-delete-code="${item.code}" data-delete-token="${item.token}" aria-label="Remove saved operation">×</button></article>`;
+      const code = escapeHtml(item.code);
+      const token = escapeHtml(item.token);
+      const phase = escapeHtml(
+        String(item.phase || "deployment").toUpperCase(),
+      );
+      return `<article class="saved-match-card"><span><strong>${solo ? "SOLO OPERATION" : code} · ROUND ${String(item.round || 1).padStart(2, "0")}</strong><small>${solo ? "FIELD COMMAND" : item.owner === 0 ? "HOST COMMAND" : "SECOND COMMAND"} · ${phase} · ${escapeHtml(dateLabel)}</small></span><button type="button" ${solo ? "data-resume-local" : `data-resume-code="${code}"`} data-resume-token="${token}">RESUME</button><button class="delete-save" type="button" data-delete-code="${code}" data-delete-token="${token}" aria-label="Remove saved operation">×</button></article>`;
     })
     .join("");
 }
@@ -1759,6 +1871,121 @@ function setMenuView(view) {
   els.menuSettings.hidden = view !== "settings";
   els.menuPause.hidden = view !== "pause";
   els.menuMapBuilder.hidden = view !== "map-builder";
+  els.menuWorld.hidden = view !== "world";
+}
+
+function loadWorldCampaign() {
+  if (worldState) return worldState;
+  try {
+    const saved = JSON.parse(localStorage.getItem(WORLD_STORAGE_KEY));
+    worldState =
+      saved?.schema === 1 && Array.isArray(saved.sectors)
+        ? saved
+        : createWorldState();
+  } catch {
+    worldState = createWorldState();
+  }
+  return worldState;
+}
+
+function saveWorldCampaign() {
+  try {
+    localStorage.setItem(WORLD_STORAGE_KEY, JSON.stringify(worldState));
+  } catch {
+    // The active campaign remains playable when storage is unavailable.
+  }
+}
+
+function openWorldCampaign() {
+  loadWorldCampaign();
+  selectedWorldSectorId ??=
+    worldState.sectors.find((sector) => sector.owner === null)?.id ??
+    worldState.sectors[0]?.id;
+  renderWorldCampaign();
+  showGameMenu("world");
+}
+
+function resetWorldCampaign() {
+  worldState = createWorldState({
+    seed: globalThis.crypto?.randomUUID?.() ?? Date.now(),
+  });
+  selectedWorldSectorId = worldState.sectors[0]?.id ?? null;
+  saveWorldCampaign();
+  renderWorldCampaign();
+}
+
+function renderWorldCampaign() {
+  if (!worldState) return;
+  const factions = new Map(
+    worldState.factions.map((faction) => [faction.id, faction]),
+  );
+  els.worldSectorGrid.style.setProperty("--world-cols", worldState.width);
+  els.worldSectorGrid.replaceChildren(
+    ...worldState.sectors.map((sector) => {
+      const button = document.createElement("button");
+      const faction = factions.get(sector.owner);
+      button.type = "button";
+      button.className = [
+        "world-sector",
+        sector.owner === null ? "neutral" : `owner-${sector.owner}`,
+        sector.contested ? "contested" : "",
+        sector.id === selectedWorldSectorId ? "selected" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      button.dataset.sectorId = sector.id;
+      button.style.setProperty("--sector-color", faction?.color ?? "#6f7568");
+      const biome = document.createElement("small");
+      biome.textContent = sector.biome.toUpperCase();
+      const number = document.createElement("strong");
+      number.textContent = String(
+        sector.y * worldState.width + sector.x + 1,
+      ).padStart(2, "0");
+      const owner = document.createElement("span");
+      owner.textContent = faction?.name ?? "UNCLAIMED";
+      button.append(biome, number, owner);
+      return button;
+    }),
+  );
+  const sector = worldState.sectors.find(
+    (item) => item.id === selectedWorldSectorId,
+  );
+  const faction = sector ? factions.get(sector.owner) : null;
+  els.worldSectorBiome.textContent = sector
+    ? sector.biome.toUpperCase()
+    : "SELECT A SECTOR";
+  els.worldSectorName.textContent = sector?.name ?? "THEATER OVERVIEW";
+  els.worldSectorDescription.textContent = sector
+    ? `A deterministic ${sector.biome} battlefield. Victory captures this sector and updates the persistent campaign.`
+    : "Select a sector to review its strategic status.";
+  els.worldSectorOwner.textContent = faction?.name ?? "UNCLAIMED";
+  els.worldSectorObjective.textContent = (sector?.objective ?? "—")
+    .replaceAll("-", " ")
+    .toUpperCase();
+  els.worldSectorSupply.textContent = sector
+    ? sector.supply
+      ? "CONNECTED"
+      : "ISOLATED"
+    : "—";
+  els.worldEnterSector.disabled = !sector;
+}
+
+function handleWorldSectorSelection(event) {
+  const button = event.target.closest("[data-sector-id]");
+  if (!button) return;
+  selectedWorldSectorId = button.dataset.sectorId;
+  renderWorldCampaign();
+}
+
+async function enterSelectedWorldSector() {
+  const sector = worldState?.sectors.find(
+    (item) => item.id === selectedWorldSectorId,
+  );
+  if (!sector) return;
+  activeWorldSectorId = sector.id;
+  pendingTerrainSeed = sector.terrainSeed;
+  activeTerrainModifications = cloneJson(sector.modifications ?? []);
+  await startAiCampaign(DEFAULT_MAP_ID);
 }
 
 function showGameMenu(view = "home") {
@@ -1793,6 +2020,8 @@ function leaveToMainMenu() {
   gameMode = "menu";
   localOwner = 0;
   multiplayer = createEmptyMultiplayerState();
+  activeWorldSectorId = null;
+  activeTerrainModifications = [];
   els.resultModal.hidden = true;
   showMainMenu();
   render();
@@ -2021,18 +2250,22 @@ function renderMapOptions() {
   els.mapCardGrid.innerHTML = allMapPresets().map((map, index) => {
     const selected = map.id === selectedMapId;
     const playable = isPlayableMap(map);
+    const safeMapId = escapeHtml(map.id);
+    const safePreview = /^[a-z0-9-]+$/i.test(map.preview)
+      ? map.preview
+      : "topology";
     const dimensions = map.tileCount
       ? `${map.tileCount} ${map.layout === "hex-odd-q" ? "HEX" : "MIXED"} TILES`
       : playable
         ? `${map.cols} × ${map.rows}`
         : "INVALID MAP";
     return `
-      <button class="map-card${selected ? " selected" : ""}${playable ? "" : " topology-only"}" type="button" data-map-id="${map.id}" aria-pressed="${selected}">
-        <span class="map-preview map-preview-${map.preview ?? "topology"}" aria-hidden="true"><i></i><i></i><i></i></span>
+      <button class="map-card${selected ? " selected" : ""}${playable ? "" : " topology-only"}" type="button" data-map-id="${safeMapId}" aria-pressed="${selected}">
+        <span class="map-preview map-preview-${safePreview}" aria-hidden="true"><i></i><i></i><i></i></span>
         <span class="map-card-copy">
-          <small>${String(index + 1).padStart(2, "0")} / ${map.theater ?? "CUSTOM TOPOLOGY"}</small>
-          <strong>${map.name}</strong>
-          <span>${map.description ?? "A mixed-polygon battlefield awaiting renderer support."}</span>
+          <small>${String(index + 1).padStart(2, "0")} / ${escapeHtml(map.theater ?? "CUSTOM TOPOLOGY")}</small>
+          <strong>${escapeHtml(map.name)}</strong>
+          <span>${escapeHtml(map.description ?? "A mixed-polygon battlefield awaiting renderer support.")}</span>
         </span>
         <b>${dimensions}</b>
       </button>
@@ -2264,6 +2497,7 @@ function enterBattlefield() {
 
 async function startAiCampaign(mapId = selectedMapId) {
   closeMatchSocket(true);
+  if (!activeWorldSectorId) activeTerrainModifications = [];
   gameMode = "ai";
   localOwner = 0;
   multiplayer = createEmptyMultiplayerState();
@@ -2414,8 +2648,8 @@ function handleMatchMessage(message) {
       handleSessionMessage(message);
       break;
     case "state-update":
-      if (applyNetworkSnapshot(message.state, { cancelAnimations: false })) {
-        saveMatchReference(message.state);
+      if (message.source === "plan" && applyPlanDelta(message)) {
+        saveMatchReference();
         render();
       }
       break;
@@ -2594,6 +2828,27 @@ function sendPlanUpdate() {
   });
 }
 
+function applyPlanDelta(message) {
+  const owner = Number(message.playerIndex);
+  if (
+    (owner !== 0 && owner !== 1) ||
+    !Array.isArray(message.jobs) ||
+    !Array.isArray(message.orders) ||
+    !Number.isFinite(message.resources)
+  )
+    return false;
+  state.jobs = [
+    ...state.jobs.filter((item) => item.owner !== owner),
+    ...cloneJson(message.jobs),
+  ];
+  state.orders = [
+    ...state.orders.filter((item) => item.owner !== owner),
+    ...cloneJson(message.orders),
+  ];
+  state.players[owner].resources = message.resources;
+  return true;
+}
+
 function setMultiplayerReady() {
   if (isInteractionLocked()) return;
   sendPlanUpdate();
@@ -2664,8 +2919,11 @@ function handleCheckpoint(message) {
   multiplayer.localReady = false;
   multiplayer.remoteReady = false;
   saveMatchReference(message.state);
-  if (message.hashesMatch === false)
-    log("State divergence corrected from the host checkpoint.", true);
+  if (message.rejected)
+    log(
+      "Phase results diverged. The server restored the pre-resolution checkpoint; submit the phase again.",
+      true,
+    );
   render();
 }
 
@@ -2745,6 +3003,8 @@ function structureDescription(structure) {
     return `Builds, launches, and recovers up to ${BUILDINGS.airfield.aircraftCapacity} bombers assigned to this airfield.`;
   if (structure.type === "mine")
     return `Feeds the supply network with ◆ ${gameConfig.mineIncome} at the end of every round.`;
+  if (structure.type === "fieldHospital")
+    return "Automatically restores one nearby friendly formation after each round.";
   if (structure.type === "bridge")
     return "Creates an operational crossing that allows ground units to traverse water cells.";
   if (structure.type === "watchtower")
@@ -3835,7 +4095,7 @@ function renderSelected() {
       (unit) => !canQueueUnitOrder(unit, "move"),
     ).length;
     els.selectedCard.className = "selected-card";
-    els.selectedCard.innerHTML = `<span class="selected-unit-icon">${group.length}</span><span><strong>PLATOON SELECTED</strong><small>${group.length} unit${group.length === 1 ? "" : "s"} Â· â—† ${totalMoveCost} to move all Â· Shift-click to add/remove</small></span>`;
+    els.selectedCard.innerHTML = `<span class="selected-unit-icon">${group.length}</span><span><strong>PLATOON SELECTED</strong><small>${group.length} unit${group.length === 1 ? "" : "s"} · ◆ ${totalMoveCost} to move all · Shift-click to add/remove</small></span>`;
     els.moveButton.disabled =
       state.phase !== "orders" ||
       !groundGroup ||
@@ -3864,7 +4124,11 @@ function renderSelected() {
     const ammunitionStatus = totalShots
       ? ` · AMMO ${Math.max(0, orderLimit - orderCount)}/${totalShots}`
       : "";
-    els.selectedCard.innerHTML = `<span class="selected-unit-icon">${spec.mark}</span><span><strong>${spec.label} UNIT · ${coord(selected.x, selected.y)}</strong><small>${selected.hp}/${spec.lives} HP · ${damageFor(selected)} DMG · ◆ ${spec.actionCost} per ${selectedIsAirUnit ? "run" : "action"}${ammunitionStatus}${queuedStatus}${movementStatus}</small></span>`;
+    const formationStatus =
+      Number.isInteger(selected.strength) && selected.maxStrength > 1
+        ? ` · ${selected.strength}/${selected.maxStrength} STRENGTH`
+        : "";
+    els.selectedCard.innerHTML = `<span class="selected-unit-icon">${spec.mark}</span><span><strong>${spec.label} UNIT · ${coord(selected.x, selected.y)}</strong><small>${selected.hp}/${spec.lives} HP${formationStatus} · ${damageFor(selected)} DMG · ◆ ${spec.actionCost} per ${selectedIsAirUnit ? "run" : "action"}${ammunitionStatus}${queuedStatus}${movementStatus}</small></span>`;
     els.moveButton.disabled =
       state.phase !== "orders" ||
       hasOrder ||
@@ -4048,20 +4312,21 @@ function renderLog() {
     .join("");
 }
 
+function isFieldBuilder(unit, owner = localOwner) {
+  return Boolean(
+    unit &&
+      unit.owner === owner &&
+      unit.hp > 0 &&
+      (unit.type === "commander" || UNIT_TYPES[unit.type]?.engineer === true),
+  );
+}
+
 function renderPurchases() {
   const deployment = state.phase === "deployment";
-  const selectedCommander = getUnit(state.selectedId);
-  const commanderSelected = Boolean(
-    selectedCommander?.owner === localOwner &&
-      selectedCommander.type === "commander" &&
-      selectedCommander.hp > 0,
-  );
+  const builderSelected = isFieldBuilder(getUnit(state.selectedId));
   if (els.commanderConstruction)
-    els.commanderConstruction.hidden = true;
-  const hasCommander = state.units.some(
-    (item) =>
-      item.owner === localOwner && item.type === "commander" && item.hp > 0,
-  );
+    els.commanderConstruction.hidden = !builderSelected;
+  const hasBuilder = state.units.some((item) => isFieldBuilder(item));
   document.querySelectorAll("[data-build]").forEach((button) => {
     const type = button.dataset.build;
     const spec = BUILDINGS[type];
@@ -4071,12 +4336,12 @@ function renderPurchases() {
     button.disabled =
       !deployment ||
       isInteractionLocked() ||
-      (spec.commanderOnly && (!hasCommander || !commanderSelected)) ||
+      (spec.commanderOnly && (!hasBuilder || !builderSelected)) ||
       state.players[localOwner].resources < minimumPrice;
     button.classList.toggle("active", state.buildMode === type);
     button.title =
-      spec.commanderOnly && !commanderSelected
-        ? "Select a surviving commander to construct this."
+      spec.commanderOnly && !builderSelected
+        ? "Select a surviving commander or engineer to construct this."
         : "";
   });
 }
@@ -4086,16 +4351,13 @@ function chooseBuild(type) {
   const minimumPrice = Number.isFinite(spec?.price)
     ? spec.price
     : Math.max(1, Math.round(spec?.pricePerMeter ?? 0));
-  const hasCommander = state.units.some(
-    (item) =>
-      item.owner === localOwner && item.type === "commander" && item.hp > 0,
-  );
+  const hasBuilder = state.units.some((item) => isFieldBuilder(item));
   if (
     !spec ||
     state.phase !== "deployment" ||
     isInteractionLocked() ||
     (spec.commanderOnly &&
-      (!hasCommander || getUnit(state.selectedId)?.type !== "commander")) ||
+      (!hasBuilder || !isFieldBuilder(getUnit(state.selectedId)))) ||
     state.players[localOwner].resources < minimumPrice
   )
     return;
@@ -4117,14 +4379,11 @@ function commanderForBridgeStart(x, y, owner = localOwner) {
     return null;
   return (
     state.units
-      .filter(
-        (item) =>
-          item.owner === owner && item.type === "commander" && item.hp > 0,
-      )
+      .filter((item) => isFieldBuilder(item, owner))
       .filter(
         (item) =>
           owner !== localOwner ||
-          getUnit(state.selectedId)?.type !== "commander" ||
+          !isFieldBuilder(getUnit(state.selectedId), owner) ||
           item.id === state.selectedId,
       )
       .find(
@@ -4140,9 +4399,7 @@ function isValidBridgeEnd(start, x, y, owner = localOwner) {
   const commander = state.units.find(
     (item) =>
       item.id === start.commanderId &&
-      item.owner === owner &&
-      item.type === "commander" &&
-      item.hp > 0,
+      isFieldBuilder(item, owner),
   );
   if (
     !commander ||
@@ -4190,9 +4447,7 @@ function isValidBuildTile(
     return state.units.some(
       (commander) =>
         commander.id === state.selectedId &&
-        commander.owner === owner &&
-        commander.type === "commander" &&
-        commander.hp > 0 &&
+        isFieldBuilder(commander, owner) &&
         navigationGraph.isConnected(commander, { x, y }) &&
         distance(commander, { x, y }) <= movementRangeFor(commander),
     );
@@ -4207,7 +4462,7 @@ function isValidBuildTile(
   )
     return true;
   return state.units
-    .filter((item) => item.owner === owner && item.type === "commander")
+    .filter((item) => isFieldBuilder(item, owner))
     .some(
       (commander) =>
         navigationGraph.isConnected(commander, { x, y }) &&
@@ -4865,6 +5120,12 @@ async function fastForwardConfiguredTurns() {
 }
 
 function checkWinner() {
+  if (state.objectiveWinner === 0 || state.objectiveWinner === 1) {
+    state.winner = state.objectiveWinner;
+    state.resolving = false;
+    showWinnerResult();
+    return;
+  }
   const playerAlive =
     state.units.some((item) => item.owner === 0) ||
     playerBarracks(0).length > 0;
@@ -4873,6 +5134,19 @@ function checkWinner() {
     playerBarracks(1).length > 0;
   if (playerAlive && enemyAlive) return;
   state.winner = playerAlive ? 0 : enemyAlive ? 1 : "draw";
+  if (activeWorldSectorId && worldState && state.winner !== "draw") {
+    const sector = worldState.sectors.find(
+      (item) => item.id === activeWorldSectorId,
+    );
+    if (sector) {
+      sector.modifications =
+        terrainSampler?.serializeModifications?.() ?? sector.modifications;
+      applySectorOutcome(worldState, activeWorldSectorId, state.winner);
+      worldState.turn += 1;
+      saveWorldCampaign();
+    }
+    activeWorldSectorId = null;
+  }
   state.resolving = false;
   showWinnerResult();
 }

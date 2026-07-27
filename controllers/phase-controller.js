@@ -1,3 +1,7 @@
+import { BUILDINGS, UNIT_TYPES } from "../game-rules.js";
+import { resolveMedicalSupport } from "../simulation/support-resolution.js";
+import { resolveObjectives } from "../simulation/objective-resolution.js";
+
 /** Coordinates phase transitions using the focused gameplay controllers. */
 export class PhaseController {
   constructor({
@@ -117,6 +121,19 @@ export class PhaseController {
       if (activeCampaign !== this.getCampaignVersion()) return;
 
       this.productionController.completeJobs();
+      const medicalEvents = resolveMedicalSupport(state, UNIT_TYPES, {
+        buildingTypes: BUILDINGS,
+      });
+      for (const event of medicalEvents)
+        this.log(
+          `Medical support restored ${event.amount} HP at ${event.x},${event.y}.`,
+        );
+      const objectiveResult = resolveObjectives(state, UNIT_TYPES);
+      for (const event of objectiveResult.events)
+        this.log(
+          `${event.owner === this.getLocalOwner() ? "Friendly forces" : "Hostile forces"} captured command post ${event.x},${event.y}.`,
+          event.owner !== this.getLocalOwner(),
+        );
       this.checkWinner();
       if (!state.winner) {
         state.round += 1;

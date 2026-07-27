@@ -28,7 +28,7 @@ step.
 | `ui/dom-elements.js` | Central registry of every DOM selector used by the game. |
 | `game.js` | Application coordinator: DOM UI, player input, order validation, and multiplayer events. |
 | `battlefield3d.js` | Three.js scene, piece models, camera, and animations. |
-| `server.js` | Static files, WebSockets, multiplayer sessions, and checkpoints. |
+| `server.cjs` | Static files, WebSockets, multiplayer sessions, and checkpoints. |
 | `styles.css` / `index.html` | Interface appearance and markup. |
 
 The important boundary is: **controllers choose actions; `game.js` validates

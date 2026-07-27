@@ -112,12 +112,22 @@ export class AiController {
     const targets = this.enemyPieces().filter(
       (piece) => UNIT_TYPES[piece.type]?.airUnit !== true,
     );
+    const strategicTargets = targets.filter(
+      (piece) => BUILDINGS[piece.type]?.capturable === true,
+    );
     for (const actor of state.units.filter((item) => item.owner === owner)) {
       const spec = UNIT_TYPES[actor.type];
       if (enemy.resources < spec.actionCost || !targets.length) continue;
-      const nearest = [...targets].sort(
+      const targetPool =
+        spec.airUnit === true || !strategicTargets.length
+          ? targets.filter(
+              (piece) => BUILDINGS[piece.type]?.capturable !== true,
+            )
+          : strategicTargets;
+      const nearest = [...targetPool].sort(
         (a, b) => this.distance(actor, a) - this.distance(actor, b),
       )[0];
+      if (!nearest) continue;
       if (spec.airUnit === true) {
         if (
           actor.airborne !== true &&
@@ -126,7 +136,9 @@ export class AiController {
           this.queueOrder(actor, "move", nearest.x, nearest.y, owner);
         continue;
       }
-      if (this.distance(actor, nearest) > spec.range) {
+      const desiredDistance =
+        BUILDINGS[nearest.type]?.capturable === true ? 1.8 : spec.range;
+      if (this.distance(actor, nearest) > desiredDistance) {
         const step = this.bestStepToward(actor, nearest);
         if (step) this.queueOrder(actor, "move", step.x, step.y, owner);
       }
@@ -139,7 +151,9 @@ export class AiController {
     const owner = this.owner;
     const enemy = state.players[owner];
     const targets = this.enemyPieces().filter(
-      (piece) => UNIT_TYPES[piece.type]?.airUnit !== true,
+      (piece) =>
+        UNIT_TYPES[piece.type]?.airUnit !== true &&
+        BUILDINGS[piece.type]?.capturable !== true,
     );
     if (!targets.length) return;
 
@@ -167,10 +181,16 @@ export class AiController {
 
   chooseRecruitType(resources) {
     const roll = this.random();
-    if (resources >= UNIT_TYPES.xtralong.price && roll < 0.1)
+    if (resources >= UNIT_TYPES.antiAir.price && roll < 0.08)
+      return "antiAir";
+    if (resources >= UNIT_TYPES.engineer.price && roll < 0.16)
+      return "engineer";
+    if (resources >= UNIT_TYPES.scout.price && roll < 0.25) return "scout";
+    if (resources >= UNIT_TYPES.medic.price && roll < 0.34) return "medic";
+    if (resources >= UNIT_TYPES.xtralong.price && roll < 0.42)
       return "xtralong";
-    if (resources >= UNIT_TYPES.long.price && roll < 0.32) return "long";
-    if (resources >= UNIT_TYPES.medium.price && roll < 0.62) return "medium";
+    if (resources >= UNIT_TYPES.long.price && roll < 0.6) return "long";
+    if (resources >= UNIT_TYPES.medium.price && roll < 0.78) return "medium";
     return "short";
   }
 

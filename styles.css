@@ -4627,3 +4627,125 @@ body {
     font-size: 19px;
   }
 }
+
+.world-campaign-menu {
+  padding: clamp(1rem, 2vw, 2rem);
+}
+
+.world-campaign-header {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.world-campaign-header h2 {
+  margin: 0.25rem 0;
+}
+
+.world-campaign-header p {
+  max-width: 62ch;
+  color: var(--muted, #9aa395);
+}
+
+.world-campaign-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 1.25rem;
+}
+
+.world-sector-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--world-cols, 6), minmax(70px, 1fr));
+  gap: 0.35rem;
+  min-height: 430px;
+  padding: 0.75rem;
+  background: rgba(8, 13, 10, 0.72);
+  border: 1px solid rgba(175, 199, 169, 0.2);
+}
+
+.world-sector {
+  position: relative;
+  display: flex;
+  min-height: 92px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.65rem;
+  overflow: hidden;
+  color: #edf2e9;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--sector-color) 45%, #172019),
+    #111713
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--sector-color) 65%, #889487);
+}
+
+.world-sector::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 70% 20%,
+    rgba(255, 255, 255, 0.12),
+    transparent 45%
+  );
+}
+
+.world-sector.selected {
+  outline: 2px solid #dce88c;
+  outline-offset: 2px;
+}
+
+.world-sector strong {
+  font-size: clamp(1.35rem, 3vw, 2.35rem);
+}
+
+.world-sector small,
+.world-sector span {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+
+.world-sector-panel {
+  padding: 1.25rem;
+  background: rgba(12, 18, 14, 0.9);
+  border: 1px solid rgba(175, 199, 169, 0.2);
+}
+
+.world-sector-panel h3 {
+  margin: 0.35rem 0 0.75rem;
+}
+
+.world-sector-panel dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(175, 199, 169, 0.14);
+}
+
+.world-sector-panel dt,
+.world-sector-panel dd {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.world-sector-panel button {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 860px) {
+  .world-campaign-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .world-sector-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

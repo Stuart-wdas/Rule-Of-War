@@ -19,6 +19,10 @@ export function buildNetworkSnapshot(state, config, configKeys) {
       round: state.round,
       phase: state.phase,
       winner: state.winner,
+      objectiveControl: cloneJson(
+        state.objectiveControl ?? { owner: null, rounds: 0 },
+      ),
+      objectiveWinner: state.objectiveWinner ?? null,
       players: cloneJson(state.players).sort((a, b) => a.id - b.id),
       structures: sortById(state.structures),
       units: sortById(state.units),

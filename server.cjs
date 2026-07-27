@@ -1,21 +1,29 @@
+// CommonJS entrypoint; browser and shared simulation modules use ESM.
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { WebSocket, WebSocketServer } = require('ws');
+const { createCampaignRepository } = require('./server/campaign-repository.cjs');
 
 const root = __dirname;
 const host = process.env.HOST || '0.0.0.0';
 const port = Number(process.env.PORT) || 4173;
 const websocketPath = '/ws';
-const matchStorePath = process.env.MATCH_STORE_PATH
+const legacyMatchStorePath = process.env.MATCH_STORE_PATH
   ? path.resolve(process.env.MATCH_STORE_PATH)
   : path.join(root, '.data', 'matches.json');
-const dataDirectory = path.dirname(matchStorePath);
+const databasePath = process.env.DATABASE_PATH
+  ? path.resolve(process.env.DATABASE_PATH)
+  : path.join(root, '.data', 'rule-of-war.sqlite');
+const campaignRepository = createCampaignRepository(databasePath);
 const maxMessageBytes = 1024 * 1024;
 const matchCodeAlphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const matches = new Map();
 const liveSockets = new Map();
+let validatePlayerPlan = null;
+let serverUnitTypes = null;
+let serverBuildings = null;
 
 const mime = {
   '.html': 'text/html; charset=utf-8',
@@ -26,6 +34,32 @@ const mime = {
   '.png': 'image/png',
   '.terrain': 'application/octet-stream',
 };
+const publicRootFiles = new Set([
+  'index.html',
+  'styles.css',
+  'game.js',
+  'game-rules.js',
+  'battlefield3d.js',
+  'map-builder3d.js',
+  'model-gallery.html',
+  'model-gallery.css',
+  'model-gallery.js',
+  'favicon.svg',
+  'game-home.png',
+]);
+const publicDirectories = new Set([
+  'assets',
+  'config',
+  'controllers',
+  'core',
+  'maps',
+  'network',
+  'simulation',
+  'state',
+  'storage',
+  'terrain',
+  'ui',
+]);
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -120,28 +154,9 @@ function serializableMatch(match) {
 
 function persistMatches() {
   try {
-    fs.mkdirSync(dataDirectory, { recursive: true });
-    const temporaryPath = `${matchStorePath}.${process.pid}.tmp`;
-    const payload = JSON.stringify(
-      {
-        format: 1,
-        savedAt: new Date().toISOString(),
-        matches: [...matches.values()].map(serializableMatch),
-      },
-      null,
-      2,
+    campaignRepository.replaceMatches(
+      [...matches.values()].map(serializableMatch),
     );
-
-    fs.writeFileSync(temporaryPath, payload, 'utf8');
-    try {
-      fs.renameSync(temporaryPath, matchStorePath);
-    } catch (renameError) {
-      fs.writeFileSync(matchStorePath, payload, 'utf8');
-      fs.rmSync(temporaryPath, { force: true });
-      if (renameError.code !== 'EPERM' && renameError.code !== 'EEXIST') {
-        console.warn(`Match store used a non-atomic fallback: ${renameError.message}`);
-      }
-    }
   } catch (error) {
     console.error(`Could not persist multiplayer matches: ${error.message}`);
   }
@@ -232,7 +247,9 @@ function normalizeLoadedMatch(raw) {
     version: Number.isSafeInteger(raw.version) && raw.version > 0 ? raw.version : 1,
     revision: Number.isSafeInteger(raw.revision) && raw.revision >= 0 ? raw.revision : 0,
     sequence,
-    ready: [false, false],
+    ready: pendingAdvance
+      ? [false, false]
+      : [Boolean(raw.ready?.[0]), Boolean(raw.ready?.[1])],
     pendingAdvance,
     completions,
     lastCheckpoint: isRecord(raw.lastCheckpoint) ? cloneJson(raw.lastCheckpoint) : null,
@@ -242,15 +259,18 @@ function normalizeLoadedMatch(raw) {
 
   if (pendingAdvance && completions[0] && completions[1]) {
     const hashesMatch = completions[0].hash === completions[1].hash;
-    match.state = completions[0].state;
+    match.state = hashesMatch
+      ? completions[0].state
+      : cloneJson(pendingAdvance.state);
     match.version += 1;
     match.revision += 1;
     match.pendingAdvance = null;
     match.completions = [null, null];
     match.lastCheckpoint = {
       sequence,
-      hash: completions[0].hash,
+      hash: hashSnapshot(match.state),
       hashesMatch,
+      rejected: !hashesMatch,
       version: match.version,
       revision: match.revision,
     };
@@ -260,14 +280,17 @@ function normalizeLoadedMatch(raw) {
 }
 
 function loadMatches() {
-  if (!fs.existsSync(matchStorePath)) return;
   try {
-    const stored = JSON.parse(fs.readFileSync(matchStorePath, 'utf8'));
-    if (!Array.isArray(stored.matches)) return;
-    for (const raw of stored.matches) {
+    let storedMatches = campaignRepository.loadMatches();
+    if (!storedMatches.length && fs.existsSync(legacyMatchStorePath)) {
+      const legacy = JSON.parse(fs.readFileSync(legacyMatchStorePath, 'utf8'));
+      storedMatches = Array.isArray(legacy.matches) ? legacy.matches : [];
+    }
+    for (const raw of storedMatches) {
       const match = normalizeLoadedMatch(raw);
       if (match) matches.set(match.code, match);
     }
+    if (matches.size) persistMatches();
     console.log(`Loaded ${matches.size} saved multiplayer match${matches.size === 1 ? '' : 'es'}.`);
   } catch (error) {
     console.error(`Could not load saved multiplayer matches: ${error.message}`);
@@ -396,15 +419,6 @@ function bindSocket(socket, match, playerIndex) {
   }
 }
 
-function requireLivePeer(match) {
-  if (!match.players[1]) {
-    throw new ProtocolError('MATCH_WAITING', 'Waiting for the second player to join.');
-  }
-  if (!connectedPlayers(match).every(Boolean)) {
-    throw new ProtocolError('PEER_OFFLINE', 'Both players must be connected.');
-  }
-}
-
 function createMatch(socket, message) {
   ensureUnbound(socket);
   if (matches.size >= 1000) {
@@ -488,6 +502,7 @@ function resumeMatch(socket, message) {
   persistMatches();
   send(socket, sessionPayload(match, playerIndex, 'resumed'));
   broadcastStatus(match);
+  maybeStartPhaseAdvance(match);
 }
 
 function sanitizeOwnedItems(items, playerIndex, label) {
@@ -512,29 +527,41 @@ function replaceOwnedItems(current, replacement, playerIndex) {
 
 function updatePlan(socket, message) {
   const { match, playerIndex } = requireSession(socket);
-  requireLivePeer(match);
   if (match.pendingAdvance) {
     throw new ProtocolError('PHASE_LOCKED', 'This phase is currently resolving.');
   }
   if (match.ready[playerIndex]) {
     throw new ProtocolError('PLAYER_READY', 'Unready before changing your plan.');
   }
-  if (!Number.isFinite(message.resources) || message.resources < 0 || message.resources > 1e9) {
-    throw new ProtocolError('INVALID_PLAN', 'Resources must be a valid non-negative number.');
-  }
-
-  const jobs = sanitizeOwnedItems(message.jobs, playerIndex, 'Jobs');
-  const orders = sanitizeOwnedItems(message.orders, playerIndex, 'Orders');
   const game = match.state.game;
   if (!isRecord(game.players[playerIndex])) {
     throw new ProtocolError('INVALID_STATE', 'The player record is missing from this match.');
   }
+  let validated;
+  try {
+    validated = validatePlayerPlan({
+      state: game,
+      playerIndex,
+      jobs: message.jobs,
+      orders: message.orders,
+      unitTypes: serverUnitTypes,
+      buildings: serverBuildings,
+      cols: match.state.config.cols,
+      rows: match.state.config.rows,
+    });
+  } catch (error) {
+    throw new ProtocolError(
+      typeof error.code === 'string' ? error.code : 'INVALID_PLAN',
+      error.message || 'The submitted plan is invalid.',
+    );
+  }
+  const { jobs, orders, resources } = validated;
 
   game.jobs = replaceOwnedItems(game.jobs, jobs, playerIndex);
   game.orders = replaceOwnedItems(game.orders, orders, playerIndex);
   game.players[playerIndex] = {
     ...game.players[playerIndex],
-    resources: message.resources,
+    resources,
   };
   match.revision += 1;
   match.updatedAt = new Date().toISOString();
@@ -543,7 +570,9 @@ function updatePlan(socket, message) {
     type: 'state-update',
     source: 'plan',
     playerIndex,
-    state: match.state,
+    jobs,
+    orders,
+    resources,
     version: match.version,
     revision: match.revision,
   });
@@ -575,7 +604,6 @@ function startPhaseAdvance(match) {
 
 function setReady(socket, message) {
   const { match, playerIndex } = requireSession(socket);
-  requireLivePeer(match);
   if (match.pendingAdvance) {
     throw new ProtocolError('PHASE_LOCKED', 'This phase is currently resolving.');
   }
@@ -592,9 +620,17 @@ function setReady(socket, message) {
     connected: connectedPlayers(match),
   });
 
-  if (match.ready.every(Boolean) && connectedPlayers(match).every(Boolean)) {
+  maybeStartPhaseAdvance(match);
+}
+
+function maybeStartPhaseAdvance(match) {
+  if (
+    !match.pendingAdvance &&
+    match.players[1] &&
+    match.ready.every(Boolean) &&
+    connectedPlayers(match).every(Boolean)
+  )
     startPhaseAdvance(match);
-  }
 }
 
 function checkpointPayload(match, checkpoint = match.lastCheckpoint) {
@@ -603,6 +639,7 @@ function checkpointPayload(match, checkpoint = match.lastCheckpoint) {
     state: match.state,
     hash: checkpoint?.hash || hashSnapshot(match.state),
     hashesMatch: checkpoint?.hashesMatch ?? true,
+    rejected: checkpoint?.rejected ?? false,
     sequence: checkpoint?.sequence ?? match.sequence,
     version: match.version,
     revision: match.revision,
@@ -613,7 +650,9 @@ function finalizePhaseCheckpoint(match, { broadcastResult = true } = {}) {
   if (!match.pendingAdvance || !match.completions.every(Boolean)) return false;
   const [hostCompletion, guestCompletion] = match.completions;
   const hashesMatch = hostCompletion.hash === guestCompletion.hash;
-  match.state = hostCompletion.state;
+  match.state = hashesMatch
+    ? hostCompletion.state
+    : cloneJson(match.pendingAdvance.state);
   match.version += 1;
   match.revision += 1;
   match.pendingAdvance = null;
@@ -622,8 +661,9 @@ function finalizePhaseCheckpoint(match, { broadcastResult = true } = {}) {
   match.updatedAt = new Date().toISOString();
   match.lastCheckpoint = {
     sequence: match.sequence,
-    hash: hostCompletion.hash,
+    hash: hashSnapshot(match.state),
     hashesMatch,
+    rejected: !hashesMatch,
     version: match.version,
     revision: match.revision,
   };
@@ -731,7 +771,6 @@ function handleDisconnect(socket) {
 
   sockets[socket.playerIndex] = null;
   match.players[socket.playerIndex].lastSeen = new Date().toISOString();
-  if (!match.pendingAdvance) match.ready[socket.playerIndex] = false;
   match.updatedAt = new Date().toISOString();
   persistMatches();
   broadcastStatus(match);
@@ -756,7 +795,17 @@ function serveStatic(request, response) {
   }
 
   const requested = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
-  if (requested === '.data' || requested.startsWith('.data/')) {
+  const requestedParts = requested.split('/').filter(Boolean);
+  const containsPrivateSegment = requestedParts.some(
+    (segment) => segment.startsWith('.'),
+  );
+  const allowedDependency =
+    requestedParts[0] === 'node_modules' && requestedParts[1] === 'three';
+  const allowedPublicPath =
+    publicRootFiles.has(requested) ||
+    publicDirectories.has(requestedParts[0]) ||
+    allowedDependency;
+  if (containsPrivateSegment || !allowedPublicPath) {
     response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Not found');
     return;
   }
@@ -791,27 +840,33 @@ function serveStatic(request, response) {
   });
 }
 
-loadMatches();
-let recoveredInterruptedMatch = false;
-for (const match of matches.values()) {
-  if (match.pendingAdvance && match.completions.every(Boolean)) {
-    finalizePhaseCheckpoint(match, { broadcastResult: false });
-    recoveredInterruptedMatch = true;
-  } else if (!match.pendingAdvance && match.ready.some(Boolean)) {
-    match.ready = [false, false];
-    recoveredInterruptedMatch = true;
+async function startServer() {
+  const [validationModule, rulesModule] = await Promise.all([
+    import('./simulation/command-validation.js'),
+    import('./game-rules.js'),
+  ]);
+  validatePlayerPlan = validationModule.validatePlayerPlan;
+  serverUnitTypes = rulesModule.UNIT_TYPES;
+  serverBuildings = rulesModule.BUILDINGS;
+
+  loadMatches();
+  let recoveredInterruptedMatch = false;
+  for (const match of matches.values()) {
+    if (match.pendingAdvance && match.completions.every(Boolean)) {
+      finalizePhaseCheckpoint(match, { broadcastResult: false });
+      recoveredInterruptedMatch = true;
+    }
   }
-}
-if (recoveredInterruptedMatch) persistMatches();
+  if (recoveredInterruptedMatch) persistMatches();
 
-const server = http.createServer(serveStatic);
-const websocketServer = new WebSocketServer({
-  server,
-  path: websocketPath,
-  maxPayload: maxMessageBytes,
-});
+  const server = http.createServer(serveStatic);
+  const websocketServer = new WebSocketServer({
+    server,
+    path: websocketPath,
+    maxPayload: maxMessageBytes,
+  });
 
-websocketServer.on('connection', (socket) => {
+  websocketServer.on('connection', (socket) => {
   socket.isAlive = true;
   socket.rateWindowStartedAt = Date.now();
   socket.rateWindowCount = 0;
@@ -834,24 +889,30 @@ websocketServer.on('connection', (socket) => {
   socket.on('error', (error) => {
     console.warn(`WebSocket connection error: ${error.message}`);
   });
-});
+  });
 
-const heartbeat = setInterval(() => {
-  for (const socket of websocketServer.clients) {
-    if (!socket.isAlive) {
-      socket.terminate();
-      continue;
+  const heartbeat = setInterval(() => {
+    for (const socket of websocketServer.clients) {
+      if (!socket.isAlive) {
+        socket.terminate();
+        continue;
+      }
+      socket.isAlive = false;
+      socket.ping();
     }
-    socket.isAlive = false;
-    socket.ping();
-  }
-}, 30000);
-heartbeat.unref();
+  }, 30000);
+  heartbeat.unref();
 
-websocketServer.on('close', () => clearInterval(heartbeat));
+  websocketServer.on('close', () => clearInterval(heartbeat));
 
-server.listen(port, host, () => {
-  const displayHost = host === '0.0.0.0' ? '127.0.0.1' : host;
-  console.log(`Result of War is ready at http://${displayHost}:${port}`);
-  console.log(`Multiplayer relay is listening on ws://${displayHost}:${port}${websocketPath}`);
+  server.listen(port, host, () => {
+    const displayHost = host === '0.0.0.0' ? '127.0.0.1' : host;
+    console.log(`Rule of War is ready at http://${displayHost}:${port}`);
+    console.log(`Multiplayer relay is listening on ws://${displayHost}:${port}${websocketPath}`);
+  });
+}
+
+startServer().catch((error) => {
+  console.error(`Could not start Rule of War: ${error.stack || error.message}`);
+  process.exitCode = 1;
 });

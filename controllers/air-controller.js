@@ -1,4 +1,5 @@
 import { UNIT_TYPES } from "../game-rules.js";
+import { applyFormationDamage } from "../simulation/formation-state.js";
 
 function distanceToSegment(point, start, end) {
   const dx = end.x - start.x;
@@ -70,7 +71,7 @@ export class AirController {
         )
           continue;
         const spec = UNIT_TYPES[interceptor.type];
-        if (!spec) continue;
+        if (!spec || spec.antiAir !== true) continue;
         const lifetimeLimit = spec.totalAttackActions;
         const alreadyUsed = Number.isInteger(interceptor.attackActionsUsed)
           ? interceptor.attackActionsUsed
@@ -118,7 +119,7 @@ export class AirController {
           ? UNIT_TYPES[interceptor.type].label
           : `HOSTILE ${UNIT_TYPES[interceptor.type].label}`;
       if (result.hit) {
-        bomber.hp -= result.damage;
+        applyFormationDamage(bomber, result.damage, UNIT_TYPES);
         this.log(
           `${interceptorName} interception hit ${UNIT_TYPES[bomber.type].label} for ${result.damage} damage.`,
           bomber.owner === localOwner,
@@ -176,7 +177,7 @@ export class AirController {
       if (!bomber) continue;
       const bomberName = bomber.owner === localOwner ? "BOMBER" : "HOSTILE BOMBER";
       if (result.hit && target) {
-        target.hp -= result.damage;
+        applyFormationDamage(target, result.damage, UNIT_TYPES);
         this.log(
           `${bomberName} dropped its payload on ${this.coord(result.to.x, result.to.y)} for ${result.damage} damage.`,
           bomber.owner !== localOwner,
