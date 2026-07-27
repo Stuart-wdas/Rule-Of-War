@@ -61,6 +61,12 @@ import { loadPrebuiltTerrain } from "./terrain/terrain-binary.js";
 import { createFreshState } from "./state/game-state.js";
 import { createEntityIndex } from "./simulation/entity-index.js";
 import {
+  initializeRealtimeState,
+  RtsRuntime,
+  RTS_TICK_RATE,
+  rtsStatsFor,
+} from "./simulation/rts-runtime.js";
+import {
   applySectorOutcome,
   createWorldState,
 } from "./simulation/world-state.js";
@@ -128,6 +134,10 @@ function enemyOwner() {
 
 function isHumanGame() {
   return gameMode === "human";
+}
+
+function isRealtimeGame() {
+  return state?.phase === "realtime";
 }
 
 function isInteractionLocked() {
@@ -203,7 +213,7 @@ function freshState() {
       owner,
       Math.min(runtimeMap.tileCount, Math.max(1024, ROWS * 6)),
     ).filter((tile) => terrainProperties(tile.x, tile.y, tile).passable);
-  return createFreshState({
+  const nextState = createFreshState({
     config: gameConfig,
     cols: COLS,
     rows: ROWS,
@@ -239,9 +249,23 @@ function freshState() {
       return [];
     }),
   });
+  nextState.rtsIncomePerMinePerMinute = Math.max(
+    6,
+    gameConfig.mineIncome * 6,
+  );
+  return initializeRealtimeState(nextState, { tickRate: RTS_TICK_RATE });
 }
 
 let state = freshState();
+let rtsRuntime = null;
+let rtsAccumulator = 0;
+let rtsPreviousFrame = 0;
+let rtsLastRenderTick = -1;
+let rtsLastFullRenderTick = -1;
+let rtsAiNextTick = 0;
+let rtsAiEconomyNextTick = 0;
+let rtsPaused = false;
+const rtsControlGroups = new Map();
 let entityIndex = null;
 let indexedUnits = null;
 let indexedStructures = null;
@@ -249,6 +273,8 @@ let indexedUnitCount = -1;
 let indexedStructureCount = -1;
 let battlefield3D = null;
 let battlefieldView = null;
+let battlefieldViewTick = -1;
+let battlefieldViewUiSignature = "";
 let navigationMarkerHits = [];
 let navigationMapProjection = null;
 let navigationResizeFrame = null;
@@ -370,6 +396,200 @@ const phaseController = new PhaseController({
   pause,
 });
 
+function ensureRtsRuntime() {
+  if (rtsRuntime?.state === state) return rtsRuntime;
+  rtsRuntime = new RtsRuntime({
+    state,
+    unitTypes: UNIT_TYPES,
+    buildingTypes: BUILDINGS,
+    tickRate: RTS_TICK_RATE,
+    seed: `${activeTerrainSeed}:${multiplayer.code || "local"}`,
+    createId: uid,
+    findPath: (unit, _start, destination) => {
+      const tile = tileAtMapPoint(destination);
+      if (!tile) return [];
+      const plan = movementRoutePlan(
+        unit,
+        tile.x,
+        tile.y,
+        destination,
+      );
+      return plan?.path ?? [];
+    },
+    isPassable: (x, y) => {
+      const tile = tileAtMapPoint({ x, y });
+      return (
+        tile &&
+        !isStructureTileBlocked(tile.x, tile.y) &&
+        Number.isFinite(groundMovementCostAt(tile.x, tile.y))
+      );
+    },
+    isVisible: (owner, target) => isVisibleToOwner(owner, target),
+    onEvent: handleRtsEvent,
+  });
+  return rtsRuntime;
+}
+
+function isVisibleToOwner(owner, target) {
+  if (!gameConfig.fogEnabled) return true;
+  return [...state.units, ...state.structures]
+    .filter((piece) => piece.owner === owner && piece.revealsFog !== false)
+    .some((piece) => {
+      const spec = UNIT_TYPES[piece.type] ?? BUILDINGS[piece.type];
+      return distance(piece, target) <= (spec?.visionRange ?? spec?.range ?? 0);
+    });
+}
+
+function handleRtsEvent(event) {
+  if (event.type === "production-complete") {
+    if (!isHumanGame()) productionController.completeJob(event.job);
+    return;
+  }
+  if (event.type === "weapon-fired") {
+    const actor = getUnit(event.actorId);
+    if (actor && battlefield3D)
+      void battlefield3D.animateAttacks([
+        {
+          ...event,
+          actorType: actor.type,
+          owner: actor.owner === localOwner ? 0 : 1,
+        },
+      ]);
+    return;
+  }
+  if (event.type === "entity-destroyed") {
+    void battlefield3D?.animateDestructions?.([event.entityId]);
+    if (event.owner === localOwner)
+      log(`${UNIT_TYPES[event.entityType]?.label ?? BUILDINGS[event.entityType]?.label ?? "Asset"} lost at ${coord(event.x, event.y)}.`, true);
+    return;
+  }
+  if (event.type === "aircraft-returning") {
+    const aircraft = getUnit(event.unitId);
+    if (aircraft?.owner === localOwner)
+      log(`BOMBER diverting to the nearest Airfield with ${Math.max(0, Math.round(event.fuel))} fuel remaining.`);
+    return;
+  }
+  if (event.type === "aircraft-landed") {
+    const aircraft = getUnit(event.unitId);
+    if (aircraft?.owner === localOwner)
+      log("BOMBER landed and is refuelling.");
+    return;
+  }
+  if (event.type === "aircraft-refuelled") {
+    const aircraft = getUnit(event.unitId);
+    if (aircraft?.owner === localOwner)
+      log("BOMBER refuelled and awaiting orders.");
+    return;
+  }
+  if (event.type === "aircraft-command-rejected") {
+    const aircraft = getUnit(event.unitId);
+    if (aircraft?.owner !== localOwner) return;
+    log(
+      event.reason === "insufficient-return-fuel"
+        ? "Aircraft order rejected: the route does not preserve enough fuel to reach a friendly Airfield."
+        : `Aircraft unavailable while ${event.reason}.`,
+      true,
+    );
+  }
+}
+
+function issueRtsCommand(type, destination = null, targetId = null, {
+  queued = false,
+  units = selectedUnits(),
+} = {}) {
+  if (!units.length || isInteractionLocked()) return false;
+  const accepted = ensureRtsRuntime().issueCommand({
+    owner: localOwner,
+    unitIds: units.map((unit) => unit.id),
+    type,
+    destination,
+    targetId,
+    queued,
+  });
+  if (!accepted.length) return false;
+  state.intent = null;
+  log(
+    type === "attack"
+      ? `${accepted.length} unit${accepted.length === 1 ? "" : "s"} ordered to focus fire.`
+      : `${accepted.length} unit${accepted.length === 1 ? "" : "s"} executing ${type.replace("-", " ")}.`,
+  );
+  if (isHumanGame()) sendRealtimeCommand({ type, destination, targetId, unitIds: accepted, queued });
+  render();
+  return true;
+}
+
+function runRtsAi() {
+  if (isHumanGame() || state.simulationTick < rtsAiNextTick) return;
+  rtsAiNextTick = state.simulationTick + RTS_TICK_RATE * 3;
+  if (state.simulationTick >= rtsAiEconomyNextTick) {
+    rtsAiEconomyNextTick = state.simulationTick + RTS_TICK_RATE * 10;
+    aiController.planDeploymentAndMoves();
+  }
+  const runtime = ensureRtsRuntime();
+  const enemies = state.units.filter((unit) => unit.owner === 1 && unit.hp > 0);
+  const targets = [...state.units, ...state.structures].filter(
+    (entity) =>
+      entity.hp > 0 &&
+      (entity.owner === 0 ||
+        (entity.owner < 0 && BUILDINGS[entity.type]?.capturable)),
+  );
+  for (const unit of enemies) {
+    if (runtime.commandFor(unit.id) || !targets.length) continue;
+    const target = targets
+      .slice()
+      .sort((first, second) => distance(unit, first) - distance(unit, second))[0];
+    runtime.issueCommand({
+      owner: 1,
+      unitIds: [unit.id],
+      type: "attack-move",
+      destination: mapPositionFor(target),
+    });
+  }
+}
+
+function rtsFrame(timestamp) {
+  const previous = rtsPreviousFrame || timestamp;
+  rtsPreviousFrame = timestamp;
+  const active =
+    gameMode !== "menu" &&
+    els.gameMenu.hidden &&
+    !rtsPaused &&
+    !isHumanGame() &&
+    !state.winner &&
+    !(isHumanGame() && !multiplayer.connected);
+  if (active) {
+    rtsAccumulator += Math.min(0.2, Math.max(0, (timestamp - previous) / 1000));
+    const tickDuration = 1 / RTS_TICK_RATE;
+    let ticks = 0;
+    while (rtsAccumulator >= tickDuration && ticks < 5) {
+      ensureRtsRuntime().step();
+      runRtsAi();
+      rtsAccumulator -= tickDuration;
+      ticks += 1;
+    }
+    if (
+      ticks &&
+      (state.simulationTick - rtsLastRenderTick >= 4 ||
+        ensureRtsRuntime().events.length)
+    ) {
+      rtsLastRenderTick = state.simulationTick;
+      ensureRtsRuntime().drainEvents();
+      checkWinner();
+      if (state.simulationTick - rtsLastFullRenderTick >= RTS_TICK_RATE) {
+        rtsLastFullRenderTick = state.simulationTick;
+        render();
+      } else {
+        renderMap(battlefieldView, getUnit(state.selectedId), {
+          dynamicOnly: true,
+        });
+      }
+    }
+  } else {
+    rtsAccumulator = 0;
+  }
+  requestAnimationFrame(rtsFrame);
+}
+
 function coord(x, y) {
   if (runtimeMap?.polygonal) {
     const index = runtimeMap.tileIndexByCoordinate.get(`${x},${y}`) ?? -1;
@@ -438,6 +658,7 @@ function selectedUnitIdSet() {
 }
 
 function defaultSelectionIntentForUnits(units) {
+  if (isRealtimeGame()) return units.length ? null : null;
   if (units.length > 1) {
     const groundGroup = units.every(
       (unit) => UNIT_TYPES[unit.type]?.airUnit !== true,
@@ -1269,7 +1490,7 @@ function createStaticUI() {
 
   document.addEventListener("keydown", (event) => {
     const commanderOpen =
-      state.phase === "deployment" &&
+      ["deployment", "realtime"].includes(state.phase) &&
       getUnit(state.selectedId)?.type === "commander";
     if (event.key !== "Escape" || (!selectedStructureId && !commanderOpen)) return;
     if (commanderOpen) clearUnitSelection();
@@ -1295,6 +1516,18 @@ function createStaticUI() {
   els.turnSkipButton?.addEventListener("click", fastForwardConfiguredTurns);
   els.moveButton.addEventListener("click", () => setIntent("move"));
   els.attackButton.addEventListener("click", () => setIntent("attack"));
+  els.stopButton?.addEventListener("click", () =>
+    issueRtsCommand("stop", null, null, { units: selectedUnits() }),
+  );
+  els.engageButton?.addEventListener("click", () =>
+    issueRtsCommand("attack-stance", null, null, { units: selectedUnits() }),
+  );
+  els.fleeButton?.addEventListener("click", () =>
+    issueRtsCommand("flee", null, null, { units: selectedUnits() }),
+  );
+  els.holdButton?.addEventListener("click", () =>
+    issueRtsCommand("hold-fire", null, null, { units: selectedUnits() }),
+  );
   els.orderList.addEventListener("click", (event) => {
     const button = event.target.closest("[data-remove]");
     if (button) removeQueued(button.dataset.remove);
@@ -1304,6 +1537,7 @@ function createStaticUI() {
     if (button) navigateToUnit(button.dataset.unitNav);
   });
   els.tacticalMap.addEventListener("click", handleTacticalMapClick);
+  document.addEventListener("keydown", handleRtsKeyDown);
   window.addEventListener("resize", () => {
     if (navigationResizeFrame) cancelAnimationFrame(navigationResizeFrame);
     navigationResizeFrame = requestAnimationFrame(() => {
@@ -1440,6 +1674,53 @@ function createStaticUI() {
   els.developerModal.addEventListener("click", (event) => {
     if (event.target === els.developerModal) closeDeveloperTools();
   });
+}
+
+function handleRtsKeyDown(event) {
+  if (
+    !isRealtimeGame() ||
+    gameMode === "menu" ||
+    event.target.closest?.("input, select, textarea")
+  )
+    return;
+  const key = event.key.toLowerCase();
+  if (event.ctrlKey && /^[1-9]$/.test(key)) {
+    rtsControlGroups.set(
+      key,
+      selectedUnits().map((unit) => unit.id),
+    );
+    event.preventDefault();
+    return;
+  }
+  if (!event.ctrlKey && /^[1-9]$/.test(key)) {
+    const ids = rtsControlGroups.get(key) ?? [];
+    state.selectedIds = ids.filter((id) => getUnit(id)?.owner === localOwner);
+    state.selectedId = state.selectedIds[0] ?? null;
+    if (event.detail > 1 && state.selectedId)
+      battlefield3D?.focusTile(getUnit(state.selectedId).x, getUnit(state.selectedId).y);
+    render();
+    return;
+  }
+  if (key === "a") setIntent("attack");
+  else if (key === "m") setIntent("move");
+  else if (key === "e")
+    issueRtsCommand("attack-stance", null, null, { units: selectedUnits() });
+  else if (key === "f")
+    issueRtsCommand("flee", null, null, { units: selectedUnits() });
+  else if (key === "s")
+    issueRtsCommand("stop", null, null, { units: selectedUnits() });
+  else if (key === "h")
+    issueRtsCommand("hold-fire", null, null, { units: selectedUnits() });
+  else if (key === "escape" && state.intent) {
+    state.intent = null;
+    state.buildMode = null;
+    render();
+  } else if (event.code === "Space" && !isHumanGame()) {
+    rtsPaused = !rtsPaused;
+    log(rtsPaused ? "Tactical pause engaged." : "Tactical pause released.");
+    render();
+    event.preventDefault();
+  }
 }
 
 function openModal(modal) {
@@ -1652,7 +1933,7 @@ function isValidNetworkSnapshot(snapshot) {
   const game = snapshot.game;
   return (
     Number.isInteger(game.round) &&
-    ["deployment", "orders", "attack"].includes(game.phase) &&
+    ["deployment", "orders", "attack", "realtime"].includes(game.phase) &&
     Array.isArray(game.players) &&
     game.players.length === 2 &&
     Array.isArray(game.structures) &&
@@ -2326,10 +2607,62 @@ function yieldLoadingFrame() {
   );
 }
 
+function markStartupPerformance(name) {
+  performance.mark(`rule-of-war:${name}`);
+}
+
+function measureStartupPerformance(name, start, end) {
+  try {
+    performance.measure(
+      `rule-of-war:${name}`,
+      `rule-of-war:${start}`,
+      `rule-of-war:${end}`,
+    );
+  } catch {
+    // A resumed or network-provided battlefield may not have local load marks.
+  }
+}
+
 function showLoadingScreen(map) {
   els.loadingMapName.textContent = `${map.name} · ${map.cols} × ${map.rows} · ${(map.cols * map.rows).toLocaleString()} TILES`;
   updateLoadingProgress(0, "INITIALIZING COMMAND SYSTEMS");
   showGameMenu("loading");
+}
+
+function scheduleBattlefieldEnhancements(instance = battlefield3D) {
+  if (!instance) return;
+  const schedule =
+    window.requestIdleCallback ??
+    ((callback) =>
+      window.setTimeout(
+        () => callback({ didTimeout: false, timeRemaining: () => 8 }),
+        120,
+      ));
+  schedule(() => {
+    if (battlefield3D !== instance || instance.destroyed) return;
+    markStartupPerformance("vegetation-start");
+    instance.enableVegetation?.();
+    markStartupPerformance("vegetation-ready");
+    measureStartupPerformance(
+      "vegetation-duration",
+      "vegetation-start",
+      "vegetation-ready",
+    );
+    schedule(() => {
+      if (battlefield3D !== instance || instance.destroyed) return;
+      markStartupPerformance("fog-clouds-start");
+      instance.enableFogClouds?.();
+      markStartupPerformance("fog-clouds-ready");
+      measureStartupPerformance(
+        "fog-clouds-duration",
+        "fog-clouds-start",
+        "fog-clouds-ready",
+      );
+      renderMap(battlefieldView, getUnit(state.selectedId), {
+        dynamicOnly: true,
+      });
+    });
+  });
 }
 
 function terrainCacheKey(map, seed, terrainConfig) {
@@ -2359,6 +2692,7 @@ function generateTerrainInWorker(bounds, seed, config) {
 }
 
 async function prepareBattlefieldAssets(mapId) {
+  markStartupPerformance("battlefield-load-start");
   const map = getMapPreset(mapId);
   showLoadingScreen(map);
   await yieldLoadingFrame();
@@ -2374,13 +2708,12 @@ async function prepareBattlefieldAssets(mapId) {
       ? { terrain: hydrateTerrain(authoredTerrainData) }
       : { resolutionScale: 0.08 },
   );
-  state = freshState();
+  battlefield3D?.destroy();
+  battlefield3D = null;
+  els.threeViewport.replaceChildren();
+  document.body.classList.remove("three-enabled");
   battlefieldView = null;
   syncConfigDependentUI();
-  initializeBattlefield3D();
-  render();
-  document.querySelector(".app-shell").inert = false;
-  document.body.classList.add("battlefield-loading-preview");
   await yieldLoadingFrame();
 
   const cacheKey = terrainCacheKey(map, activeTerrainSeed, map.terrainConfig);
@@ -2440,15 +2773,19 @@ async function prepareBattlefieldAssets(mapId) {
   await yieldLoadingFrame();
 
   updateLoadingProgress(86, "VEGETATION · DEPLOYING LOW-POLY TREES");
-  battlefield3D?.enableVegetation?.();
   await yieldLoadingFrame();
   updateLoadingProgress(93, "FOG · FORMING CLOUD COVER");
-  battlefield3D?.enableFogClouds?.();
   render();
   await yieldLoadingFrame();
   updateLoadingProgress(97, "BATTLEFIELD · DRAWING TACTICAL MAP");
   renderTacticalNavigation(battlefieldView);
   preparedMapId = map.id;
+  markStartupPerformance("battlefield-core-ready");
+  measureStartupPerformance(
+    "battlefield-core-duration",
+    "battlefield-load-start",
+    "battlefield-core-ready",
+  );
   await yieldLoadingFrame();
   updateLoadingProgress(100, "BATTLEFIELD · OPERATION READY");
   await yieldLoadingFrame();
@@ -2493,6 +2830,13 @@ function enterBattlefield() {
   document.querySelector(".app-shell").inert = false;
   window.requestAnimationFrame(() => battlefield3D?.resize?.());
   render();
+  markStartupPerformance("battlefield-interactive");
+  measureStartupPerformance(
+    "time-to-interactive",
+    "battlefield-load-start",
+    "battlefield-interactive",
+  );
+  scheduleBattlefieldEnhancements();
 }
 
 async function startAiCampaign(mapId = selectedMapId) {
@@ -2641,6 +2985,52 @@ function sendSocketMessage(payload) {
   return true;
 }
 
+function sendRealtimeCommand(command) {
+  if (!isHumanGame()) return false;
+  const { type: commandType, ...payload } = command;
+  return sendSocketMessage({
+    type: "rts-command",
+    sequence: ++multiplayer.sequence,
+    commandType,
+    ...payload,
+  });
+}
+
+function applyRealtimeServerSnapshot(snapshot) {
+  if (!isValidNetworkSnapshot(snapshot)) return false;
+  const game = cloneJson(snapshot.game);
+  const selectedIds = new Set(state.selectedIds ?? []);
+  const selectedId = state.selectedId;
+  Object.assign(state, game, {
+    resolving: false,
+    resolutionStep: null,
+    selectedIds: game.units
+      .filter((unit) => unit.owner === localOwner && selectedIds.has(unit.id))
+      .map((unit) => unit.id),
+    selectedId: game.units.some(
+      (unit) => unit.id === selectedId && unit.owner === localOwner,
+    )
+      ? selectedId
+      : null,
+  });
+  rtsRuntime = null;
+  if (state.simulationTick - rtsLastRenderTick >= 4) {
+    rtsLastRenderTick = state.simulationTick;
+    if (
+      !battlefieldView ||
+      state.simulationTick - rtsLastFullRenderTick >= RTS_TICK_RATE
+    ) {
+      rtsLastFullRenderTick = state.simulationTick;
+      render();
+    } else {
+      renderMap(battlefieldView, getUnit(state.selectedId), {
+        dynamicOnly: true,
+      });
+    }
+  }
+  return true;
+}
+
 function handleMatchMessage(message) {
   switch (message.type) {
     case "session":
@@ -2674,6 +3064,12 @@ function handleMatchMessage(message) {
       break;
     case "checkpoint":
       handleCheckpoint(message);
+      break;
+    case "simulation-snapshot":
+      if (message.state) applyRealtimeServerSnapshot(message.state);
+      break;
+    case "rts-event":
+      if (message.event) handleRtsEvent(message.event);
       break;
     case "error":
       showConnectionError(message.message || "The match request was rejected.");
@@ -3026,7 +3422,9 @@ function structureRecruitmentMarkup(structure) {
       (job.producerId ?? job.barracksId) === structure.id,
   ).length;
   const controlsAvailable =
-    friendly && state.phase === "deployment" && !isInteractionLocked();
+    friendly &&
+    ["deployment", "realtime"].includes(state.phase) &&
+    !isInteractionLocked();
   const buttons = recruitableTypes
     .map(([type, spec]) => {
       const producerReady = producerCanRecruit(structure, type, localOwner);
@@ -3034,8 +3432,8 @@ function structureRecruitmentMarkup(structure) {
       const disabled = !controlsAvailable || !producerReady || !affordable;
       const reason = !friendly
         ? "Enemy production is unavailable."
-        : state.phase !== "deployment"
-          ? "Recruitment is available during deployment."
+        : !["deployment", "realtime"].includes(state.phase)
+          ? "Recruitment is unavailable."
           : isInteractionLocked()
             ? "Command controls are currently locked."
             : !producerReady
@@ -3048,8 +3446,8 @@ function structureRecruitmentMarkup(structure) {
     .join("");
   const note = !friendly
     ? "Production controls are restricted to the owning commander."
-    : state.phase !== "deployment"
-      ? "Recruitment controls reopen during the next deployment phase."
+    : !["deployment", "realtime"].includes(state.phase)
+      ? "Recruitment controls are unavailable."
       : structure.type === "airfield" &&
           !producerCanRecruit(structure, "plane", localOwner)
         ? `This airfield's ${BUILDINGS.airfield.aircraftCapacity} aircraft bays are occupied or reserved.`
@@ -3134,21 +3532,31 @@ function renderStructurePopover() {
 
 function render() {
   const selected = getUnit(state.selectedId);
-  battlefieldView = createBattlefieldViewIndex({
-    state,
-    runtimeMap,
-    localOwner,
-    fogEnabled: gameConfig.fogEnabled,
-    unitTypes: UNIT_TYPES,
-    buildings: BUILDINGS,
-    selected,
-    movementRangeFor,
-    getWorldPoint: mapPositionFor,
-    canUnitAttack,
-    isValidBuildTile,
-    isTerrainPassable: (x, y) =>
-      Number.isFinite(groundMovementCostAt(x, y)),
-  });
+  const viewUiSignature = `${state.selectedId}:${(state.selectedIds ?? []).join(",")}:${state.intent}:${state.buildMode}:${state.bridgeStart?.x ?? ""}:${state.bridgeStart?.y ?? ""}`;
+  const refreshView =
+    !battlefieldView ||
+    !isRealtimeGame() ||
+    state.simulationTick - battlefieldViewTick >= RTS_TICK_RATE / 2 ||
+    viewUiSignature !== battlefieldViewUiSignature;
+  if (refreshView) {
+    battlefieldView = createBattlefieldViewIndex({
+      state,
+      runtimeMap,
+      localOwner,
+      fogEnabled: gameConfig.fogEnabled,
+      unitTypes: UNIT_TYPES,
+      buildings: BUILDINGS,
+      selected,
+      movementRangeFor,
+      getWorldPoint: mapPositionFor,
+      canUnitAttack,
+      isValidBuildTile,
+      isTerrainPassable: (x, y) =>
+        Number.isFinite(groundMovementCostAt(x, y)),
+    });
+    battlefieldViewTick = state.simulationTick;
+    battlefieldViewUiSignature = viewUiSignature;
+  }
   renderHeader(battlefieldView);
   renderPhase();
   renderMap(battlefieldView, selected);
@@ -3398,10 +3806,7 @@ function navigateToUnit(id) {
   const unit = getUnit(id);
   if (!unit || unit.owner !== localOwner) return;
   closeStructurePopover();
-  if (
-    !isInteractionLocked() &&
-    (state.phase === "orders" || state.phase === "attack")
-  ) {
+  if (!isInteractionLocked()) {
     selectUnit(unit);
     render();
   }
@@ -3472,15 +3877,39 @@ function renderHeader(view) {
   const visibleBarracks = visibleEnemies.filter(
     (item) => item.type === "barracks",
   ).length;
-  els.round.textContent = String(state.round).padStart(2, "0");
+  const elapsed = Math.floor(Number(state.elapsedSeconds ?? 0));
+  els.round.textContent = `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
   els.resources.textContent = state.players[localOwner].resources;
-  els.income.textContent = `+${incomeFor(localOwner)} / round`;
+  els.income.textContent = `+${Math.round(incomeFor(localOwner) * 6)} / min`;
   els.enemyForce.textContent = visibleEnemies.length
     ? `${visibleUnits} UNIT${visibleUnits === 1 ? "" : "S"} · ${visibleBarracks} BARRACKS SIGHTED`
     : "NO VISIBLE CONTACTS";
 }
 
 function renderPhase() {
+  document.body.classList.toggle("rts-mode", isRealtimeGame());
+  document.body.classList.toggle("rts-paused", isRealtimeGame() && rtsPaused);
+  if (isRealtimeGame()) {
+    els.deploymentControls.hidden = false;
+    els.orderControls.hidden = false;
+    els.phaseIndex.textContent = "RT";
+    els.phaseName.textContent = state.winner ? "COMPLETE" : "LIVE COMMAND";
+    els.phaseRing.textContent = state.winner ? "■" : "●";
+    els.phaseButton.hidden = true;
+    els.trackDeployment.hidden = true;
+    els.trackOrders.hidden = true;
+    els.trackAttack.hidden = true;
+    els.trackResolve.hidden = true;
+    els.orderSectionTitle.textContent = "REAL-TIME ORDERS";
+    els.orderSectionLimit.textContent = "RIGHT-CLICK TO COMMAND";
+    els.orderSectionHint.textContent =
+      "Units move continuously and automatically engage visible hostiles. Use attack-move to sweep contested ground.";
+    els.moveButton.hidden = false;
+    els.attackButton.hidden = false;
+    els.turnSkipControl.hidden = true;
+    document.body.classList.remove("resolving");
+    return;
+  }
   const phases = {
     deployment: { index: 1, label: "DEPLOYMENT", button: "PROCEED TO ORDERS" },
     orders: { index: 2, label: "ORDERS", button: "EXECUTE MOVEMENT" },
@@ -3623,6 +4052,24 @@ function virtualRangeOverlay(selected) {
     };
   }
   const group = selectedUnits();
+  if (isRealtimeGame() && group.length) {
+    return {
+      kind: "targetable",
+      sources: group
+        .filter((unit) => Number(UNIT_TYPES[unit.type]?.range) > 0)
+        .map((unit) => sourceFor(unit, UNIT_TYPES[unit.type].range)),
+      secondary: {
+        kind: "sight",
+        sources: group.map((unit) => {
+          const spec = UNIT_TYPES[unit.type];
+          return sourceFor(
+            unit,
+            spec.visionRange ?? spec.acquisitionRange ?? spec.range ?? 0,
+          );
+        }),
+      },
+    };
+  }
   if (group.length > 1 && state.intent === "move")
     return {
       kind: "reachable",
@@ -3641,7 +4088,11 @@ function virtualRangeOverlay(selected) {
   return { kind: null, sources: [] };
 }
 
-function renderMap(view, selected = getUnit(state.selectedId)) {
+function renderMap(
+  view,
+  selected = getUnit(state.selectedId),
+  { dynamicOnly = false } = {},
+) {
   const selectedStructure = getStructure(selectedStructureId);
   const selectedIds = selectedUnitIdSet();
   const renderFallbackGrid = !battlefield3D;
@@ -3649,20 +4100,23 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
   const fallbackBudget = isVirtualizedBattlefield()
     ? MAX_FALLBACK_TILES
     : runtimeMap.tileCount;
-  const mapTiles = renderTileDescriptors(
-    view,
-    renderFallbackGrid ? fallbackBudget : MAX_DETAILED_TILES,
-  );
+  const mapTiles = dynamicOnly
+    ? []
+    : renderTileDescriptors(
+        view,
+        renderFallbackGrid ? fallbackBudget : MAX_DETAILED_TILES,
+      );
   const tileModels = [];
   for (const mapTile of mapTiles) {
     const { x, y } = mapTile;
     const key = `${x},${y}`;
     const visible = view.isVisible(x, y);
     const isSelected = Boolean(
-      state.units.some(
+      (!isRealtimeGame() &&
+        state.units.some(
         (unit) =>
           selectedIds.has(unit.id) && unit.x === x && unit.y === y,
-      ) ||
+        )) ||
         (selectedStructure && occupiesTile(selectedStructure, x, y)),
     );
     // Nearby detailed instances retain per-tile interaction highlighting.
@@ -3749,10 +4203,40 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
         ]
       : []),
   ]
-    .filter((piece) => isPieceVisible(piece, view))
+    .filter(
+      (piece) => piece.type === "objective" || isPieceVisible(piece, view),
+    )
     .map((piece) => {
       const isUnit = piece.type in UNIT_TYPES;
       const spec = isUnit ? UNIT_TYPES[piece.type] : BUILDINGS[piece.type];
+      const progressFor = (job) =>
+        Math.max(
+          0,
+          Math.min(
+            1,
+            Number(job?.progressTicks ?? 0) /
+              Math.max(
+                1,
+                Number(
+                  job?.durationTicks ??
+                    Number(job?.durationSeconds ?? 8) * RTS_TICK_RATE,
+                ),
+              ),
+          ),
+        );
+      const producerJobs =
+        !isUnit && piece.kind !== "building" && piece.type === "barracks"
+          ? state.jobs.filter(
+              (job) =>
+                job.kind === "recruit" &&
+                (job.producerId ?? job.barracksId) === piece.id,
+            )
+          : [];
+      const productionProgress = producerJobs.length
+        ? Math.max(...producerJobs.map(progressFor))
+        : piece.kind === "building"
+          ? progressFor(piece)
+          : null;
       const order =
         isUnit && piece.owner === localOwner && view.orderByUnit.get(piece.id);
       return {
@@ -3760,22 +4244,44 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
         kind: isUnit ? "unit" : "structure",
         type: piece.type,
         owner: piece.owner === localOwner ? 0 : 1,
+        objectiveControl:
+          piece.type !== "objective"
+            ? null
+            : piece.owner < 0
+              ? "neutral"
+              : piece.owner === localOwner
+                ? "friendly"
+                : "enemy",
         x: piece.x,
         y: piece.y,
         hp: piece.hp || 1,
         maxHp: spec.lives,
         pending: piece.kind === "building",
+        productionProgress,
+        productionCount: producerJobs.length,
         guide: piece.guide === true,
         bridgeAnchorOnly: piece.bridgeAnchorOnly === true,
         selected:
           selectedIds.has(piece.id) || piece.id === selectedStructureId,
-        orderKind: order?.kind || null,
-        heading: piece.owner === 0 ? 0 : Math.PI,
+        orderKind: order?.commandType ?? order?.kind ?? null,
+        heading: Number.isFinite(piece.heading)
+          ? piece.heading
+          : piece.owner === 0
+            ? 0
+            : Math.PI,
         airborne: piece.airborne === true,
+        airState: piece.airState ?? null,
+        fuel: Number.isFinite(piece.fuel) ? piece.fuel : null,
+        maxFuel: Number.isFinite(piece.maxFuel) ? piece.maxFuel : null,
         ...(isUnit &&
         Number.isFinite(piece.worldX) &&
         Number.isFinite(piece.worldY)
-          ? { worldX: piece.worldX, worldY: piece.worldY }
+          ? {
+              worldX: piece.worldX,
+              worldY: piece.worldY,
+              velocityX: Number(piece.velocityX) || 0,
+              velocityY: Number(piece.velocityY) || 0,
+            }
           : {}),
         footprintSize: isUnit ? 1 : (spec.footprintSize ?? 1),
         ...(!isUnit && Number.isFinite(spec.modelWidth)
@@ -3795,16 +4301,19 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
     });
 
   battlefield3D?.update({
-    tiles: tileModels,
+    tiles: dynamicOnly ? null : tileModels,
     pieces,
     orderTargets: state.orders
       .filter(
         (order) =>
           order.owner === localOwner &&
-          (order.kind === "attack" || order.kind === "move"),
+          (order.kind === "attack" ||
+            order.kind === "move" ||
+            order.kind === "command"),
       )
       .filter((order) => {
-        if (order.kind === "attack") return true;
+        if (order.kind === "attack" || order.commandType === "attack")
+          return true;
         const actor = getUnit(order.unitId);
         return UNIT_TYPES[actor?.type]?.airUnit === true;
       })
@@ -3813,7 +4322,7 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
         return {
           id: order.id,
           kind:
-            order.kind === "attack"
+            order.kind === "attack" || order.commandType === "attack"
               ? "attack"
               : UNIT_TYPES[actor?.type]?.airUnit === true
                 ? "bomb"
@@ -3825,10 +4334,48 @@ function renderMap(view, selected = getUnit(state.selectedId)) {
         };
       }),
     movementRoutes: state.orders
-      .filter((order) => order.owner === localOwner && order.kind === "move")
+      .filter(
+        (order) =>
+          order.owner === localOwner &&
+          (order.kind === "move" ||
+            (order.kind === "command" &&
+              ["move", "attack-move", "patrol"].includes(order.commandType))),
+      )
       .map((order) => {
         const actor = getUnit(order.unitId);
         if (!actor || UNIT_TYPES[actor.type]?.airUnit === true) return null;
+        if (order.kind === "command") {
+          const commands = state.orders.filter(
+            (candidate) =>
+              candidate.kind === "command" &&
+              candidate.unitId === actor.id &&
+              ["move", "attack-move", "patrol"].includes(
+                candidate.commandType,
+              ),
+          );
+          const commandIndex = commands.findIndex(
+            (candidate) => candidate.id === order.id,
+          );
+          const previousCommand =
+            commandIndex > 0 ? commands[commandIndex - 1] : null;
+          const points =
+            commandIndex <= 0
+              ? [
+                  mapPositionFor(actor),
+                  ...actor.path.slice(actor.pathIndex ?? 0),
+                ]
+              : [
+                  { x: previousCommand.x, y: previousCommand.y },
+                  { x: order.x, y: order.y },
+                ];
+          if (!points.length && Number.isFinite(order.x))
+            points.push({ x: order.x, y: order.y });
+          return {
+            id: order.id,
+            points,
+            flagPoints: [{ x: order.x, y: order.y }],
+          };
+        }
         const waypointIndex = Number.isInteger(order.waypointIndex)
           ? order.waypointIndex
           : 0;
@@ -4066,6 +4613,10 @@ function pieceMarkup(piece) {
 function renderSelected() {
   const selected = getUnit(state.selectedId);
   const group = selectedUnits();
+  if (isRealtimeGame()) {
+    renderRealtimeSelection(selected, group);
+    return;
+  }
   const groupSelected = group.length > 1;
   const selectedMovementRange = selected ? movementRangeFor(selected) : null;
   const movedThisRound = selected?.movedThisRound === true;
@@ -4204,6 +4755,78 @@ function renderSelected() {
   els.selectionReadout.innerHTML = `<span class="selection-icon">⌖</span><span><small>FIELD ORDERS</small><strong>${message}</strong></span>`;
 }
 
+function renderRealtimeSelection(selected, group) {
+  const groupSelected = group.length > 1;
+  if (!selected) {
+    els.selectedCard.className = "selected-card empty";
+    els.selectedCard.innerHTML =
+      '<span class="selected-unit-icon">—</span><span><strong>NO UNIT SELECTED</strong><small>Click or drag-select friendly units.</small></span>';
+  } else if (groupSelected) {
+    els.selectedCard.className = "selected-card";
+    els.selectedCard.innerHTML = `<span class="selected-unit-icon">${group.length}</span><span><strong>COMBAT GROUP</strong><small>${group.length} units · Shift queues waypoints · E attack · F flee · H hold fire</small></span>`;
+  } else {
+    const spec = UNIT_TYPES[selected.type];
+    const stats = rtsStatsFor(spec, RTS_TICK_RATE);
+    const cooldown = Math.max(
+      0,
+      Number(selected.weaponCooldownTicks ?? 0) / RTS_TICK_RATE,
+    );
+    const command = ensureRtsRuntime().commandFor(selected.id);
+    els.selectedCard.className = "selected-card";
+    const fuelStatus = spec.airUnit
+      ? ` · ${Math.round(
+          (Number(selected.fuel ?? spec.fuelCapacity) /
+            Math.max(1, Number(selected.maxFuel ?? spec.fuelCapacity))) *
+            100,
+        )}% FUEL · ${String(selected.airState ?? "landed").toUpperCase()}`
+      : "";
+    els.selectedCard.innerHTML = `<span class="selected-unit-icon">${spec.mark}</span><span><strong>${spec.label} · ${coord(selected.x, selected.y)}</strong><small>${selected.hp}/${spec.lives} HP · ${stats.speed.toFixed(1)} SPEED · ${spec.range} RANGE · ${cooldown.toFixed(1)}s RELOAD${fuelStatus}${command ? ` · ${command.commandType.toUpperCase()}` : ""}</small></span>`;
+  }
+  const available = Boolean(selected) && !isInteractionLocked();
+  els.moveButton.disabled = !available;
+  els.attackButton.disabled = !available;
+  if (els.stopButton) els.stopButton.disabled = !available;
+  if (els.engageButton) {
+    els.engageButton.disabled = !available;
+    els.engageButton.classList.toggle(
+      "active",
+      group.some((unit) => unit.stance === "attack"),
+    );
+  }
+  if (els.fleeButton) {
+    els.fleeButton.disabled = !available;
+    els.fleeButton.classList.toggle(
+      "active",
+      group.some((unit) => unit.stance === "flee"),
+    );
+  }
+  if (els.holdButton) els.holdButton.disabled = !available;
+  els.holdButton?.classList.toggle(
+    "active",
+    group.some((unit) => unit.stance === "hold-fire"),
+  );
+  els.moveButton.hidden = false;
+  els.attackButton.hidden = false;
+  els.moveButton.querySelector("strong").textContent = "MOVE";
+  els.moveButton.querySelector("small").textContent = "M · right-click";
+  els.attackButton.querySelector("strong").textContent = "ATTACK-MOVE";
+  els.attackRange.textContent = "A · auto engage";
+  els.moveButton.classList.toggle("active", state.intent === "move");
+  els.attackButton.classList.toggle("active", state.intent === "attack-move");
+  let message = "Select units, then right-click terrain to move or enemies to focus fire.";
+  if (state.buildMode)
+    message = `Place ${BUILDINGS[state.buildMode].label} on valid terrain. Construction completes in real time.`;
+  else if (state.intent === "move")
+    message = "Choose a destination. Shift preserves the current command queue.";
+  else if (state.intent === "attack-move")
+    message = "Choose ground to sweep. Units will stop and engage contacts en route.";
+  else if (groupSelected)
+    message = `${group.length} units ready. E attack · F flee · H hold fire · Shift queues waypoints.`;
+  else if (selected)
+    message = `${UNIT_TYPES[selected.type].label} ready · stance ${String(selected.stance).replace("-", " ")}.`;
+  els.selectionReadout.innerHTML = `<span class="selection-icon">⌖</span><span><small>LIVE COMMAND</small><strong>${message}</strong></span>`;
+}
+
 function updateBridgePlacementReadout(preview) {
   if (state.buildMode !== "bridge") return;
   const readout = els.selectionReadout.querySelector("strong");
@@ -4254,13 +4877,38 @@ function renderQueue() {
         );
       }
       if (item.kind === "recruit") {
+        const progress = Math.min(
+          100,
+          Math.round(
+            (Number(item.progressTicks ?? 0) /
+              Math.max(1, Number(item.durationTicks ?? RTS_TICK_RATE))) *
+              100,
+          ),
+        );
         return queueMarkup(
           item.id,
           UNIT_TYPES[item.type].mark,
           `${UNIT_TYPES[item.type].label} RECRUIT`,
-          "Reports after resolution",
+          `Training ${progress}%`,
           item.cost,
           "build",
+        );
+      }
+      if (item.kind === "command") {
+        const actor = getUnit(item.unitId);
+        const unitName = actor ? UNIT_TYPES[actor.type].label : "UNIT";
+        const destination = Number.isFinite(item.x)
+          ? coord(Math.round(item.x), Math.round(item.y))
+          : "designated target";
+        return queueMarkup(
+          item.id,
+          item.commandType === "attack" ? "⌖" : "↗",
+          `${unitName} · ${item.commandType.toUpperCase()}`,
+          item.commandType === "attack"
+            ? "Focus hostile target"
+            : `Destination ${destination}`,
+          null,
+          "action",
         );
       }
       const actor = getUnit(item.unitId);
@@ -4296,7 +4944,9 @@ function queueMarkup(
   refundable = true,
   recurring = false,
 ) {
-  const costLabel = recurring
+  const costLabel = cost == null
+    ? "LIVE"
+    : recurring
     ? `◆ ${cost} / TURN`
     : `◆ ${cost}${refundable ? "" : " SPENT"}`;
   return `<div class="queue-item ${className}"><span class="queue-icon">${icon}</span><span><strong>${title}</strong><small>${detail}</small></span><span class="queue-cost">${costLabel}</span><button class="queue-remove" data-remove="${id}" type="button" aria-label="Cancel ${title}">×</button></div>`;
@@ -4322,7 +4972,7 @@ function isFieldBuilder(unit, owner = localOwner) {
 }
 
 function renderPurchases() {
-  const deployment = state.phase === "deployment";
+  const deployment = state.phase === "deployment" || isRealtimeGame();
   const builderSelected = isFieldBuilder(getUnit(state.selectedId));
   if (els.commanderConstruction)
     els.commanderConstruction.hidden = !builderSelected;
@@ -4354,7 +5004,7 @@ function chooseBuild(type) {
   const hasBuilder = state.units.some((item) => isFieldBuilder(item));
   if (
     !spec ||
-    state.phase !== "deployment" ||
+    !["deployment", "realtime"].includes(state.phase) ||
     isInteractionLocked() ||
     (spec.commanderOnly &&
       (!hasBuilder || !isFieldBuilder(getUnit(state.selectedId)))) ||
@@ -4476,7 +5126,7 @@ function queueBuilding(type, x, y, owner = localOwner) {
   const footprint = buildingFootprintCoordinates(x, y, type);
   if (
     (owner === localOwner &&
-      (state.phase !== "deployment" || isInteractionLocked())) ||
+      (!["deployment", "realtime"].includes(state.phase) || isInteractionLocked())) ||
     !isValidBuildTile(x, y, owner, type) ||
     state.players[owner].resources < spec.price
   )
@@ -4491,6 +5141,7 @@ function queueBuilding(type, x, y, owner = localOwner) {
     y,
     cost: spec.price,
     footprint,
+    durationSeconds: type === "watchtower" ? 5 : 10,
   });
   if (owner === localOwner) {
     log(`${spec.label} construction marked at ${coord(x, y)}.`);
@@ -4505,7 +5156,7 @@ function queueBridge(start, end, owner = localOwner) {
   const footprint = bridgeFootprintCoordinates(start, end);
   if (
     (owner === localOwner &&
-      (state.phase !== "deployment" || isInteractionLocked())) ||
+      (!["deployment", "realtime"].includes(state.phase) || isInteractionLocked())) ||
     !isValidBridgeEnd(start, end.x, end.y, owner) ||
     state.players[owner].resources < metrics.cost
   )
@@ -4524,6 +5175,7 @@ function queueBridge(start, end, owner = localOwner) {
     lengthMeters: metrics.lengthMeters,
     cost: metrics.cost,
     footprint,
+    durationSeconds: Math.max(8, metrics.lengthMeters * 0.5),
   });
   if (owner === localOwner) {
     log(
@@ -4545,7 +5197,7 @@ function queueRecruit(type, owner = localOwner, producerId = null) {
     spec.recruitable === false ||
     !Number.isFinite(spec.price) ||
     (owner === localOwner &&
-      (state.phase !== "deployment" || isInteractionLocked())) ||
+      (!["deployment", "realtime"].includes(state.phase) || isInteractionLocked())) ||
     !producerCanRecruit(producer, type, owner) ||
     state.players[owner].resources < spec.price
   )
@@ -4559,6 +5211,7 @@ function queueRecruit(type, owner = localOwner, producerId = null) {
     producerId: producer.id,
     ...(producer.type === "barracks" ? { barracksId: producer.id } : {}),
     cost: spec.price,
+    durationSeconds: spec.airUnit ? 18 : 8 + spec.price * 0.2,
   });
   if (owner === localOwner) {
     log(`${spec.label} unit added to the reinforcement manifest.`);
@@ -4696,6 +5349,13 @@ function handleTileClick(x, y, pointer = null) {
     occupiesTile(structure, x, y),
   );
   const clickedFriendlyUnit = nearestFriendlyUnitAt(x, y, pointer);
+  if (isRealtimeGame()) {
+    handleRealtimeTileClick(x, y, pointer, {
+      clickedStructure,
+      clickedFriendlyUnit,
+    });
+    return;
+  }
   if (state.phase === "deployment") {
     if (state.buildMode === "bridge") {
       closeStructurePopover();
@@ -4837,7 +5497,135 @@ function handleTileClick(x, y, pointer = null) {
   render();
 }
 
+function handleRealtimeTileClick(
+  x,
+  y,
+  pointer,
+  { clickedStructure, clickedFriendlyUnit },
+) {
+  const destination = targetPointForTile(x, y, pointer);
+  const clickedTarget = pointer?.targetId
+    ? [...state.units, ...state.structures].find(
+        (entity) => entity.id === pointer.targetId && entity.hp > 0,
+      )
+    : pieceAt(x, y, false);
+  const commandClick = pointer?.button === 2;
+
+  if (!commandClick && state.buildMode) {
+    if (state.buildMode === "bridge") {
+      if (!state.bridgeStart) {
+        const commander = commanderForBridgeStart(x, y, localOwner);
+        if (commander)
+          state.bridgeStart = { x, y, commanderId: commander.id };
+      } else if (queueBridge(state.bridgeStart, { x, y })) {
+        state.buildMode = null;
+        state.bridgeStart = null;
+      }
+    } else if (queueBuilding(state.buildMode, x, y)) {
+      state.buildMode = null;
+    }
+    render();
+    return;
+  }
+
+  if (!commandClick && clickedFriendlyUnit && !state.intent) {
+    selectUnit(clickedFriendlyUnit, {
+      additive: Boolean(pointer?.shiftKey),
+      pointer,
+    });
+    render();
+    return;
+  }
+
+  const selected = selectedUnits();
+  if (selected.length && (commandClick || state.intent)) {
+    const hostile =
+      clickedTarget && clickedTarget.owner === enemyOwner()
+        ? clickedTarget
+        : null;
+    if (hostile) {
+      issueRtsCommand("attack", null, hostile.id, {
+        queued: Boolean(pointer?.shiftKey),
+        units: selected,
+      });
+      return;
+    }
+    const commandType =
+      state.intent === "attack-move" ? "attack-move" : "move";
+    issueFormationRtsCommand(commandType, destination, {
+      queued: Boolean(pointer?.shiftKey),
+      units: selected,
+    });
+    return;
+  }
+
+  if (!commandClick && clickedStructure) {
+    selectStructure(clickedStructure, pointer);
+  } else if (!commandClick) {
+    clearUnitSelection();
+    closeStructurePopover();
+  }
+  render();
+}
+
+function issueFormationRtsCommand(
+  type,
+  destination,
+  { queued = false, units = selectedUnits() } = {},
+) {
+  if (!units.length) return false;
+  const offsets = formationOffsets(units.length);
+  let accepted = 0;
+  const runtime = ensureRtsRuntime();
+  const networkCommands = [];
+  for (let index = 0; index < units.length; index += 1) {
+    const offset = offsets[index];
+    const target = {
+      x: destination.x + offset.x,
+      y: destination.y + offset.y,
+    };
+    const unit = units[index];
+    const acceptedIds = runtime.issueCommand({
+      owner: localOwner,
+      unitIds: [unit.id],
+      type,
+      destination: target,
+      queued,
+    });
+    if (acceptedIds.length) {
+      accepted += 1;
+      if (isHumanGame())
+        networkCommands.push({
+          commandType: type,
+          destination: target,
+          targetId: null,
+          unitIds: acceptedIds,
+          queued,
+        });
+    }
+  }
+  if (accepted) {
+    if (networkCommands.length)
+      sendSocketMessage({
+        type: "rts-command-batch",
+        sequence: ++multiplayer.sequence,
+        commands: networkCommands,
+      });
+    state.intent = null;
+    log(`${accepted} unit${accepted === 1 ? "" : "s"} executing ${type.replace("-", " ")}.`);
+    render();
+  }
+  return accepted > 0;
+}
+
 function setIntent(intent) {
+  if (isRealtimeGame()) {
+    const normalized = intent === "attack" ? "attack-move" : intent;
+    if (!selectedUnits().length || isInteractionLocked()) return;
+    state.intent = state.intent === normalized ? null : normalized;
+    render();
+    return;
+  }
   const selected = getUnit(state.selectedId);
   const group = selectedUnits();
   if (intent === "move" && group.length > 1) {
@@ -4874,6 +5662,7 @@ function setIntent(intent) {
 }
 
 function defaultSelectionIntent(unitItem) {
+  if (isRealtimeGame()) return null;
   const spec = UNIT_TYPES[unitItem?.type];
   return state.phase === "orders" &&
     spec?.airUnit === true &&
@@ -5043,11 +5832,26 @@ function removeQueued(id) {
   );
   if (index < 0 || isInteractionLocked()) return;
   const [item] = collection.splice(index, 1);
+  if (item.kind === "command") {
+    const actor = getUnit(item.unitId);
+    if (actor) {
+      actor.path = [];
+      actor.pathIndex = 0;
+      actor.velocityX = 0;
+      actor.velocityY = 0;
+      actor.explicitTargetId = null;
+      actor.acquiredTargetId = null;
+    }
+    log("Live command cancelled.");
+    render();
+    return;
+  }
   const refundable =
     item.kind !== "move" ||
     !Number.isInteger(item.waypointIndex) ||
     item.waypointIndex === 0;
-  if (refundable) state.players[localOwner].resources += item.cost;
+  if (refundable)
+    state.players[localOwner].resources += Number(item.cost ?? 0);
   if (item.unitId === state.selectedId) state.intent = null;
   log(
     refundable
@@ -5231,7 +6035,12 @@ function initializeBattlefield3D({
       resolvePlacementPreview: (x, y) => {
         const type = state.buildMode;
         const spec = BUILDINGS[type];
-        if (!type || !spec || state.phase !== "deployment") return null;
+        if (
+          !type ||
+          !spec ||
+          !["deployment", "realtime"].includes(state.phase)
+        )
+          return null;
         if (type === "bridge") {
           if (!state.bridgeStart)
             return {
@@ -5348,3 +6157,4 @@ document.body.classList.toggle(
 );
 showGameMenu("home");
 render();
+requestAnimationFrame(rtsFrame);

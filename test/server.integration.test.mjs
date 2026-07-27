@@ -165,3 +165,119 @@ test("server protects private files and broadcasts validated plan deltas", async
     fs.rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test("server authoritatively advances real-time movement commands", async () => {
+  const port = await availablePort();
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "rule-war-rts-"));
+  const child = spawn(process.execPath, ["server.cjs"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      HOST: "127.0.0.1",
+      PORT: String(port),
+      DATABASE_PATH: path.join(directory, "campaign.sqlite"),
+      MATCH_STORE_PATH: path.join(directory, "legacy.json"),
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  const output = [];
+  child.stdout.on("data", (data) => output.push(data.toString()));
+  child.stderr.on("data", (data) => output.push(data.toString()));
+  const host = `http://127.0.0.1:${port}`;
+  let hostSocket;
+  let guestSocket;
+  try {
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      try {
+        if ((await fetch(host)).ok) break;
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+    }
+    hostSocket = await openSocket(`ws://127.0.0.1:${port}/ws`);
+    const hostSessionPromise = nextMessage(hostSocket, "session");
+    hostSocket.send(
+      JSON.stringify({
+        type: "create-match",
+        state: {
+          schema: 1,
+          config: { cols: 20, rows: 20 },
+          game: {
+            round: 1,
+            phase: "realtime",
+            mode: "realtime",
+            simulationTick: 0,
+            tickRate: 20,
+            players: [
+              { id: 0, resources: 10 },
+              { id: 1, resources: 10 },
+            ],
+            units: [
+              {
+                id: "host-unit",
+                type: "commander",
+                owner: 0,
+                x: 1,
+                y: 1,
+                hp: 1,
+                revealsFog: true,
+              },
+              {
+                id: "guest-unit",
+                type: "commander",
+                owner: 1,
+                x: 18,
+                y: 18,
+                hp: 1,
+                revealsFog: true,
+              },
+            ],
+            structures: [],
+            jobs: [],
+            orders: [],
+            projectiles: [],
+          },
+        },
+      }),
+    );
+    const hostSession = await hostSessionPromise;
+    guestSocket = await openSocket(`ws://127.0.0.1:${port}/ws`);
+    const guestSessionPromise = nextMessage(guestSocket, "session");
+    guestSocket.send(
+      JSON.stringify({ type: "join-match", code: hostSession.code }),
+    );
+    await guestSessionPromise;
+
+    const acceptedPromise = nextMessage(hostSocket, "command-accepted");
+    hostSocket.send(
+      JSON.stringify({
+        type: "rts-command",
+        sequence: 1,
+        commandType: "move",
+        unitIds: ["host-unit"],
+        destination: { x: 5, y: 1 },
+      }),
+    );
+    const accepted = await acceptedPromise;
+    assert.deepEqual(accepted.unitIds, ["host-unit"]);
+
+    let movedUnit = null;
+    const snapshotDeadline = Date.now() + 3000;
+    while (Date.now() < snapshotDeadline && !movedUnit) {
+      const snapshot = await nextMessage(hostSocket, "simulation-snapshot");
+      const unit = snapshot.state.game.units.find(
+        (item) => item.id === "host-unit",
+      );
+      if (unit?.worldX > 1.05) movedUnit = unit;
+    }
+    assert.ok(movedUnit, output.join(""));
+    assert.ok(movedUnit.worldX <= 5);
+  } finally {
+    hostSocket?.close();
+    guestSocket?.close();
+    child.kill();
+    await new Promise((resolve) => child.once("exit", resolve));
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});

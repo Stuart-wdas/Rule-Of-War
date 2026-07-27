@@ -1,8 +1,7 @@
 # Modding and Architecture Guide
 
-This project is being separated gradually so each step remains playable. The
-current structure is intentionally simple JavaScript modules with no build
-step.
+The project uses browser-native JavaScript modules with no build step. Gameplay
+is driven by a deterministic fixed-tick simulation.
 
 ## Where things live
 
@@ -17,6 +16,7 @@ step.
 | `controllers/combat-controller.js` | Attack snapshots, damage, animation timeouts, and casualty removal. |
 | `controllers/production-controller.js` | Completing construction and spawning recruits. |
 | `controllers/phase-controller.js` | Movement/combat phase orchestration and round cleanup. |
+| `simulation/rts-runtime.js` | Continuous movement, steering, targeting, weapons, projectiles, economy, production, support, objectives, and victory. |
 | `state/game-state.js` | Serializable piece factories and fresh campaign creation. |
 | `core/board-utils.js` | Circular distance, coordinates, and deployment ordering. |
 | `core/battlefield-view-index.js` | Per-render occupancy, visibility, order, and highlight indexes. |
@@ -31,9 +31,9 @@ step.
 | `server.cjs` | Static files, WebSockets, multiplayer sessions, and checkpoints. |
 | `styles.css` / `index.html` | Interface appearance and markup. |
 
-The important boundary is: **controllers choose actions; `game.js` validates
-and resolves them**. For example, the AI calls `queueOrder()` instead of moving
-a unit directly. This keeps AI and human players on the same rules.
+The important boundary is: **players and AI issue commands; `RtsRuntime`
+resolves them**. Rendering consumes state and events but never decides movement
+or damage. Multiplayer runs the same runtime on the server.
 
 ## Add a selectable map
 
@@ -64,6 +64,11 @@ scout: {
   damage: 1,
   mark: "SC",
   movementRange: 7,
+  speed: 2.8,
+  acceleration: 9,
+  reloadSeconds: 1.2,
+  windupSeconds: 0.1,
+  acquisitionRange: 10,
 },
 ```
 
@@ -73,6 +78,12 @@ Common fields:
 - `actionCost`: supply spent on each move or attack.
 - `range`: circular attack and fog-reveal radius.
 - `movementRange`: circular world-space radius measured between tile centres.
+- `speed`: world units moved per second.
+- `acceleration`: velocity change per second.
+- `reloadSeconds`: delay between weapon shots.
+- `windupSeconds`: tracking delay before a shot is released.
+- `acquisitionRange`: automatic target search radius.
+- `projectileSpeed`: optional authoritative projectile travel speed.
 - `hitChance`: number from `0` to `1`.
 - `lives`: maximum health.
 - `damage`: damage from a successful hit.

@@ -18,6 +18,12 @@ export function buildNetworkSnapshot(state, config, configKeys) {
     game: {
       round: state.round,
       phase: state.phase,
+      mode: state.mode ?? null,
+      simulationTick: state.simulationTick ?? 0,
+      tickRate: state.tickRate ?? 20,
+      elapsedSeconds: state.elapsedSeconds ?? 0,
+      nextRuntimeId: state.nextRuntimeId ?? 1,
+      rtsIncomePerMinePerMinute: state.rtsIncomePerMinePerMinute ?? 30,
       winner: state.winner,
       objectiveControl: cloneJson(
         state.objectiveControl ?? { owner: null, rounds: 0 },
@@ -28,6 +34,7 @@ export function buildNetworkSnapshot(state, config, configKeys) {
       units: sortById(state.units),
       jobs: sortById(state.jobs),
       orders: sortById(state.orders),
+      projectiles: sortById(state.projectiles ?? []),
     },
   };
 }

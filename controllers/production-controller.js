@@ -27,9 +27,15 @@ export class ProductionController {
 
   completeJobs() {
     const state = this.getState();
-    const localOwner = this.getLocalOwner();
     const buildingJobs = state.jobs.filter((item) => item.kind === "building");
-    for (const job of buildingJobs) {
+    const recruitJobs = state.jobs.filter((item) => item.kind === "recruit");
+    for (const job of [...buildingJobs, ...recruitJobs]) this.completeJob(job);
+  }
+
+  completeJob(job) {
+    const state = this.getState();
+    const localOwner = this.getLocalOwner();
+    if (job.kind === "building") {
       const isBridge = job.type === "bridge";
       const footprint =
         job.footprint ?? this.getBuildingFootprint(job.x, job.y);
@@ -71,10 +77,9 @@ export class ProductionController {
             true,
           );
       }
+      return;
     }
-
-    const recruitJobs = state.jobs.filter((item) => item.kind === "recruit");
-    for (const job of recruitJobs) {
+    if (job.kind === "recruit") {
       const producer = state.structures.find(
         (item) => item.id === (job.producerId ?? job.barracksId),
       );

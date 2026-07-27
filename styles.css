@@ -4749,3 +4749,121 @@ body {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* Real-time command layer */
+body.rts-mode .phase-track,
+body.rts-mode #phase-button,
+body.rts-mode #turn-skip-control,
+body.rts-mode #phase-sync-status {
+  display: none !important;
+}
+
+body.rts-mode .command-panel {
+  border-color: color-mix(in srgb, var(--lime, #d2c779) 38%, transparent);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.28),
+    inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+body.rts-mode .phase-ring {
+  color: #d2c779;
+  animation: rts-live-pulse 1.6s ease-in-out infinite;
+}
+
+body.rts-mode .order-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(119, 156, 145, 0.18);
+  background:
+    linear-gradient(135deg, rgba(119, 156, 145, 0.055), transparent 52%),
+    rgba(8, 13, 10, 0.28);
+}
+
+body.rts-mode .order-actions.single .order-button:not([hidden]) {
+  grid-column: auto;
+}
+
+body.rts-mode .order-button {
+  min-height: 4.1rem;
+  grid-template-columns: 1.65rem minmax(0, 1fr);
+  padding: 0.65rem 0.55rem;
+  border-width: 1px;
+  border-left-width: 2px;
+  background:
+    linear-gradient(115deg, rgba(119, 156, 145, 0.1), transparent 72%),
+    rgba(16, 23, 18, 0.72);
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    transform 140ms ease;
+}
+
+body.rts-mode .order-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background:
+    linear-gradient(115deg, rgba(213, 240, 90, 0.12), transparent 72%),
+    rgba(18, 25, 19, 0.9);
+}
+
+body.rts-mode .order-button > span {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  font-size: 0.82rem;
+  opacity: 0.82;
+}
+
+body.rts-mode .order-button strong {
+  font-size: 0.67rem;
+  letter-spacing: 0.11em;
+}
+
+body.rts-mode .order-button small {
+  margin-top: 0.15rem;
+  font-size: 0.48rem;
+  line-height: 1.25;
+}
+
+body.rts-mode #three-viewport {
+  cursor: crosshair;
+}
+
+body.rts-mode .queue-cost {
+  color: #d2c779;
+  letter-spacing: 0.08em;
+}
+
+body.rts-paused .three-viewport::after {
+  content: "TACTICAL PAUSE";
+  position: absolute;
+  inset: 1rem auto auto 50%;
+  z-index: 8;
+  transform: translateX(-50%);
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(210, 199, 121, 0.5);
+  background: rgba(13, 17, 14, 0.9);
+  color: #e8e0bc;
+  font: 700 0.7rem/1 var(--font-display, sans-serif);
+  letter-spacing: 0.18em;
+}
+
+@keyframes rts-live-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    box-shadow: 0 0 0 rgba(210, 199, 121, 0);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 24px rgba(210, 199, 121, 0.22);
+  }
+}
+
+@media (max-width: 720px) {
+  body.rts-mode .order-actions {
+    grid-template-columns: repeat(2, minmax(7rem, 1fr));
+  }
+}

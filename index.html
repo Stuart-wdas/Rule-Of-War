@@ -38,7 +38,7 @@
           </div>
           <div class="menu-network-mark" aria-label="Network ready">
             <span aria-hidden="true"></span>
-            LOCKSTEP COMMAND
+            LIVE COMMAND NETWORK
           </div>
         </header>
 
@@ -104,7 +104,7 @@
           </div>
 
           <div class="menu-doctrine">
-            <span><b>04</b> COMMAND PHASES</span>
+            <span><b>20</b> SIMULATION TICKS / SEC</span>
             <span><b>02</b> SYNCHRONIZED PLAYERS</span>
             <span><b>&infin;</b> SAVED CHECKPOINTS</span>
           </div>
@@ -439,10 +439,31 @@
             <div>
               <kbd>RMB</kbd
               ><span
-                ><b>PAN CAMERA</b
+                ><b>COMMAND / PAN</b
                 ><small
-                  >Right-drag to move the camera across the battlefield.</small
+                  >Right-click to move or attack. Right-drag pans the camera.</small
                 ></span
+              >
+            </div>
+            <div>
+              <kbd>A / M</kbd
+              ><span
+                ><b>ATTACK-MOVE / MOVE</b
+                ><small>Choose a command, then designate terrain.</small></span
+              >
+            </div>
+            <div>
+              <kbd>E / F / H</kbd
+              ><span
+                ><b>ATTACK / FLEE / HOLD FIRE</b
+                ><small>Set persistent automatic unit behavior.</small></span
+              >
+            </div>
+            <div>
+              <kbd>CTRL+1</kbd
+              ><span
+                ><b>CONTROL GROUPS</b
+                ><small>Assign with Ctrl plus 1-9; recall with 1-9.</small></span
               >
             </div>
             <div>
@@ -712,7 +733,7 @@
 
         <div class="round-status" aria-label="Current round">
           <span class="eyebrow">OPERATION</span>
-          <strong>ROUND <span id="round-number">01</span></strong>
+          <strong><span id="round-number">00:00</span></strong>
           <span class="live-dot">LIVE</span>
         </div>
 
@@ -953,7 +974,7 @@
               <span class="resource-divider" aria-hidden="true"></span>
               <span class="income-pill">
                 <small>INCOME</small>
-                <b id="income-rate">+0 / round</b>
+                <b id="income-rate">+0 / min</b>
               </span>
             </div>
 
@@ -989,10 +1010,10 @@
               </button>
               <div class="phase-header">
                 <div>
-                  <span class="eyebrow">COMMAND PHASE</span>
+                  <span class="eyebrow">BATTLE NETWORK</span>
                   <h2 id="command-title">
                     <span id="phase-index">01</span> /
-                    <span id="phase-name">DEPLOYMENT</span>
+                    <span id="phase-name">LIVE COMMAND</span>
                   </h2>
                 </div>
                 <div class="phase-ring" id="phase-ring" aria-hidden="true">
@@ -1143,7 +1164,7 @@
                     type="button"
                     disabled>
                     <span>↗</span><strong>MOVE</strong
-                    ><small>Movement range per round</small>
+                    ><small>Continuous pathing</small>
                   </button>
                   <button
                     id="attack-button"
@@ -1153,10 +1174,42 @@
                     <span>⌖</span><strong>FIRE</strong
                     ><small id="attack-range-label">Select unit</small>
                   </button>
+                  <button
+                    id="stop-button"
+                    class="order-button"
+                    type="button"
+                    disabled>
+                    <span>■</span><strong>STOP</strong
+                    ><small>S · cancel orders</small>
+                  </button>
+                  <button
+                    id="engage-button"
+                    class="order-button danger"
+                    type="button"
+                    disabled>
+                    <span>⌖</span><strong>ATTACK</strong
+                    ><small>Engage in range</small>
+                  </button>
+                  <button
+                    id="flee-button"
+                    class="order-button"
+                    type="button"
+                    disabled>
+                    <span>⇠</span><strong>FLEE</strong
+                    ><small>Retreat from threats</small>
+                  </button>
+                  <button
+                    id="hold-button"
+                    class="order-button"
+                    type="button"
+                    disabled>
+                    <span>◆</span><strong>HOLD</strong
+                    ><small>Hold fire in range</small>
+                  </button>
                 </div>
                 <p class="control-hint" id="order-section-hint">
-                  Ground routes advance to the next flag each round. Bomber
-                  sorties remain single-turn missions.
+                  Units path continuously and automatically fire on visible
+                  hostiles. Use attack-move to clear contested ground.
                 </p>
               </div>
 
@@ -1230,14 +1283,14 @@
           ×
         </button>
         <span class="eyebrow">COMMANDER'S BRIEFING</span>
-        <h2 id="briefing-title">COMMAND THE WAR IN FOUR STAGES.</h2>
+        <h2 id="briefing-title">COMMAND A LIVING BATTLEFIELD.</h2>
         <div class="briefing-steps">
           <article>
             <b>01</b>
-            <h3>DEPLOY</h3>
+            <h3>BUILD</h3>
             <p>
               Spend supply to place buildings or recruit units. New assets
-              arrive after the round resolves. Your commander can establish
+              complete over time. Your commander can establish
               nine-tile, 3 × 3 buildings throughout their movement radius, or
               place a bridge by selecting its two riverbanks.
             </p>
@@ -1246,48 +1299,43 @@
             <b>02</b>
             <h3>MOVE</h3>
             <p>
-              Plot a connected destination at any distance. A small flag marks
-              every round of travel; units advance one flag per round and cannot
-              fire after moving. Bombers still complete one sortie.
+              Right-click a destination or use M. Units follow terrain-aware
+              paths continuously, steer around formations, and repath when blocked.
             </p>
           </article>
           <article>
             <b>03</b>
-            <h3>ATTACK</h3>
+            <h3>ENGAGE</h3>
             <p>
-              Fire from the new positions. Multiple units may concentrate on one
-              square. Units whose range touches a bomber's route automatically
-              attempt to intercept it before payload release.
+              Units automatically acquire and fire on visible enemies. Right-click
+              a hostile to focus it, or press A and designate an attack-move route.
             </p>
           </article>
           <article>
             <b>04</b>
-            <h3>RESOLVE</h3>
+            <h3>CONTROL</h3>
             <p>
-              Shots land together, reinforcements arrive, and the next round
-              begins.
+              Use S to stop, H to hold, Shift to queue commands, and Ctrl+1-9
+              to organize control groups. Solo play supports tactical pause.
             </p>
           </article>
         </div>
         <div class="rules-table">
           <span>Movement</span
           ><strong id="movement-rule"
-            >Movement range depends on unit type</strong
+            >Speed, acceleration, terrain cost, steering, and pathfinding depend on unit type</strong
           >
           <span>Combat</span
           ><strong
-            >Successful-hit damage depends on unit type; commanders may queue
-            three shots</strong
+            >Weapons track targets, wind up, fire, and reload continuously</strong
           >
-          <span>Resolution</span
+          <span>Simulation</span
           ><strong
-            >All moves resolve first; fire then strikes the targeted
-            square</strong
+            >The battle runs at a deterministic 20 simulation ticks per second</strong
           >
-          <span>Evasion</span
+          <span>Orders</span
           ><strong
-            >A unit that leaves a targeted square moves clear before the shot
-            lands</strong
+            >Move, attack, attack-move, stop, hold, patrol, and queued commands are persistent</strong
           >
           <span>Concentrated fire</span
           ><strong

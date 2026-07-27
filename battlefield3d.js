@@ -226,7 +226,10 @@ export class Battlefield3D {
     this.hoveredMapPoint = null;
     this.hoveredTargetId = null;
     this.debugLabelSignature = "";
-    this.clock = new THREE.Clock();
+    this.timer = new THREE.Timer();
+    this.timer.connect(document);
+    this.statusParentQuaternion = new THREE.Quaternion();
+    this.lastRenderTimestamp = performance.now();
     this.destroyed = false;
     this.timedAnimations = new Set();
     this.activeTransientLights = 0;
@@ -382,6 +385,9 @@ export class Battlefield3D {
     this.renderer.domElement.addEventListener(
       "pointerleave",
       this._onPointerLeave,
+    );
+    this.renderer.domElement.addEventListener("contextmenu", (event) =>
+      event.preventDefault(),
     );
     this.renderer.domElement.addEventListener(
       "pointerdown",
@@ -814,6 +820,10 @@ export class Battlefield3D {
       { length: MAX_VIRTUAL_RANGE_SOURCES },
       () => new THREE.Vector3(),
     );
+    const secondaryRangeSources = Array.from(
+      { length: MAX_VIRTUAL_RANGE_SOURCES },
+      () => new THREE.Vector3(),
+    );
     // This is the strategic proxy for the entire map. Terrain tone, fog,
     // adaptive grid lines, and range circles are composited in one opaque
     // fragment. No coplanar transparent surfaces remain to z-fight.
@@ -856,6 +866,13 @@ export class Battlefield3D {
             value: RANGE_OVERLAY_QUALITY.boundaryWidthInTiles,
           },
           rangeGridBoost: { value: 0 },
+          secondaryRangeSourceCount: { value: 0 },
+          secondaryRangeSources: { value: secondaryRangeSources },
+          secondaryRangeColor: { value: new THREE.Color(0x70aeb8) },
+          secondaryRangeBoundaryAlpha: { value: 0.82 },
+          secondaryRangeBoundaryWidth: {
+            value: RANGE_OVERLAY_QUALITY.boundaryWidthInTiles,
+          },
         },
         vertexShader: `
           uniform vec2 boardSize;
@@ -902,6 +919,11 @@ export class Battlefield3D {
           uniform float rangeBoundaryAlpha;
           uniform float rangeBoundaryWidth;
           uniform float rangeGridBoost;
+          uniform int secondaryRangeSourceCount;
+          uniform vec3 secondaryRangeSources[MAX_RANGE_SOURCES];
+          uniform vec3 secondaryRangeColor;
+          uniform float secondaryRangeBoundaryAlpha;
+          uniform float secondaryRangeBoundaryWidth;
           varying vec2 gridCoordinate;
           varying vec2 mapCoordinate;
           varying vec2 gridUv;
@@ -973,6 +995,28 @@ export class Battlefield3D {
               rangeBoundary * rangeBoundaryAlpha
             );
             color = mix(color, rangeColor, clamp(rangeAlpha, 0.0, 1.0));
+            float secondaryBoundary = 0.0;
+            for (int index = 0; index < MAX_RANGE_SOURCES; index++) {
+              if (index >= secondaryRangeSourceCount) break;
+              vec3 source = secondaryRangeSources[index];
+              float distanceToSource = distance(mapCoordinate, source.xy);
+              float edgeSoftness = max(fwidth(distanceToSource) * 1.25, 0.015);
+              float boundary = 1.0 - smoothstep(
+                secondaryRangeBoundaryWidth,
+                secondaryRangeBoundaryWidth + edgeSoftness,
+                abs(distanceToSource - source.z)
+              );
+              secondaryBoundary = max(secondaryBoundary, boundary);
+            }
+            color = mix(
+              color,
+              secondaryRangeColor,
+              clamp(
+                secondaryBoundary * secondaryRangeBoundaryAlpha,
+                0.0,
+                1.0
+              )
+            );
             // Construction mode strengthens the actual grid lines within its
             // valid-range wash, keeping individual placement cells readable.
             color = mix(
@@ -1005,6 +1049,7 @@ export class Battlefield3D {
     this.virtualGrid = surface;
     this.virtualSurface = surface;
     this.virtualRangeSources = rangeSources;
+    this.virtualSecondaryRangeSources = secondaryRangeSources;
     this.boardGroup.add(surface);
   }
 
@@ -1043,7 +1088,7 @@ export class Battlefield3D {
     const gridUniforms = this.virtualGrid?.material?.uniforms;
     if (gridUniforms?.fogMask) gridUniforms.fogMask.value = texture;
     if (this.deferFogClouds) return;
-    const maximumClouds = 30000;
+    const maximumClouds = this.largeScale ? 4000 : 12000;
     const spacing = Math.max(
       3,
       Math.sqrt((this.cols * this.rows) / maximumClouds),
@@ -1228,8 +1273,17 @@ export class Battlefield3D {
         Number.isFinite(source.radius) &&
         source.radius > 0,
     );
-    const enabled = Boolean(kind && sources.length);
-    const signature = enabled ? JSON.stringify({ kind, sources }) : "disabled";
+    const secondarySources = (rangeOverlay?.secondary?.sources ?? []).filter(
+      (source) =>
+        Number.isFinite(source.x) &&
+        Number.isFinite(source.y) &&
+        Number.isFinite(source.radius) &&
+        source.radius > 0,
+    );
+    const enabled = Boolean((kind && sources.length) || secondarySources.length);
+    const signature = enabled
+      ? JSON.stringify({ kind, sources, secondarySources })
+      : "disabled";
     if (signature === this.virtualRangeSignature) return;
     this.virtualRangeSignature = signature;
     if (!enabled) {
@@ -1237,6 +1291,7 @@ export class Battlefield3D {
       uniforms.rangeFillAlpha.value = 0;
       uniforms.rangeBoundaryAlpha.value = 0;
       uniforms.rangeGridBoost.value = 0;
+      uniforms.secondaryRangeSourceCount.value = 0;
       return;
     }
 
@@ -1276,6 +1331,19 @@ export class Battlefield3D {
       );
     }
     uniforms.rangeSourceCount.value = sourceCount;
+    const secondaryCount = Math.min(
+      secondarySources.length,
+      MAX_VIRTUAL_RANGE_SOURCES,
+    );
+    for (let index = 0; index < secondaryCount; index += 1) {
+      const source = secondarySources[index];
+      this.virtualSecondaryRangeSources[index].set(
+        Number(source.x),
+        Number(source.y),
+        Number(source.radius),
+      );
+    }
+    uniforms.secondaryRangeSourceCount.value = secondaryCount;
   }
 
   _cellPosition(x, y) {
@@ -1490,22 +1558,23 @@ export class Battlefield3D {
   update(model) {
     this.model = model;
     this._setTerrainFlatteningAreas(model.terrainFlatteningAreas ?? []);
-    if (this.virtualized) {
-      this._updateVirtualTiles(model.tiles);
-      this._updateVirtualRange(model.rangeOverlay);
-    } else
-      for (const tileState of model.tiles) {
-        const tile = this.tileByKey.get(`${tileState.x},${tileState.y}`);
-        if (!tile) continue;
-        tile.state = tileState;
-        this._applyTileAppearance(tile, tile === this.hoveredTile);
-      }
+    if (model.tiles !== null) {
+      if (this.virtualized) this._updateVirtualTiles(model.tiles);
+      else
+        for (const tileState of model.tiles) {
+          const tile = this.tileByKey.get(`${tileState.x},${tileState.y}`);
+          if (!tile) continue;
+          tile.state = tileState;
+          this._applyTileAppearance(tile, tile === this.hoveredTile);
+        }
+    }
+    if (this.virtualized) this._updateVirtualRange(model.rangeOverlay);
 
     this._updateVirtualFog(model.fog);
 
-    this._updateTerrainDebugLabels(model.tiles);
+    if (model.tiles !== null) this._updateTerrainDebugLabels(model.tiles);
     this._updateRangeRings(model.rangeOverlay);
-    this._updateTrees(model.tiles, model.pieces);
+    if (model.tiles !== null) this._updateTrees(model.tiles, model.pieces);
 
     const routeModelSignature = JSON.stringify(model.movementRoutes ?? []);
     if (routeModelSignature !== this.routeModelSignature) {
@@ -1517,7 +1586,23 @@ export class Battlefield3D {
     }
 
     const dynamicModelSignature = JSON.stringify({
-      pieces: model.pieces,
+      pieces: model.pieces.map((piece) => ({
+        id: piece.id,
+        kind: piece.kind,
+        type: piece.type,
+        owner: piece.owner,
+        objectiveControl: piece.objectiveControl,
+        hp: piece.hp,
+        maxHp: piece.maxHp,
+        pending: piece.pending,
+        hasProductionProgress: Number.isFinite(piece.productionProgress),
+        selected: piece.selected,
+        orderKind: piece.orderKind,
+        airborne: piece.airborne,
+        footprintSize: piece.footprintSize,
+        endX: piece.endX,
+        endY: piece.endY,
+      })),
       orderTargets: model.orderTargets ?? [],
     });
     if (dynamicModelSignature !== this.dynamicModelSignature) {
@@ -1531,6 +1616,7 @@ export class Battlefield3D {
         this._addOrderTargetMarker(marker);
       for (const piece of model.pieces) this._addPiece(piece);
     }
+    this._updatePieceTransforms(model.pieces);
     this._updateHoverReticle(this.hoveredTile);
     this._updatePlacementPreview(this.hoveredTile);
     if (!this.hasFocusedInitialView && this._focusPlayerUnits())
@@ -1543,24 +1629,28 @@ export class Battlefield3D {
   }
 
   _updateRangeRings(rangeOverlay) {
-    const kind = rangeOverlay?.kind ?? null;
-    const sources = (rangeOverlay?.sources ?? []).filter(
-      (source) =>
-        Number.isFinite(source.x) &&
-        Number.isFinite(source.y) &&
-        Number.isFinite(source.radius) &&
-        source.radius > 0,
-    );
+    const overlays = [rangeOverlay, rangeOverlay?.secondary]
+      .filter(Boolean)
+      .map((overlay) => ({
+        kind: overlay.kind,
+        sources: (overlay.sources ?? []).filter(
+          (source) =>
+            Number.isFinite(source.x) &&
+            Number.isFinite(source.y) &&
+            Number.isFinite(source.radius) &&
+            source.radius > 0,
+        ),
+      }));
     const signature = JSON.stringify({
-      kind,
-      sources,
+      overlays,
       terrain: this.terrainFlatteningSignature,
     });
     if (signature === this.rangeRingSignature) return;
     this.rangeRingSignature = signature;
     this._clearDynamicGroup(this.rangeRingGroup);
-    if (kind !== "reachable" && kind !== "targetable") return;
-    for (const source of sources) {
+    for (const { kind, sources } of overlays) {
+      if (!["reachable", "targetable", "sight"].includes(kind)) continue;
+      for (const source of sources) {
       const positions = [];
       const segments = 128;
       for (let index = 0; index < segments; index += 1) {
@@ -1579,7 +1669,12 @@ export class Battlefield3D {
           new THREE.Float32BufferAttribute(positions, 3),
         ),
         new THREE.LineBasicMaterial({
-          color: kind === "targetable" ? COLORS.target : COLORS.paper,
+          color:
+            kind === "targetable"
+              ? COLORS.target
+              : kind === "sight"
+                ? 0x70aeb8
+                : COLORS.paper,
           transparent: true,
           opacity: 0.95,
           depthTest: false,
@@ -1589,6 +1684,7 @@ export class Battlefield3D {
       line.renderOrder = 91;
       line.raycast = () => {};
       this.rangeRingGroup.add(line);
+      }
     }
   }
 
@@ -1599,13 +1695,17 @@ export class Battlefield3D {
       if (!terrain?.cellAtMapPoint) return;
       const placements = [];
       const cellCount = terrain.width * terrain.height;
-      const densityScale = Math.min(1, 60000 / Math.max(cellCount * 0.16, 1));
+      const maximumCandidates = this.largeScale ? 20000 : 80000;
+      const densityScale = Math.min(
+        1,
+        (this.largeScale ? 12000 : 40000) / Math.max(cellCount * 0.16, 1),
+      );
       // Large maps keep a bounded vegetation candidate set. Tree placement is
       // visual only, so sampling representative cells avoids a multi-million
       // cell main-thread scan without changing terrain or gameplay data.
       const vegetationStride = Math.max(
         1,
-        Math.ceil(Math.sqrt(cellCount / 250000)),
+        Math.ceil(Math.sqrt(cellCount / maximumCandidates)),
       );
       const sampledDensityScale = Math.min(
         1,
@@ -2332,6 +2432,10 @@ export class Battlefield3D {
       group.rotation.y = piece.heading ?? (piece.owner === 0 ? 0 : Math.PI);
     }
     if (!piece.guide) this._addHealth(group, piece);
+    if (piece.type === "plane") this._addAircraftFuel(group, piece);
+    if (Number.isFinite(piece.productionProgress))
+      this._addProductionProgress(group, piece);
+    if (piece.type === "objective") this._addObjectiveMarker(group, piece);
 
     if (piece.selected) this._addSelectionRing(group);
     if (piece.orderKind) this._addOrderRing(group, piece.orderKind);
@@ -2343,6 +2447,239 @@ export class Battlefield3D {
     });
     this.pieceGroup.add(group);
     this.pieceMeshes.set(piece.id, group);
+  }
+
+  _addObjectiveMarker(group, piece) {
+    const color =
+      piece.objectiveControl === "friendly"
+        ? 0xb9ff61
+        : piece.objectiveControl === "enemy"
+          ? 0xff604b
+          : 0xf0e8c9;
+    const marker = new THREE.Group();
+    marker.position.y = 2.45;
+    marker.userData.objectiveMarker = true;
+    marker.userData.markerPixels = 34;
+
+    const beam = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.09, 1.2),
+      new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.42,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    );
+    beam.position.y = -0.7;
+    beam.renderOrder = 25;
+    const outer = new THREE.Mesh(
+      new THREE.RingGeometry(0.3, 0.4, 4),
+      new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.95,
+        side: THREE.DoubleSide,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    outer.rotation.z = Math.PI / 4;
+    outer.renderOrder = 27;
+    const core = new THREE.Mesh(
+      new THREE.CircleGeometry(0.16, 4),
+      new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.82,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    core.rotation.z = Math.PI / 4;
+    core.position.z = 0.008;
+    core.renderOrder = 28;
+    const crossHorizontal = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.7, 0.025),
+      new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.72,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    crossHorizontal.renderOrder = 26;
+    const crossVertical = crossHorizontal.clone();
+    crossVertical.rotation.z = Math.PI / 2;
+    for (const item of [
+      beam,
+      outer,
+      core,
+      crossHorizontal,
+      crossVertical,
+    ])
+      item.raycast = () => {};
+    marker.add(beam, outer, core, crossHorizontal, crossVertical);
+    group.add(marker);
+    group.userData.objectiveMarker = marker;
+    this.pulsingObjects.push(marker);
+  }
+
+  _addProductionProgress(group, piece) {
+    const width = Math.max(1.2, Math.min(2.25, piece.footprintSize * 0.72));
+    const indicator = new THREE.Group();
+    indicator.position.y =
+      piece.type === "watchtower" ? 2.9 : piece.type === "bridge" ? 0.78 : 1.88;
+    indicator.userData.productionIndicator = true;
+    indicator.userData.barWidth = width;
+
+    const frame = new THREE.Mesh(
+      new THREE.PlaneGeometry(width + 0.18, 0.28),
+      new THREE.MeshBasicMaterial({
+        color: 0xe8e3cf,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    frame.renderOrder = 18;
+    frame.raycast = () => {};
+    const backing = new THREE.Mesh(
+      new THREE.PlaneGeometry(width + 0.1, 0.2),
+      new THREE.MeshBasicMaterial({
+        color: 0x080b08,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    backing.position.z = 0.006;
+    backing.renderOrder = 19;
+    backing.raycast = () => {};
+    const track = new THREE.Mesh(
+      new THREE.PlaneGeometry(width, 0.13),
+      new THREE.MeshBasicMaterial({
+        color: 0x293029,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    track.position.z = 0.012;
+    track.renderOrder = 20;
+    track.raycast = () => {};
+    const fill = new THREE.Mesh(
+      new THREE.PlaneGeometry(width, 0.13),
+      new THREE.MeshBasicMaterial({
+        color: piece.owner === 0 ? 0xe7ff58 : 0xff654f,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    fill.position.z = 0.018;
+    fill.renderOrder = 21;
+    fill.raycast = () => {};
+    indicator.add(frame, backing, track, fill);
+    indicator.userData.fill = fill;
+    group.add(indicator);
+    group.userData.productionIndicator = indicator;
+    this._setProductionProgress(group, piece.productionProgress);
+  }
+
+  _addAircraftFuel(group, piece) {
+    const width = 0.92;
+    const indicator = new THREE.Group();
+    indicator.position.y = 1.72;
+    indicator.userData.fuelIndicator = true;
+    indicator.userData.barWidth = width;
+    const frame = new THREE.Mesh(
+      new THREE.PlaneGeometry(width + 0.12, 0.18),
+      new THREE.MeshBasicMaterial({
+        color: 0xe8e3cf,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    frame.renderOrder = 22;
+    frame.raycast = () => {};
+    const backing = new THREE.Mesh(
+      new THREE.PlaneGeometry(width + 0.06, 0.12),
+      new THREE.MeshBasicMaterial({
+        color: 0x070a07,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    backing.position.z = 0.006;
+    backing.renderOrder = 23;
+    backing.raycast = () => {};
+    const fill = new THREE.Mesh(
+      new THREE.PlaneGeometry(width, 0.075),
+      new THREE.MeshBasicMaterial({
+        color: 0x62d7f5,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    fill.position.z = 0.012;
+    fill.renderOrder = 24;
+    fill.raycast = () => {};
+    indicator.add(frame, backing, fill);
+    indicator.userData.fill = fill;
+    group.add(indicator);
+    group.userData.fuelIndicator = indicator;
+    this._setAircraftFuel(group, piece);
+  }
+
+  _setAircraftFuel(group, piece) {
+    const indicator = group.userData.fuelIndicator;
+    if (!indicator) return;
+    const maximum = Math.max(1, Number(piece.maxFuel ?? 1));
+    const value = THREE.MathUtils.clamp(Number(piece.fuel ?? maximum) / maximum, 0.015, 1);
+    const fill = indicator.userData.fill;
+    fill.scale.x = value;
+    fill.position.x = ((value - 1) * indicator.userData.barWidth) / 2;
+    fill.material.color.setHex(
+      value <= 0.12 ? 0xff5548 : value <= 0.3 ? 0xf0b94f : 0x62d7f5,
+    );
+  }
+
+  _setProductionProgress(group, progress) {
+    const indicator = group.userData.productionIndicator;
+    if (!indicator) return;
+    const fill = indicator.userData.fill;
+    const value = THREE.MathUtils.clamp(Number(progress) || 0, 0.015, 1);
+    fill.scale.x = value;
+    fill.position.x = ((value - 1) * indicator.userData.barWidth) / 2;
+  }
+
+  _updatePieceTransforms(pieces) {
+    for (const piece of pieces) {
+      const object = this.pieceMeshes.get(piece.id);
+      if (!object) continue;
+      if (Number.isFinite(piece.productionProgress))
+        this._setProductionProgress(object, piece.productionProgress);
+      if (piece.type === "plane") this._setAircraftFuel(object, piece);
+      if (piece.kind !== "unit") continue;
+      const extrapolationSeconds = 0.14;
+      const displayWorldX =
+        Number.isFinite(piece.worldX) && Number.isFinite(piece.velocityX)
+          ? piece.worldX + piece.velocityX * extrapolationSeconds
+          : piece.worldX;
+      const displayWorldY =
+        Number.isFinite(piece.worldY) && Number.isFinite(piece.velocityY)
+          ? piece.worldY + piece.velocityY * extrapolationSeconds
+          : piece.worldY;
+      const position = this._mapPosition(
+        piece.x,
+        piece.y,
+        displayWorldX,
+        displayWorldY,
+      );
+      position.y += piece.airborne && piece.type === "plane" ? 1.6 : 0.01;
+      object.userData.targetPosition = position;
+      object.userData.targetHeading =
+        piece.heading ?? (piece.owner === 0 ? 0 : Math.PI);
+    }
   }
 
   _updatePlacementPreview(tile) {
@@ -2632,7 +2969,81 @@ export class Battlefield3D {
       if (medicalMark) group.add(medicalMark);
       if (medicalMarkCross) group.add(medicalMarkCross);
       if (commandStar) group.add(commandStar);
-    } else if (piece.type === "medium" || piece.type === "antiAir") {
+    } else if (piece.type === "antiAir") {
+      const leftTrack = new THREE.Mesh(
+        new THREE.BoxGeometry(0.68, 0.18, 0.14),
+        materials.dark,
+      );
+      leftTrack.position.set(-0.02, 0.18, -0.27);
+      const rightTrack = leftTrack.clone();
+      rightTrack.position.z = 0.27;
+      const hull = new THREE.Mesh(
+        new THREE.BoxGeometry(0.62, 0.24, 0.48),
+        materials.primary,
+      );
+      hull.position.y = 0.3;
+      const slopedNose = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.18, 0.42),
+        materials.secondary,
+      );
+      slopedNose.position.set(0.34, 0.32, 0);
+      slopedNose.rotation.z = -0.2;
+      const turret = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.19, 0.23, 0.16, 10),
+        materials.secondary,
+      );
+      turret.position.set(-0.04, 0.5, 0);
+      const mount = new THREE.Mesh(
+        new THREE.BoxGeometry(0.25, 0.15, 0.34),
+        materials.dark,
+      );
+      mount.position.set(0.02, 0.63, 0);
+      const barrels = [-0.115, -0.04, 0.04, 0.115].map((z) => {
+        const barrel = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.014, 0.021, 0.55, 7),
+          materials.pale,
+        );
+        barrel.rotation.z = Math.PI / 2 - 0.14;
+        barrel.position.set(0.34, 0.72, z);
+        return barrel;
+      });
+      const radarMast = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.014, 0.018, 0.35, 6),
+        materials.pale,
+      );
+      radarMast.position.set(-0.2, 0.78, 0);
+      const radar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 0.025, 18, 1, false, 0, Math.PI),
+        materials.secondary,
+      );
+      radar.rotation.x = Math.PI / 2;
+      radar.rotation.z = Math.PI / 2;
+      radar.position.set(-0.2, 0.98, 0);
+      radar.userData.spinAxis = "y";
+      radar.userData.spinSpeed = 0.75;
+      this.spinningObjects.push(radar);
+      const missilePods = [-1, 1].map((side) => {
+        const pod = new THREE.Mesh(
+          new THREE.BoxGeometry(0.28, 0.12, 0.1),
+          materials.canvas,
+        );
+        pod.position.set(0.05, 0.68, side * 0.25);
+        pod.rotation.z = 0.12;
+        return pod;
+      });
+      group.add(
+        leftTrack,
+        rightTrack,
+        hull,
+        slopedNose,
+        turret,
+        mount,
+        ...barrels,
+        radarMast,
+        radar,
+        ...missilePods,
+      );
+    } else if (piece.type === "medium") {
       const leftTrack = new THREE.Mesh(
         new THREE.BoxGeometry(0.62, 0.18, 0.13),
         materials.dark,
@@ -3082,6 +3493,65 @@ export class Battlefield3D {
 
   _addHealth(group, piece) {
     const total = Math.max(piece.maxHp || 1, 1);
+    if (piece.kind === "unit") {
+      const width = 0.92;
+      const height = 0.18;
+      const gap = 0.025;
+      const segmentWidth = (width - gap * (total - 1)) / total;
+      const indicator = new THREE.Group();
+      indicator.position.y = piece.type === "plane" ? 2.05 : 1.18;
+      indicator.userData.healthIndicator = true;
+
+      const frame = new THREE.Mesh(
+        new THREE.PlaneGeometry(width + 0.14, height + 0.12),
+        new THREE.MeshBasicMaterial({
+          color: 0xe8e3cf,
+          depthTest: false,
+          depthWrite: false,
+        }),
+      );
+      frame.renderOrder = 22;
+      frame.raycast = () => {};
+      const backing = new THREE.Mesh(
+        new THREE.PlaneGeometry(width + 0.07, height + 0.05),
+        new THREE.MeshBasicMaterial({
+          color: 0x070a07,
+          depthTest: false,
+          depthWrite: false,
+        }),
+      );
+      backing.position.z = 0.006;
+      backing.renderOrder = 23;
+      backing.raycast = () => {};
+      indicator.add(frame, backing);
+
+      for (let index = 0; index < total; index += 1) {
+        const alive = index < piece.hp;
+        const segment = new THREE.Mesh(
+          new THREE.PlaneGeometry(segmentWidth, height),
+          new THREE.MeshBasicMaterial({
+            color: alive
+              ? piece.owner === 0
+                ? 0x9dff65
+                : 0xff7059
+              : 0x242a24,
+            depthTest: false,
+            depthWrite: false,
+          }),
+        );
+        segment.position.set(
+          -width / 2 + segmentWidth / 2 + index * (segmentWidth + gap),
+          0,
+          0.012,
+        );
+        segment.renderOrder = 24;
+        segment.raycast = () => {};
+        indicator.add(segment);
+      }
+      group.add(indicator);
+      group.userData.healthIndicator = indicator;
+      return;
+    }
     for (let i = 0; i < total; i += 1) {
       const alive = i < piece.hp;
       const segment = new THREE.Mesh(
@@ -3447,9 +3917,13 @@ export class Battlefield3D {
     const facing = Math.atan2(-(target.z - start.z), target.x - start.x);
     const previousFacing = shooter.rotation.y;
     shooter.rotation.y = facing;
+    shooter.userData.targetHeading = facing;
 
     const restoreFacing = () => {
-      if (shooter.parent) shooter.rotation.y = previousFacing;
+      if (shooter.parent)
+        shooter.rotation.y = Number.isFinite(shooter.userData.targetHeading)
+          ? shooter.userData.targetHeading
+          : previousFacing;
     };
     if (isArtillery)
       return this._animateMortarShot(
@@ -4315,18 +4789,14 @@ export class Battlefield3D {
       }
     }
     this._onPointerMove(event);
-    if (
-      !gesture ||
-      gesture.button !== 0 ||
-      gesture.dragged ||
-      !this.hoveredTile
-    )
+    if (!gesture || ![0, 2].includes(gesture.button) || gesture.dragged || !this.hoveredTile)
       return;
     const { x, y } = this.hoveredTile;
     this.onTileClick?.(x, y, {
       clientX: event.clientX,
       clientY: event.clientY,
       shiftKey: event.shiftKey,
+      button: gesture.button,
       worldX: this.hoveredMapPoint?.x,
       worldY: this.hoveredMapPoint?.y,
       targetId: this.hoveredTargetId,
@@ -4656,13 +5126,22 @@ export class Battlefield3D {
   _renderLoop() {
     if (this.destroyed) return;
     const now = performance.now();
-    const elapsed = this.clock.getElapsedTime();
+    const frameSeconds = Math.min(
+      0.1,
+      Math.max(0, (now - this.lastRenderTimestamp) / 1000),
+    );
+    this.lastRenderTimestamp = now;
+    const transformAlpha = 1 - Math.exp(-frameSeconds * 11);
+    this.timer.update(now);
+    const elapsed = this.timer.getElapsed();
     this._updateTimedAnimations(now);
     this._constrainControls();
     this.controls.update();
+    this._updateStatusIndicators();
     if (this.virtualized) this._updateVirtualLod();
     for (const object of this.spinningObjects)
-      object.rotation.z = elapsed * 0.75;
+      object.rotation[object.userData.spinAxis ?? "z"] =
+        elapsed * (object.userData.spinSpeed ?? 0.75);
     const pulseScale = 1 + Math.sin(elapsed * 4) * 0.06;
     for (const object of this.pulsingObjects)
       object.scale.setScalar(pulseScale * this._markerScale(object));
@@ -4676,8 +5155,49 @@ export class Battlefield3D {
       );
       flag.scale.setScalar(this._markerScale(flag));
     }
+    for (const object of this.pieceMeshes.values()) {
+      const target = object.userData.targetPosition;
+      if (target) object.position.lerp(target, transformAlpha);
+      if (Number.isFinite(object.userData.targetHeading)) {
+        const delta = Math.atan2(
+          Math.sin(object.userData.targetHeading - object.rotation.y),
+          Math.cos(object.userData.targetHeading - object.rotation.y),
+        );
+        object.rotation.y += delta * transformAlpha;
+      }
+    }
     this.renderer.render(this.scene, this.camera);
     this.animationFrame = requestAnimationFrame(() => this._renderLoop());
+  }
+
+  _updateStatusIndicators() {
+    const cameraDistance = this.camera.position.distanceTo(
+      this.controls.target,
+    );
+    const verticalSpan =
+      2 *
+      cameraDistance *
+      Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
+    const viewportHeight = Math.max(this.container.clientHeight, 1);
+    const pixelsPerTile = viewportHeight / Math.max(verticalSpan, 1);
+    for (const object of this.pieceMeshes.values()) {
+      object.getWorldQuaternion(this.statusParentQuaternion);
+      this.statusParentQuaternion.invert();
+      for (const indicator of [
+        object.userData.productionIndicator,
+        object.userData.healthIndicator,
+        object.userData.fuelIndicator,
+        object.userData.objectiveMarker,
+      ]) {
+        if (!indicator) continue;
+        indicator.visible =
+          indicator.userData.objectiveMarker === true || pixelsPerTile >= 24;
+        if (!indicator.visible) continue;
+        indicator.quaternion
+          .copy(this.statusParentQuaternion)
+          .multiply(this.camera.quaternion);
+      }
+    }
   }
 
   _updateVirtualLod() {
@@ -4833,6 +5353,7 @@ export class Battlefield3D {
   destroy() {
     this.destroyed = true;
     cancelAnimationFrame(this.animationFrame);
+    this.timer.dispose();
     for (const animation of [...this.timedAnimations])
       this._finishTimedAnimation(
         animation,

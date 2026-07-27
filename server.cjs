@@ -24,6 +24,10 @@ const liveSockets = new Map();
 let validatePlayerPlan = null;
 let serverUnitTypes = null;
 let serverBuildings = null;
+let RtsRuntime = null;
+let createServerUnit = null;
+let createServerStructure = null;
+const rtsRuntimes = new Map();
 
 const mime = {
   '.html': 'text/html; charset=utf-8',
@@ -712,6 +716,203 @@ function requestSync(socket) {
   send(socket, sessionPayload(match, playerIndex, null, 'sync'));
 }
 
+function completeServerProduction(match, job) {
+  const game = match.state.game;
+  if (job.kind === 'building') {
+    const structure = createServerStructure(
+      job.type,
+      job.owner,
+      job.x,
+      job.y,
+      `s-${job.id}`,
+      job.type !== 'bridge',
+      Array.isArray(job.footprint) ? job.footprint : [{ x: job.x, y: job.y }],
+    );
+    if (job.type === 'bridge') {
+      structure.endX = job.endX;
+      structure.endY = job.endY;
+      structure.lengthMeters = job.lengthMeters;
+    }
+    game.structures.push(structure);
+    return;
+  }
+  if (job.kind !== 'recruit') return;
+  const producer = game.structures.find(
+    (structure) => structure.id === (job.producerId || job.barracksId),
+  );
+  if (!producer) {
+    game.players[job.owner].resources += Number(job.cost) || 0;
+    return;
+  }
+  const offset = game.units.filter(
+    (unit) => Math.hypot(unit.x - producer.x, unit.y - producer.y) < 3,
+  ).length;
+  const angle = (offset % 8) * Math.PI / 4;
+  const x = producer.x + Math.cos(angle) * 2;
+  const y = producer.y + Math.sin(angle) * 2;
+  const unit = createServerUnit(
+    job.type,
+    job.owner,
+    Math.round(x),
+    Math.round(y),
+    `u-${job.id}`,
+  );
+  unit.worldX = x;
+  unit.worldY = y;
+  if (serverUnitTypes[job.type]?.airUnit) {
+    unit.homeAirfieldId = producer.id;
+    unit.parkingSlot = offset % Math.max(
+      1,
+      Number(serverBuildings.airfield?.aircraftCapacity ?? 3),
+    );
+    unit.worldX =
+      producer.x + ([0.1, 1, 1.9][unit.parkingSlot] ?? 0);
+    unit.worldY = producer.y + 0.8;
+    unit.x = producer.x;
+    unit.y = producer.y;
+    unit.airborne = false;
+    unit.airState = "landed";
+    unit.maxFuel = Number(serverUnitTypes[job.type].fuelCapacity ?? 1);
+    unit.fuel = unit.maxFuel;
+  }
+  game.units.push(unit);
+}
+
+function ensureMatchRuntime(match) {
+  const existing = rtsRuntimes.get(match.code);
+  if (existing?.state === match.state.game) return existing;
+  let runtimeCounter = Number(match.state.game.nextRuntimeId) || 1;
+  const runtime = new RtsRuntime({
+    state: match.state.game,
+    unitTypes: serverUnitTypes,
+    buildingTypes: serverBuildings,
+    tickRate: 20,
+    seed: match.code,
+    createId: (prefix) => `${prefix}-server-${runtimeCounter++}`,
+    isPassable: (x, y) =>
+      Number.isFinite(x) &&
+      Number.isFinite(y) &&
+      x >= 0 &&
+      y >= 0 &&
+      x < match.state.config.cols &&
+      y < match.state.config.rows,
+    isVisible: () => true,
+    onEvent: (event) => {
+      if (event.type === 'production-complete')
+        completeServerProduction(match, event.job);
+      broadcast(match, { type: 'rts-event', event });
+    },
+  });
+  rtsRuntimes.set(match.code, runtime);
+  return runtime;
+}
+
+function issueRtsCommand(socket, message) {
+  const { match, playerIndex } = requireSession(socket);
+  const game = match.state.game;
+  if (game.phase !== 'realtime') {
+    throw new ProtocolError('INVALID_MODE', 'This match is not running in real time.');
+  }
+  if (
+    !Array.isArray(message.unitIds) ||
+    !message.unitIds.length ||
+    message.unitIds.length > 200
+  ) {
+    throw new ProtocolError('INVALID_COMMAND', 'A command requires 1 to 200 units.');
+  }
+  const unitIds = [...new Set(message.unitIds.map(String))];
+  if (
+    unitIds.some(
+      (id) =>
+        !game.units.some(
+          (unit) => String(unit.id) === id && unit.owner === playerIndex && unit.hp > 0,
+        ),
+    )
+  ) {
+    throw new ProtocolError('INVALID_COMMAND', 'The command contains an unowned unit.');
+  }
+  const allowed = new Set([
+    'move',
+    'attack',
+    'attack-move',
+    'stop',
+    'hold',
+    'patrol',
+    'attack-stance',
+    'flee',
+    'hold-fire',
+  ]);
+  const commandType = message.commandType;
+  if (!allowed.has(commandType)) {
+    throw new ProtocolError('INVALID_COMMAND', 'Unknown real-time command.');
+  }
+  let destination = null;
+  if (
+    ![
+      'attack',
+      'stop',
+      'hold',
+      'attack-stance',
+      'flee',
+      'hold-fire',
+    ].includes(commandType)
+  ) {
+    const x = Number(message.destination?.x);
+    const y = Number(message.destination?.y);
+    if (
+      !Number.isFinite(x) ||
+      !Number.isFinite(y) ||
+      x < 0 ||
+      y < 0 ||
+      x >= match.state.config.cols ||
+      y >= match.state.config.rows
+    ) {
+      throw new ProtocolError('INVALID_COMMAND', 'The destination is outside the map.');
+    }
+    destination = { x, y };
+  }
+  let targetId = null;
+  if (commandType === 'attack') {
+    targetId = String(message.targetId || '');
+    const target = [...game.units, ...game.structures].find(
+      (entity) =>
+        String(entity.id) === targetId &&
+        entity.owner !== playerIndex &&
+        entity.hp > 0,
+    );
+    if (!target) {
+      throw new ProtocolError('INVALID_COMMAND', 'The attack target is not valid.');
+    }
+  }
+  const accepted = ensureMatchRuntime(match).issueCommand({
+    owner: playerIndex,
+    unitIds,
+    type: commandType,
+    destination,
+    targetId,
+    queued: Boolean(message.queued),
+  });
+  match.revision += 1;
+  match.updatedAt = new Date().toISOString();
+  broadcast(match, {
+    type: 'command-accepted',
+    playerIndex,
+    sequence: Number(message.sequence) || 0,
+    unitIds: accepted,
+  });
+}
+
+function issueRtsCommandBatch(socket, message) {
+  if (!Array.isArray(message.commands) || message.commands.length > 200) {
+    throw new ProtocolError('INVALID_COMMAND', 'A command batch may contain up to 200 commands.');
+  }
+  for (const command of message.commands)
+    issueRtsCommand(socket, {
+      ...command,
+      sequence: message.sequence,
+    });
+}
+
 function handleMessage(socket, rawMessage) {
   if (Date.now() - socket.rateWindowStartedAt > 1000) {
     socket.rateWindowStartedAt = Date.now();
@@ -750,6 +951,12 @@ function handleMessage(socket, rawMessage) {
       break;
     case 'phase-complete':
       completePhase(socket, message);
+      break;
+    case 'rts-command':
+      issueRtsCommand(socket, message);
+      break;
+    case 'rts-command-batch':
+      issueRtsCommandBatch(socket, message);
       break;
     case 'request-sync':
       requestSync(socket);
@@ -841,13 +1048,18 @@ function serveStatic(request, response) {
 }
 
 async function startServer() {
-  const [validationModule, rulesModule] = await Promise.all([
+  const [validationModule, rulesModule, runtimeModule, stateModule] = await Promise.all([
     import('./simulation/command-validation.js'),
     import('./game-rules.js'),
+    import('./simulation/rts-runtime.js'),
+    import('./state/game-state.js'),
   ]);
   validatePlayerPlan = validationModule.validatePlayerPlan;
   serverUnitTypes = rulesModule.UNIT_TYPES;
   serverBuildings = rulesModule.BUILDINGS;
+  RtsRuntime = runtimeModule.RtsRuntime;
+  createServerUnit = stateModule.createUnit;
+  createServerStructure = stateModule.createStructure;
 
   loadMatches();
   let recoveredInterruptedMatch = false;
@@ -903,7 +1115,37 @@ async function startServer() {
   }, 30000);
   heartbeat.unref();
 
-  websocketServer.on('close', () => clearInterval(heartbeat));
+  const simulationLoop = setInterval(() => {
+    for (const match of matches.values()) {
+      if (
+        match.state?.game?.phase !== 'realtime' ||
+        !match.players[1] ||
+        !connectedPlayers(match).every(Boolean) ||
+        match.state.game.winner
+      )
+        continue;
+      const runtime = ensureMatchRuntime(match);
+      runtime.step();
+      runtime.drainEvents();
+      match.updatedAt = new Date().toISOString();
+      if (match.state.game.simulationTick % 4 === 0) {
+        match.revision += 1;
+        broadcast(match, {
+          type: 'simulation-snapshot',
+          state: match.state,
+          tick: match.state.game.simulationTick,
+          revision: match.revision,
+        });
+      }
+      if (match.state.game.simulationTick % 100 === 0) persistMatches();
+    }
+  }, 50);
+  simulationLoop.unref();
+
+  websocketServer.on('close', () => {
+    clearInterval(heartbeat);
+    clearInterval(simulationLoop);
+  });
 
   server.listen(port, host, () => {
     const displayHost = host === '0.0.0.0' ? '127.0.0.1' : host;
