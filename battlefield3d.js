@@ -1601,6 +1601,27 @@ export class Battlefield3D {
     return value - Math.floor(value);
   }
 
+  _treeClusterNoise(x, y) {
+    const scale = 7;
+    const sampleX = x / scale;
+    const sampleY = y / scale;
+    const x0 = Math.floor(sampleX);
+    const y0 = Math.floor(sampleY);
+    const blendX = THREE.MathUtils.smoothstep(sampleX - x0, 0, 1);
+    const blendY = THREE.MathUtils.smoothstep(sampleY - y0, 0, 1);
+    const top = THREE.MathUtils.lerp(
+      this._treeNoise(x0, y0, 2),
+      this._treeNoise(x0 + 1, y0, 2),
+      blendX,
+    );
+    const bottom = THREE.MathUtils.lerp(
+      this._treeNoise(x0, y0 + 1, 2),
+      this._treeNoise(x0 + 1, y0 + 1, 2),
+      blendX,
+    );
+    return THREE.MathUtils.lerp(top, bottom, blendY);
+  }
+
   _updateRangeRings(rangeOverlay) {
     if (this.virtualized) {
       if (this.rangeRingSignature !== "virtual-shader-only") {
@@ -1694,25 +1715,41 @@ export class Battlefield3D {
       const spanX = this.mapBounds.maxX - this.mapBounds.minX;
       const spanY = this.mapBounds.maxY - this.mapBounds.minY;
       for (let gridY = 0; gridY < terrain.height; gridY += vegetationStride) {
+        const blockHeight = Math.min(
+          vegetationStride,
+          terrain.height - gridY,
+        );
         const centerY =
-          this.mapBounds.minY + ((gridY + 0.5) / terrain.height) * spanY;
+          this.mapBounds.minY +
+          ((gridY + blockHeight * 0.5) / terrain.height) * spanY;
         for (let gridX = 0; gridX < terrain.width; gridX += vegetationStride) {
+          const blockWidth = Math.min(
+            vegetationStride,
+            terrain.width - gridX,
+          );
           const centerX =
-            this.mapBounds.minX + ((gridX + 0.5) / terrain.width) * spanX;
+            this.mapBounds.minX +
+            ((gridX + blockWidth * 0.5) / terrain.width) * spanX;
           const cell = terrain.cellAtMapPoint(centerX, centerY);
+          const authoredX = Math.min(
+            terrain.width - 1,
+            gridX + Math.floor(blockWidth * 0.5),
+          );
+          const authoredY = Math.min(
+            terrain.height - 1,
+            gridY + Math.floor(blockHeight * 0.5),
+          );
           const authoredTree =
-            this.authoredTreeDensity?.[gridY * terrain.width + gridX] ?? 0;
+            this.authoredTreeDensity?.[
+              authoredY * terrain.width + authoredX
+            ] ?? 0;
           if (
             cell.water ||
             !["lowland", "plains", "hill"].includes(cell.terrainType) ||
             (!authoredTree && cell.moisture < 0.48)
           )
             continue;
-          const clusterNoise = this._treeNoise(
-            Math.floor(centerX / 3),
-            Math.floor(centerY / 3),
-            2,
-          );
+          const clusterNoise = this._treeClusterNoise(centerX, centerY);
           const density =
             THREE.MathUtils.clamp(
               (cell.moisture - 0.44) * 0.75 + clusterNoise * 0.18,
@@ -1725,10 +1762,24 @@ export class Battlefield3D {
               : this._treeNoise(gridX, gridY, 5) > density
           )
             continue;
+          const blockSpanX = (blockWidth / terrain.width) * spanX;
+          const blockSpanY = (blockHeight / terrain.height) * spanY;
           const point = {
-            x: centerX + (this._treeNoise(gridX, gridY, 7) - 0.5) * 0.5,
-            y: centerY + (this._treeNoise(gridX, gridY, 11) - 0.5) * 0.5,
+            x:
+              centerX +
+              (this._treeNoise(gridX, gridY, 7) - 0.5) * blockSpanX * 0.9,
+            y:
+              centerY +
+              (this._treeNoise(gridX, gridY, 11) - 0.5) * blockSpanY * 0.9,
           };
+          const placementCell = terrain.cellAtMapPoint(point.x, point.y);
+          if (
+            placementCell.water ||
+            !["lowland", "plains", "hill"].includes(
+              placementCell.terrainType,
+            )
+          )
+            continue;
           const sample = this.terrainSampler(point.x, point.y);
           placements.push({
             point,

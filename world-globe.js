@@ -6,6 +6,9 @@ const OWNER_COLORS = {
   hostile: 0xc86558,
 };
 
+const OCEAN_DETAIL = 8;
+const LAND_DETAIL = 12;
+
 const CONTINENTS = [
   [[-168, 72], [-142, 70], [-124, 58], [-112, 50], [-125, 32], [-106, 20], [-86, 24], [-80, 32], [-62, 47], [-82, 57], [-98, 72]],
   [[-82, 13], [-69, 10], [-50, 2], [-35, -20], [-52, -55], [-69, -43], [-79, -8]],
@@ -124,7 +127,6 @@ export class WorldGlobe {
     this.globe.rotation.set(-0.14, -0.55, 0.03);
     this.scene.add(this.globe);
     this._buildPlanet();
-    this._buildOrbit();
 
     this.scene.add(new THREE.HemisphereLight(0xb8d7c2, 0x141810, 1.7));
     const sun = new THREE.DirectionalLight(0xffefc7, 3.4);
@@ -141,7 +143,10 @@ export class WorldGlobe {
   _buildPlanet() {
     // Keep ocean facets broad while using a denser independent mesh for
     // recognizable coastlines and raised continental relief.
-    const sourceGeometry = new THREE.IcosahedronGeometry(2.28, 3);
+    const sourceGeometry = new THREE.IcosahedronGeometry(
+      2.28,
+      OCEAN_DETAIL,
+    );
     const geometry = sourceGeometry.index
       ? sourceGeometry.toNonIndexed()
       : sourceGeometry;
@@ -182,13 +187,19 @@ export class WorldGlobe {
     );
     this.globe.add(this.planet);
 
-    const landSourceGeometry = new THREE.IcosahedronGeometry(2.28, 5);
+    const landSourceGeometry = new THREE.IcosahedronGeometry(
+      2.28,
+      LAND_DETAIL,
+    );
     const landSource = landSourceGeometry.index
       ? landSourceGeometry.toNonIndexed()
       : landSourceGeometry;
     const landSourcePosition = landSource.attributes.position;
     const landPositions = [];
     const landColors = [];
+    const skirtPositions = [];
+    const skirtColors = [];
+    const skirtRadius = 2.275;
     const lowland = new THREE.Color(0x61a052);
     const forest = new THREE.Color(0x347640);
     const scrub = new THREE.Color(0x7f9447);
@@ -242,6 +253,30 @@ export class WorldGlobe {
         landPositions.push(vertex.x, vertex.y, vertex.z);
         landColors.push(color.r, color.g, color.b);
       }
+      const skirtColor = color.clone().multiplyScalar(0.62);
+      for (let edge = 0; edge < 3; edge += 1) {
+        const topStart = vertices[edge];
+        const topEnd = vertices[(edge + 1) % 3];
+        const bottomStart = topStart
+          .clone()
+          .normalize()
+          .multiplyScalar(skirtRadius);
+        const bottomEnd = topEnd
+          .clone()
+          .normalize()
+          .multiplyScalar(skirtRadius);
+        for (const vertex of [
+          topStart,
+          bottomStart,
+          bottomEnd,
+          topStart,
+          bottomEnd,
+          topEnd,
+        ]) {
+          skirtPositions.push(vertex.x, vertex.y, vertex.z);
+          skirtColors.push(skirtColor.r, skirtColor.g, skirtColor.b);
+        }
+      }
     }
     const landGeometry = new THREE.BufferGeometry();
     landGeometry.setAttribute(
@@ -264,37 +299,26 @@ export class WorldGlobe {
     );
     this.globe.add(this.land);
 
-    const atmosphere = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(2.34, 3),
-      new THREE.MeshBasicMaterial({
-        color: 0x8eb8a6,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.08,
-        depthWrite: false,
+    const skirtGeometry = new THREE.BufferGeometry();
+    skirtGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(skirtPositions, 3),
+    );
+    skirtGeometry.setAttribute(
+      "color",
+      new THREE.Float32BufferAttribute(skirtColors, 3),
+    );
+    skirtGeometry.computeVertexNormals();
+    this.landSkirt = new THREE.Mesh(
+      skirtGeometry,
+      new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        flatShading: true,
+        roughness: 0.94,
+        side: THREE.DoubleSide,
       }),
     );
-    this.globe.add(atmosphere);
-  }
-
-  _buildOrbit() {
-    this.orbit = new THREE.Group();
-    this.orbit.rotation.set(1.18, 0.2, 0.35);
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(3.05, 0.012, 4, 128),
-      new THREE.MeshBasicMaterial({
-        color: 0xb9cb87,
-        transparent: true,
-        opacity: 0.28,
-      }),
-    );
-    const satellite = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.09, 0),
-      new THREE.MeshBasicMaterial({ color: 0xd8e89b }),
-    );
-    satellite.position.x = 3.05;
-    this.orbit.add(ring, satellite);
-    this.scene.add(this.orbit);
+    this.globe.add(this.landSkirt);
   }
 
   setWorld(world, selectedSectorId, contestableIds = new Set()) {
@@ -544,7 +568,6 @@ export class WorldGlobe {
     this.clock.update();
     const delta = Math.min(0.05, this.clock.getDelta());
     if (!this.dragging) this.globe.rotation.y += delta * 0.055;
-    this.orbit.rotation.z += delta * 0.09;
     const elapsed = this.clock.getElapsed();
     for (let index = 0; index < this.sectorMeshes.length; index += 1) {
       const marker = this.sectorMeshes[index];

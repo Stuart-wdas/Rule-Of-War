@@ -7,6 +7,11 @@ function hexColor(value) {
   return new THREE.Color(value || "#668844");
 }
 
+function treeNoise(x, y, salt = 0) {
+  const value = Math.sin(x * 127.1 + y * 311.7 + salt * 74.7) * 43758.5453;
+  return value - Math.floor(value);
+}
+
 export class MapBuilder3D {
   constructor(canvas, getBrush, { onHeightPicked } = {}) {
     this.canvas = canvas;
@@ -261,11 +266,28 @@ export class MapBuilder3D {
     indices.forEach((index, instance) => {
       const x = index % this.state.size;
       const y = Math.floor(index / this.state.size);
-      transform.position.set(
-        x - half,
-        this.state.elevation[index] * MAP_BUILDER_HEIGHT_SCALE + 0.38,
-        y - half,
+      const jitteredX = THREE.MathUtils.clamp(
+        x + (treeNoise(x, y, 7) - 0.5) * stride * 0.9,
+        0,
+        this.state.size - 1,
       );
+      const jitteredY = THREE.MathUtils.clamp(
+        y + (treeNoise(x, y, 11) - 0.5) * stride * 0.9,
+        0,
+        this.state.size - 1,
+      );
+      const elevationX = Math.round(jitteredX);
+      const elevationY = Math.round(jitteredY);
+      const elevationIndex = elevationY * this.state.size + elevationX;
+      const scale = 0.78 + treeNoise(x, y, 17) * 0.44;
+      transform.position.set(
+        jitteredX - half,
+        this.state.elevation[elevationIndex] * MAP_BUILDER_HEIGHT_SCALE +
+          0.375 * scale,
+        jitteredY - half,
+      );
+      transform.scale.setScalar(scale);
+      transform.rotation.set(0, treeNoise(x, y, 19) * Math.PI * 2, 0);
       transform.updateMatrix();
       this.treeMesh.setMatrixAt(instance, transform.matrix);
     });

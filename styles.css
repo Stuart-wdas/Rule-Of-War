@@ -4826,40 +4826,6 @@ body.world-campaign-active .world-sector-panel {
   cursor: grabbing;
 }
 
-.world-globe-reticle {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 2;
-  width: min(55%, 340px);
-  aspect-ratio: 1;
-  border: 1px solid rgba(213, 240, 90, 0.09);
-  border-radius: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-}
-
-.world-globe-reticle::before,
-.world-globe-reticle::after {
-  content: "";
-  position: absolute;
-  background: rgba(213, 240, 90, 0.25);
-}
-
-.world-globe-reticle::before {
-  left: -8px;
-  right: -8px;
-  top: 50%;
-  height: 1px;
-}
-
-.world-globe-reticle::after {
-  top: -8px;
-  bottom: -8px;
-  left: 50%;
-  width: 1px;
-}
-
 .world-globe-hint {
   position: absolute;
   right: 14px;
