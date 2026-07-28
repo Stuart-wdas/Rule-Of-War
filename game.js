@@ -74,6 +74,7 @@ import {
 } from "./simulation/world-state.js";
 import { SavedMatchStore } from "./storage/saved-match-store.js";
 import {
+  deleteCustomMap,
   loadCustomMaps,
   saveCustomMap,
 } from "./storage/custom-map-store.js";
@@ -96,6 +97,7 @@ let worldState = null;
 let selectedWorldSectorId = null;
 let activeWorldSectorId = null;
 const customMapsReady = loadCustomMaps();
+let customMapLibrary = [];
 
 const CONFIG_STORAGE_KEY = "result-of-war:developer-config:v1";
 const MATCH_STORAGE_KEY = "result-of-war:saved-matches:v1";
@@ -126,6 +128,7 @@ let fastForwarding = false;
 let settingsReturnView = "home";
 let mapBuilderState = null;
 let mapBuilder3D = null;
+let mapBuilderMapId = null;
 let worldGlobe = null;
 let mapBuilderSculptMode = "add";
 let multiplayer = createEmptyMultiplayerState();
@@ -1666,7 +1669,15 @@ function createStaticUI() {
   els.mapBuilderBack.addEventListener("click", showMainMenu);
   els.mapBuilderSize.addEventListener("change", resetMapBuilder);
   els.mapBuilderClear.addEventListener("click", resetMapBuilder);
+  els.mapBuilderNew.addEventListener("click", () =>
+    resetMapBuilder({ newMap: true }),
+  );
+  els.mapBuilderLibraryList.addEventListener(
+    "click",
+    handleMapBuilderLibraryAction,
+  );
   els.mapBuilderSave.addEventListener("click", saveMapBuilder);
+  els.mapBuilderTool.addEventListener("change", updateMapBuilderToolControls);
   els.mapBuilderPickHeight.addEventListener("click", () => {
     mapBuilder3D?.beginHeightPick();
     els.mapBuilderPickHeight.classList.add("active");
@@ -1683,6 +1694,7 @@ function createStaticUI() {
         );
     });
   els.mapBuilderStrength.addEventListener("input", updateMapBuilderReadouts);
+  els.mapBuilderSmoothing.addEventListener("input", updateMapBuilderReadouts);
   for (const input of [
     els.mapBuilderHeight,
     els.mapBuilderWater,
@@ -2490,7 +2502,12 @@ async function handleSavedMatchAction(event) {
   enterBattlefield();
 }
 
-function resetMapBuilder() {
+function resetMapBuilder(options = {}) {
+  const newMap = options?.newMap === true;
+  if (newMap) {
+    mapBuilderMapId = null;
+    els.mapBuilderName.value = "CUSTOM FRONT";
+  }
   const size = Number(els.mapBuilderSize.value) || 64;
   const elevation = new Float32Array(size * size);
   const trees = new Uint8Array(size * size);
@@ -2503,8 +2520,105 @@ function resetMapBuilder() {
       elevation[y * size + x] = Math.max(0, Math.min(1, 0.52 + broad));
     }
   mapBuilderState = { size, elevation, trees };
-  els.mapBuilderStatus.textContent = "Drag on the map to paint terrain.";
+  els.mapBuilderStatus.textContent = newMap
+    ? "New map created. Drag on the terrain to begin."
+    : "Terrain reset. Drag on the map to paint terrain.";
   mapBuilder3D?.setMap(mapBuilderState);
+  renderMapBuilderLibrary();
+}
+
+function renderMapBuilderLibrary() {
+  els.mapBuilderLibraryList.replaceChildren();
+  if (!customMapLibrary.length) {
+    const empty = document.createElement("p");
+    empty.textContent = "NO SAVED MAPS";
+    els.mapBuilderLibraryList.append(empty);
+    return;
+  }
+  for (const map of customMapLibrary) {
+    const row = document.createElement("article");
+    row.className = map.id === mapBuilderMapId ? "active" : "";
+    const details = document.createElement("span");
+    const name = document.createElement("strong");
+    name.textContent = map.name;
+    const size = document.createElement("small");
+    size.textContent = `${map.cols} × ${map.rows}`;
+    details.append(name, size);
+    const loadButton = document.createElement("button");
+    loadButton.type = "button";
+    loadButton.dataset.loadMap = map.id;
+    loadButton.textContent = map.id === mapBuilderMapId ? "LOADED" : "LOAD";
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.dataset.deleteMap = map.id;
+    deleteButton.textContent = "DELETE";
+    row.append(details, loadButton, deleteButton);
+    els.mapBuilderLibraryList.append(row);
+  }
+}
+
+function loadMapIntoBuilder(map) {
+  const terrain = map?.authoredTerrain;
+  if (
+    !terrain?.elevation ||
+    terrain.elevation.length !== map.cols * map.rows
+  )
+    return false;
+  mapBuilderMapId = map.id;
+  mapBuilderState = {
+    size: map.cols,
+    elevation: new Float32Array(terrain.elevation),
+    trees: terrain.treeDensity
+      ? new Uint8Array(terrain.treeDensity)
+      : new Uint8Array(map.cols * map.rows),
+  };
+  els.mapBuilderName.value = map.name;
+  els.mapBuilderSize.value = String(map.cols);
+  els.mapBuilderWater.value = String(
+    Math.round((terrain.waterLevel ?? 0.28) * 100),
+  );
+  const colors = terrain.heightColors ?? {};
+  els.mapBuilderLowColor.value = colors.low ?? "#486f30";
+  els.mapBuilderMidColor.value = colors.mid ?? "#7e8b45";
+  els.mapBuilderHighColor.value = colors.high ?? "#b5ab7e";
+  els.mapBuilderLowBoundary.value = String(
+    Math.round((colors.lowBoundary ?? 0.45) * 100),
+  );
+  els.mapBuilderHighBoundary.value = String(
+    Math.round((colors.highBoundary ?? 0.72) * 100),
+  );
+  mapBuilder3D?.setMap(mapBuilderState);
+  updateMapBuilderReadouts();
+  renderMapBuilderLibrary();
+  els.mapBuilderStatus.textContent =
+    `${map.name} loaded. Saving will update this map.`;
+  return true;
+}
+
+async function handleMapBuilderLibraryAction(event) {
+  const loadButton = event.target.closest("[data-load-map]");
+  if (loadButton) {
+    const map = customMapLibrary.find(
+      (item) => item.id === loadButton.dataset.loadMap,
+    );
+    if (map) loadMapIntoBuilder(map);
+    return;
+  }
+  const deleteButton = event.target.closest("[data-delete-map]");
+  if (!deleteButton) return;
+  const map = customMapLibrary.find(
+    (item) => item.id === deleteButton.dataset.deleteMap,
+  );
+  if (!map || !window.confirm(`Delete ${map.name}? This cannot be undone.`))
+    return;
+  deleteButton.disabled = true;
+  customMapLibrary = await deleteCustomMap(map.id);
+  registerCustomMaps(customMapLibrary);
+  if (selectedMapId === map.id) selectedMapId = DEFAULT_MAP_ID;
+  if (mapBuilderMapId === map.id) resetMapBuilder({ newMap: true });
+  renderMapBuilderLibrary();
+  renderMapOptions();
+  els.mapBuilderStatus.textContent = `${map.name} deleted.`;
 }
 
 function openMapBuilder() {
@@ -2516,6 +2630,7 @@ function openMapBuilder() {
         mode: mapBuilderSculptMode,
         radius: Number(els.mapBuilderBrush.value) || 1,
         strength: Number(els.mapBuilderStrength.value) / 100,
+        smoothing: Number(els.mapBuilderSmoothing.value) / 100,
         height: Number(els.mapBuilderHeight.value) / 100,
         water: Number(els.mapBuilderWater.value) / 100,
         lowBoundary: Number(els.mapBuilderLowBoundary.value) / 100,
@@ -2528,6 +2643,7 @@ function openMapBuilder() {
         onHeightPicked: (height) => {
           els.mapBuilderHeight.value = String(Math.round(height * 100));
           els.mapBuilderTool.value = "flatten";
+          updateMapBuilderToolControls();
           els.mapBuilderPickHeight.classList.remove("active");
           els.mapBuilderStatus.textContent =
             `Flatten height sampled at ${height.toFixed(2)}. Drag to level terrain.`;
@@ -2537,7 +2653,9 @@ function openMapBuilder() {
     );
   if (!mapBuilderState) resetMapBuilder();
   else mapBuilder3D.setMap(mapBuilderState);
+  renderMapBuilderLibrary();
   updateMapBuilderReadouts();
+  updateMapBuilderToolControls();
   showGameMenu("map-builder");
   requestAnimationFrame(() => mapBuilder3D?.resize());
 }
@@ -2545,12 +2663,25 @@ function openMapBuilder() {
 function updateMapBuilderReadouts() {
   els.mapBuilderStrengthValue.value =
     `${Math.round(Number(els.mapBuilderStrength.value))}%`;
+  els.mapBuilderSmoothingValue.value =
+    `${Math.round(Number(els.mapBuilderSmoothing.value))}%`;
   els.mapBuilderHeightValue.value = (
     Number(els.mapBuilderHeight.value) / 100
   ).toFixed(2);
   els.mapBuilderWaterValue.value = (
     Number(els.mapBuilderWater.value) / 100
   ).toFixed(2);
+}
+
+function updateMapBuilderToolControls() {
+  const tool = els.mapBuilderTool.value;
+  els.mapBuilderMode.hidden = tool !== "sculpt";
+  els.mapBuilderStrengthControl.hidden = tool === "smooth";
+  els.mapBuilderSmoothingControl.hidden = tool !== "smooth";
+  els.mapBuilderHeightControl.hidden = tool !== "flatten";
+  if (tool === "smooth")
+    els.mapBuilderStatus.textContent =
+      "Drag across terrain to soften sharp elevation changes.";
 }
 
 async function saveMapBuilder() {
@@ -2567,7 +2698,7 @@ async function saveMapBuilder() {
     els.mapBuilderSave.disabled = false;
     return;
   }
-  const id = `custom-${Date.now().toString(36)}`;
+  const id = mapBuilderMapId ?? `custom-${Date.now().toString(36)}`;
   const name = els.mapBuilderName.value.trim() || "CUSTOM FRONT";
   const map = {
     id,
@@ -2591,15 +2722,18 @@ async function saveMapBuilder() {
     },
   };
   try {
-    registerCustomMaps(await saveCustomMap(map));
+    customMapLibrary = await saveCustomMap(map);
+    registerCustomMaps(customMapLibrary);
   } catch {
     els.mapBuilderStatus.textContent =
       "The browser could not save this map. Check available device storage.";
     els.mapBuilderSave.disabled = false;
     return;
   }
+  mapBuilderMapId = id;
   selectedMapId = id;
   renderMapOptions();
+  renderMapBuilderLibrary();
   els.mapBuilderStatus.textContent = `${map.name} saved and ready to play.`;
   els.mapBuilderSave.disabled = false;
 }
@@ -6287,8 +6421,10 @@ createStaticUI();
 renderSavedMatches();
 customMapsReady
   .then((maps) => {
+    customMapLibrary = maps;
     registerCustomMaps(maps);
     renderMapOptions();
+    renderMapBuilderLibrary();
   })
   .catch((error) => console.warn("Custom maps could not be loaded.", error));
 document.body.classList.toggle(

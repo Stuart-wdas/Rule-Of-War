@@ -89,13 +89,28 @@ export function collectDomElements(root = document) {
     mapBuilderBack: root.querySelector("#map-builder-back"),
     mapBuilderCanvas: root.querySelector("#map-builder-canvas"),
     mapBuilderName: root.querySelector("#map-builder-name"),
+    mapBuilderLibrary: root.querySelector("#map-builder-library"),
+    mapBuilderLibraryList: root.querySelector("#map-builder-library-list"),
+    mapBuilderNew: root.querySelector("#map-builder-new"),
     mapBuilderSize: root.querySelector("#map-builder-size"),
     mapBuilderTool: root.querySelector("#map-builder-tool"),
     mapBuilderBrush: root.querySelector("#map-builder-brush"),
+    mapBuilderMode: root.querySelector("#map-builder-mode"),
+    mapBuilderStrengthControl: root.querySelector(
+      "#map-builder-strength-control",
+    ),
     mapBuilderStrength: root.querySelector("#map-builder-strength"),
     mapBuilderStrengthValue: root.querySelector(
       "#map-builder-strength-value",
     ),
+    mapBuilderSmoothingControl: root.querySelector(
+      "#map-builder-smoothing-control",
+    ),
+    mapBuilderSmoothing: root.querySelector("#map-builder-smoothing"),
+    mapBuilderSmoothingValue: root.querySelector(
+      "#map-builder-smoothing-value",
+    ),
+    mapBuilderHeightControl: root.querySelector("#map-builder-height-control"),
     mapBuilderHeight: root.querySelector("#map-builder-height"),
     mapBuilderHeightValue: root.querySelector("#map-builder-height-value"),
     mapBuilderPickHeight: root.querySelector("#map-builder-pick-height"),

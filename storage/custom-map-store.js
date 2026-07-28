@@ -117,3 +117,26 @@ export async function saveCustomMap(map) {
   database.close();
   return maps.slice(0, MAX_SAVED_MAPS);
 }
+
+export async function deleteCustomMap(id) {
+  if (typeof id !== "string" || !id) return loadCustomMaps();
+  try {
+    const database = await openDatabase();
+    const transaction = database.transaction(STORE_NAME, "readwrite");
+    transaction.objectStore(STORE_NAME).delete(id);
+    await transactionComplete(transaction);
+    const maps = await readDatabaseMaps(database);
+    database.close();
+    return maps
+      .sort((left, right) => (right.savedAt ?? 0) - (left.savedAt ?? 0))
+      .slice(0, MAX_SAVED_MAPS);
+  } catch {
+    const maps = loadLegacyMaps().filter((map) => map.id !== id);
+    try {
+      localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(maps));
+    } catch {
+      // Return the in-memory result when browser storage is unavailable.
+    }
+    return maps;
+  }
+}

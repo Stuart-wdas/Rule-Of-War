@@ -169,6 +169,15 @@
                 <span class="eyebrow">CUSTOM TERRAIN</span>
                 <h2>MAP BUILDER.</h2>
               </div>
+              <section class="map-builder-library" id="map-builder-library">
+                <header>
+                  <span>SAVED MAPS</span>
+                  <button id="map-builder-new" type="button">+ NEW</button>
+                </header>
+                <div id="map-builder-library-list">
+                  <p>NO SAVED MAPS</p>
+                </div>
+              </section>
               <label
                 >MAP NAME<input
                   id="map-builder-name"
@@ -189,12 +198,13 @@
               <label
                 >TOOL<select id="map-builder-tool">
                   <option value="sculpt">SCULPT HEIGHT</option>
+                  <option value="smooth">SMOOTH TERRAIN</option>
                   <option value="flatten">FLATTEN TO HEIGHT</option>
                   <option value="trees">PAINT TREES</option>
                   <option value="erase-trees">ERASE TREES</option>
                 </select></label
               >
-              <fieldset class="map-builder-mode">
+              <fieldset class="map-builder-mode" id="map-builder-mode">
                 <legend>SCULPT MODE</legend>
                 <button
                   class="active"
@@ -214,7 +224,7 @@
                   max="12"
                   value="5"
               /></label>
-              <label
+              <label id="map-builder-strength-control"
                 >BRUSH STRENGTH<input
                   id="map-builder-strength"
                   type="range"
@@ -224,7 +234,17 @@
                   >45%</output
                 ></label
               >
-              <div class="map-builder-height-control">
+              <label id="map-builder-smoothing-control" hidden
+                >SMOOTHING AMOUNT<input
+                  id="map-builder-smoothing"
+                  type="range"
+                  min="1"
+                  max="100"
+                  value="60" /><output id="map-builder-smoothing-value"
+                  >60%</output
+                ></label
+              >
+              <div class="map-builder-height-control" id="map-builder-height-control" hidden>
                 <label
                   >FLATTEN HEIGHT<input
                   id="map-builder-height"

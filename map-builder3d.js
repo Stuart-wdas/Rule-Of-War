@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { MAP_BUILDER_HEIGHT_SCALE } from "./config/map-builder-config.js";
+import { smoothTerrainBrush } from "./core/terrain-smoothing.js";
 
 function hexColor(value) {
   return new THREE.Color(value || "#668844");
@@ -324,7 +325,9 @@ export class MapBuilder3D {
     }
     const brush = this.getBrush();
     const radius = this.effectiveRadius(brush.radius);
-    const strength = Math.max(0.01, Math.min(1, brush.strength));
+    const activeStrength =
+      brush.tool === "smooth" ? brush.smoothing : brush.strength;
+    const strength = Math.max(0.01, Math.min(1, activeStrength));
     const height =
       this.heightAtWorldPoint(hitPoint) * MAP_BUILDER_HEIGHT_SCALE + 0.09;
     this.brushOuter.position.set(hitPoint.x, height, hitPoint.z);
@@ -360,6 +363,19 @@ export class MapBuilder3D {
       this.state.size - 1,
       Math.ceil(centerY + effectiveRadius),
     );
+    if (brush.tool === "smooth") {
+      smoothTerrainBrush(
+        this.state.elevation,
+        this.state.size,
+        centerX,
+        centerY,
+        effectiveRadius,
+        brush.smoothing,
+      );
+      this.terrainChanged = true;
+      this.refreshTerrainRegion(minX, minY, maxX, maxY);
+      return;
+    }
     for (let y = minY; y <= maxY; y += 1)
       for (let x = minX; x <= maxX; x += 1) {
         const distance = Math.hypot(x - centerX, y - centerY);

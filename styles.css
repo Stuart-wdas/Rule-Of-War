@@ -388,6 +388,85 @@ body.battlefield-loading-preview .loading-menu:not([hidden]) {
   margin: 4px 0 10px;
   font: 800 36px var(--condensed);
 }
+.map-builder-library {
+  border: 1px solid rgba(213, 240, 90, 0.16);
+  background: rgba(7, 11, 8, 0.38);
+}
+.map-builder-library > header {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 6px 10px;
+  border-bottom: 1px solid rgba(213, 240, 90, 0.12);
+  color: #92998c;
+  font: 700 7px var(--sans);
+  letter-spacing: 0.14em;
+}
+.map-builder-library > header button {
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid rgba(213, 240, 90, 0.24);
+  color: var(--lime);
+  background: rgba(213, 240, 90, 0.04);
+  font: 700 7px var(--sans);
+  cursor: pointer;
+}
+#map-builder-library-list {
+  max-height: 148px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+#map-builder-library-list > p {
+  margin: 0;
+  padding: 14px 10px;
+  color: #5f665c;
+  font: 700 7px var(--sans);
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+#map-builder-library-list article {
+  min-height: 40px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 6px 5px 9px;
+  border-bottom: 1px solid rgba(213, 240, 90, 0.08);
+}
+#map-builder-library-list article.active {
+  background: rgba(213, 240, 90, 0.055);
+}
+#map-builder-library-list article > span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+#map-builder-library-list article strong {
+  overflow: hidden;
+  color: #d5d7ce;
+  font: 700 8px var(--sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#map-builder-library-list article small {
+  color: #6f766b;
+  font: 700 6px var(--sans);
+  letter-spacing: 0.09em;
+}
+#map-builder-library-list article button {
+  min-height: 24px;
+  padding: 0 6px;
+  border: 1px solid rgba(213, 240, 90, 0.18);
+  color: #aeb4a7;
+  background: transparent;
+  font: 700 6px var(--sans);
+  cursor: pointer;
+}
+#map-builder-library-list article button[data-delete-map] {
+  color: #c78071;
+  border-color: rgba(199, 128, 113, 0.2);
+}
 .map-builder-tools > label,
 .map-builder-height-control label,
 .map-builder-colors label {
