@@ -77,6 +77,9 @@ test("server protects private files and broadcasts validated plan deltas", async
       }
     }
     assert.equal((await fetch(host)).status, 200, output.join(""));
+    const globeModule = await fetch(`${host}/world-globe.js`);
+    assert.equal(globeModule.status, 200);
+    assert.match(await globeModule.text(), /export class WorldGlobe/);
     assert.equal((await fetch(`${host}/.git/HEAD`)).status, 404);
     assert.equal((await fetch(`${host}/server.cjs`)).status, 404);
 

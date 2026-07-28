@@ -5,7 +5,7 @@ const DEFAULT_BIOMES = ["plains", "forest", "highlands", "coast"];
  * seed, so the world map never needs to carry full battlefield terrain.
  */
 export function createWorldState({
-  width = 6,
+  width = 10,
   height = 4,
   factionCount = 2,
   seed = "rule-of-war",
@@ -14,8 +14,13 @@ export function createWorldState({
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
       const id = `sector-${x}-${y}`;
+      const homeRow = Math.floor(height / 2);
       const edgeOwner =
-        x === 0 ? 0 : x === width - 1 ? factionCount - 1 : null;
+        x === 0 && y === homeRow
+          ? 0
+          : x === width - 1 && y === homeRow
+            ? factionCount - 1
+            : null;
       sectors.push({
         id,
         x,
@@ -33,7 +38,7 @@ export function createWorldState({
     }
   }
   return {
-    schema: 1,
+    schema: 3,
     id: `world-${seed}`,
     seed,
     turn: 1,
@@ -53,17 +58,29 @@ export function createWorldState({
 export function neighboringSectorIds(world, sectorId) {
   const sector = world.sectors.find((item) => item.id === sectorId);
   if (!sector) return [];
+  const diagonalOffset = sector.y % 2 === 0 ? -1 : 1;
   return [
     [sector.x - 1, sector.y],
     [sector.x + 1, sector.y],
     [sector.x, sector.y - 1],
     [sector.x, sector.y + 1],
+    [sector.x + diagonalOffset, sector.y - 1],
+    [sector.x + diagonalOffset, sector.y + 1],
   ]
     .map(([x, y]) =>
       world.sectors.find((item) => item.x === x && item.y === y),
     )
     .filter(Boolean)
     .map((item) => item.id);
+}
+
+export function canFactionContestSector(world, sectorId, factionId) {
+  const sector = world.sectors.find((item) => item.id === sectorId);
+  if (!sector || sector.owner === factionId) return false;
+  return neighboringSectorIds(world, sectorId).some(
+    (neighborId) =>
+      world.sectors.find((item) => item.id === neighborId)?.owner === factionId,
+  );
 }
 
 /** Marks ownership chains as supplied without inventories or convoy controls. */

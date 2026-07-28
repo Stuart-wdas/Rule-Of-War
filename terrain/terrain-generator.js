@@ -172,13 +172,16 @@ function mixColor(first, second, amount) {
   );
 }
 
-export function terrainColor(sample, { debug = false } = {}) {
-  if (!debug && Array.isArray(sample.authoredColor))
-    return [...sample.authoredColor];
+export function terrainColor(
+  sample,
+  { debug = false, x = sample.x ?? 0, y = sample.y ?? 0 } = {},
+) {
   const terrainType = sample.terrainType ?? sample.type ?? TERRAIN_TYPES.PLAINS;
   const palette = debug ? TERRAIN_DEBUG_PALETTE : TERRAIN_PALETTE;
   if (debug) return [...(palette[terrainType] ?? palette.plains)];
-  let color = [...(palette[terrainType] ?? palette.plains)];
+  let color = Array.isArray(sample.authoredColor)
+    ? [...sample.authoredColor]
+    : [...(palette[terrainType] ?? palette.plains)];
   if (terrainType === TERRAIN_TYPES.PLAINS)
     color = mixColor(color, [128, 142, 62], sample.moisture * 0.32);
   else if (terrainType === TERRAIN_TYPES.LOWLAND)
@@ -187,11 +190,31 @@ export function terrainColor(sample, { debug = false } = {}) {
     color = mixColor(color, [116, 94, 58], (1 - sample.moisture) * 0.35);
   else if (terrainType === TERRAIN_TYPES.MOUNTAIN)
     color = mixColor(color, [132, 124, 104], sample.elevation * 0.28);
-  const variation =
-    terrainType === TERRAIN_TYPES.RIVER || terrainType.includes("water")
-      ? (sample.moisture - 0.5) * 10
-      : (sample.elevation - 0.5) * 17 + (sample.moisture - 0.5) * 8;
-  return color.map((channel) => clamp(Math.round(channel + variation), 0, 255));
+  const water =
+    terrainType === TERRAIN_TYPES.RIVER || terrainType.includes("water");
+  const broadVariation =
+    Math.sin(x * 0.17 + y * 0.11) * 0.5 +
+    Math.sin(x * 0.047 - y * 0.083 + 1.7) * 0.5;
+  const fineNoise = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+  const fineVariation = fineNoise - Math.floor(fineNoise) - 0.5;
+  const variation = water
+    ? (sample.moisture - 0.5) * 10 + broadVariation * 2
+    : (sample.elevation - 0.5) * 22 +
+      (sample.moisture - 0.5) * 9 +
+      broadVariation * 11 +
+      fineVariation * 5;
+  const elevationWarmth = water ? 0 : (sample.elevation - 0.5) * 7;
+  return color.map((channel, index) =>
+    clamp(
+      Math.round(
+        channel +
+          variation +
+          (index === 0 ? elevationWarmth : index === 2 ? -elevationWarmth : 0),
+      ),
+      0,
+      255,
+    ),
+  );
 }
 
 export function generateTerrain({ bounds, seed, config = {} }) {

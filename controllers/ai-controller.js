@@ -41,7 +41,7 @@ export class AiController {
   }
 
   /** Plans economy choices and movement before the movement queue resolves. */
-  planDeploymentAndMoves() {
+  planDeploymentAndMoves({ includeMovement = true } = {}) {
     const state = this.getState();
     const config = this.getGameConfig();
     const owner = this.owner;
@@ -109,6 +109,7 @@ export class AiController {
       this.queueRecruit(this.chooseRecruitType(enemy.resources), owner);
     }
 
+    if (!includeMovement) return;
     const targets = this.enemyPieces().filter(
       (piece) => UNIT_TYPES[piece.type]?.airUnit !== true,
     );

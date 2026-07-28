@@ -58,16 +58,18 @@ export function createBattlefieldViewIndex({
     }
   }
 
-  const visible = fogEnabled ? new Set() : null;
+  const usesAnalyticVisibility = fogEnabled && runtimeMap.virtual;
+  const visible = fogEnabled && !usesAnalyticVisibility ? new Set() : null;
+  const ownedVisible = fogEnabled ? new Set() : null;
   // The renderer consumes the same reveal sources as the gameplay visibility
   // index. Keeping them here prevents the visual fog radius from drifting away
   // from the range rule used to reveal units and tiles.
   const visibilitySources = [];
-  if (visible) {
+  if (fogEnabled) {
     for (const piece of [...state.units, ...state.structures]) {
       if (piece.owner !== localOwner) continue;
       for (const tile of occupiedCoordinates(piece))
-        visible.add(keyOf(tile.x, tile.y));
+        ownedVisible.add(keyOf(tile.x, tile.y));
       if (piece.revealsFog !== true) continue;
       const spec = unitTypes[piece.type] ?? buildings[piece.type];
       if (!spec) continue;
@@ -86,15 +88,16 @@ export function createBattlefieldViewIndex({
         y: center.y,
         radius: visionRange,
       });
-      for (const tile of runtimeMap.tilesWithinRadius(piece, visionRange, {
-        includeOrigin: true,
-      }))
-        visible.add(keyOf(tile.x, tile.y));
+      if (visible)
+        for (const tile of runtimeMap.tilesWithinRadius(piece, visionRange, {
+          includeOrigin: true,
+        }))
+          visible.add(keyOf(tile.x, tile.y));
     }
     for (const job of state.jobs)
       if (job.owner === localOwner && job.kind === "building") {
         for (const tile of occupiedCoordinates(job))
-          visible.add(keyOf(tile.x, tile.y));
+          ownedVisible.add(keyOf(tile.x, tile.y));
       }
   }
 
@@ -168,7 +171,16 @@ export function createBattlefieldViewIndex({
     targetable,
     visibilitySources,
     isVisible(x, y) {
-      return visible === null || visible.has(keyOf(x, y));
+      if (!fogEnabled) return true;
+      const key = keyOf(x, y);
+      if (ownedVisible.has(key) || visible?.has(key)) return true;
+      if (!usesAnalyticVisibility) return false;
+      const center = runtimeMap.tileByCoordinate.get(key)?.center ?? { x, y };
+      return visibilitySources.some(
+        (source) =>
+          (center.x - source.x) ** 2 + (center.y - source.y) ** 2 <=
+          source.radius ** 2,
+      );
     },
   };
 }

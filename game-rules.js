@@ -288,6 +288,7 @@ export const BUILDINGS = {
     range: 0,
     buildRange: 0,
     footprintSize: 1,
+    width: 2,
     commanderOnly: true,
     linear: true,
   },

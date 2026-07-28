@@ -37,6 +37,7 @@ import {
 import {
   DEFAULT_MAP_ID,
   MAP_CATALOG,
+  WORLD_CAMPAIGN_MAP_ID,
   allMapPresets,
   applyMapPreset,
   findMapPresetByDimensions,
@@ -68,6 +69,7 @@ import {
 } from "./simulation/rts-runtime.js";
 import {
   applySectorOutcome,
+  canFactionContestSector,
   createWorldState,
 } from "./simulation/world-state.js";
 import { SavedMatchStore } from "./storage/saved-match-store.js";
@@ -77,6 +79,7 @@ import {
 } from "./storage/custom-map-store.js";
 import { createAuthoredTerrainData } from "./terrain/authored-terrain.js";
 import { collectDomElements } from "./ui/dom-elements.js";
+import { WorldGlobe } from "./world-globe.js";
 
 let COLS = 48;
 let ROWS = 48;
@@ -123,6 +126,7 @@ let fastForwarding = false;
 let settingsReturnView = "home";
 let mapBuilderState = null;
 let mapBuilder3D = null;
+let worldGlobe = null;
 let mapBuilderSculptMode = "add";
 let multiplayer = createEmptyMultiplayerState();
 const uid = (prefix) =>
@@ -528,7 +532,7 @@ function runRtsAi() {
   rtsAiNextTick = state.simulationTick + RTS_TICK_RATE * 3;
   if (state.simulationTick >= rtsAiEconomyNextTick) {
     rtsAiEconomyNextTick = state.simulationTick + RTS_TICK_RATE * 10;
-    aiController.planDeploymentAndMoves();
+    aiController.planDeploymentAndMoves({ includeMovement: false });
   }
   const runtime = ensureRtsRuntime();
   const enemies = state.units.filter((unit) => unit.owner === 1 && unit.hp > 0);
@@ -538,17 +542,57 @@ function runRtsAi() {
       (entity.owner === 0 ||
         (entity.owner < 0 && BUILDINGS[entity.type]?.capturable)),
   );
+  let issuedCommands = 0;
   for (const unit of enemies) {
+    if (issuedCommands >= 2) break;
     if (runtime.commandFor(unit.id) || !targets.length) continue;
-    const target = targets
-      .slice()
-      .sort((first, second) => distance(unit, first) - distance(unit, second))[0];
-    runtime.issueCommand({
+    let target = null;
+    let targetDistance = Number.POSITIVE_INFINITY;
+    for (const candidate of targets) {
+      const candidateDistance = distance(unit, candidate);
+      if (candidateDistance >= targetDistance) continue;
+      target = candidate;
+      targetDistance = candidateDistance;
+    }
+    if (!target) continue;
+    const unitPosition = mapPositionFor(unit);
+    const targetPosition = mapPositionFor(target);
+    let destination = targetPosition;
+    if (UNIT_TYPES[unit.type]?.airUnit !== true && targetDistance > 24) {
+      const amount = 24 / targetDistance;
+      const projected = {
+        x: unitPosition.x + (targetPosition.x - unitPosition.x) * amount,
+        y: unitPosition.y + (targetPosition.y - unitPosition.y) * amount,
+      };
+      const projectedTile = tileAtMapPoint(projected);
+      const candidates = projectedTile
+        ? runtimeMap.tilesWithinRadius(projectedTile, 5, {
+            includeOrigin: true,
+          })
+        : [];
+      let waypoint = null;
+      let waypointDistance = Number.POSITIVE_INFINITY;
+      for (const candidate of candidates) {
+        if (
+          !Number.isFinite(groundMovementCostAt(candidate.x, candidate.y)) ||
+          isStructureTileBlocked(candidate.x, candidate.y)
+        )
+          continue;
+        const candidateDistance = distance(candidate, target);
+        if (candidateDistance >= waypointDistance) continue;
+        waypoint = candidate;
+        waypointDistance = candidateDistance;
+      }
+      if (!waypoint) continue;
+      destination = waypoint.center ?? { x: waypoint.x, y: waypoint.y };
+    }
+    const accepted = runtime.issueCommand({
       owner: 1,
       unitIds: [unit.id],
       type: "attack-move",
-      destination: mapPositionFor(target),
+      destination,
     });
+    if (accepted.length) issuedCommands += 1;
   }
 }
 
@@ -888,7 +932,7 @@ function movementRoutePlan(actor, x, y, targetPoint = null) {
           ? Number.POSITIVE_INFINITY
           : groundMovementCostAt(tile.x, tile.y),
       distance,
-      maximumVisited: Math.max(10000, Math.min(runtimeMap.tileCount, 1000000)),
+      maximumVisited: Math.max(10000, Math.min(runtimeMap.tileCount, 75000)),
     });
     if (result) {
       if (movementPathCache.size >= 512)
@@ -1027,41 +1071,46 @@ function bridgeFootprintCoordinates(start, end) {
     candidates.push(endTile);
   const footprintByKey = new Map();
   const sampleCount = Math.max(2, Math.ceil(lengthMeters * 4));
-  for (let index = 0; index <= sampleCount; index += 1) {
-    const amount = index / sampleCount;
-    const sample = {
-      x: startCenter.x + (endCenter.x - startCenter.x) * amount,
-      y: startCenter.y + (endCenter.y - startCenter.y) * amount,
-    };
-    const nearest = candidates.reduce((best, tile) => {
-      const center = tile.center ?? tile;
-      const tileDistance = euclideanDistance(center, sample);
-      return !best || tileDistance < best.distance
-        ? { tile, distance: tileDistance }
-        : best;
-    }, null)?.tile;
-    if (nearest)
-      footprintByKey.set(`${nearest.x},${nearest.y}`, {
-        x: nearest.x,
-        y: nearest.y,
-      });
+  const directionX = (endCenter.x - startCenter.x) / lengthMeters;
+  const directionY = (endCenter.y - startCenter.y) / lengthMeters;
+  const normal = { x: -directionY, y: directionX };
+  if (normal.y < 0 || (Math.abs(normal.y) < 1e-6 && normal.x < 0)) {
+    normal.x *= -1;
+    normal.y *= -1;
   }
-  footprintByKey.set(`${startTile.x},${startTile.y}`, {
-    x: startTile.x,
-    y: startTile.y,
-  });
-  footprintByKey.set(`${endTile.x},${endTile.y}`, {
-    x: endTile.x,
-    y: endTile.y,
-  });
+  for (const laneOffset of [0, BUILDINGS.bridge.width - 1.1]) {
+    for (let index = 0; index <= sampleCount; index += 1) {
+      const amount = index / sampleCount;
+      const sample = {
+        x:
+          startCenter.x +
+          (endCenter.x - startCenter.x) * amount +
+          normal.x * laneOffset,
+        y:
+          startCenter.y +
+          (endCenter.y - startCenter.y) * amount +
+          normal.y * laneOffset,
+      };
+      const nearest = candidates.reduce((best, tile) => {
+        const center = tile.center ?? tile;
+        const tileDistance = euclideanDistance(center, sample);
+        return !best || tileDistance < best.distance
+          ? { tile, distance: tileDistance }
+          : best;
+      }, null)?.tile;
+      if (nearest)
+        footprintByKey.set(`${nearest.x},${nearest.y}`, {
+          x: nearest.x,
+          y: nearest.y,
+        });
+    }
+  }
   return [...footprintByKey.values()].sort((first, second) => {
     const firstCenter =
       runtimeMap.tileByCoordinate.get(`${first.x},${first.y}`)?.center ?? first;
     const secondCenter =
       runtimeMap.tileByCoordinate.get(`${second.x},${second.y}`)?.center ??
       second;
-    const directionX = endCenter.x - startCenter.x;
-    const directionY = endCenter.y - startCenter.y;
     return (
       (firstCenter.x - startCenter.x) * directionX +
       (firstCenter.y - startCenter.y) * directionY -
@@ -1486,6 +1535,12 @@ function initializeHudPanels() {
 function createStaticUI() {
   syncConfigDependentUI();
   initializeHudPanels();
+  worldGlobe = new WorldGlobe(els.worldSectorGrid, {
+    onSelect: (sectorId) => {
+      selectedWorldSectorId = sectorId;
+      renderWorldCampaign();
+    },
+  });
 
   els.structurePopover.addEventListener("click", (event) => {
     const commanderBuild = event.target.closest("[data-commander-build]");
@@ -1606,7 +1661,6 @@ function createStaticUI() {
   els.mainMapBuilderButton.addEventListener("click", openMapBuilder);
   els.worldCampaignButton.addEventListener("click", openWorldCampaign);
   els.worldBackButton.addEventListener("click", showMainMenu);
-  els.worldSectorGrid.addEventListener("click", handleWorldSectorSelection);
   els.worldEnterSector.addEventListener("click", enterSelectedWorldSector);
   els.worldNewCampaign.addEventListener("click", resetWorldCampaign);
   els.mapBuilderBack.addEventListener("click", showMainMenu);
@@ -2187,7 +2241,7 @@ function loadWorldCampaign() {
   try {
     const saved = JSON.parse(localStorage.getItem(WORLD_STORAGE_KEY));
     worldState =
-      saved?.schema === 1 && Array.isArray(saved.sectors)
+      saved?.schema === 3 && Array.isArray(saved.sectors)
         ? saved
         : createWorldState();
   } catch {
@@ -2207,7 +2261,9 @@ function saveWorldCampaign() {
 function openWorldCampaign() {
   loadWorldCampaign();
   selectedWorldSectorId ??=
-    worldState.sectors.find((sector) => sector.owner === null)?.id ??
+    worldState.sectors.find((sector) =>
+      canFactionContestSector(worldState, sector.id, localOwner),
+    )?.id ??
     worldState.sectors[0]?.id;
   renderWorldCampaign();
   showGameMenu("world");
@@ -2217,7 +2273,10 @@ function resetWorldCampaign() {
   worldState = createWorldState({
     seed: globalThis.crypto?.randomUUID?.() ?? Date.now(),
   });
-  selectedWorldSectorId = worldState.sectors[0]?.id ?? null;
+  selectedWorldSectorId =
+    worldState.sectors.find((sector) =>
+      canFactionContestSector(worldState, sector.id, localOwner),
+    )?.id ?? null;
   saveWorldCampaign();
   renderWorldCampaign();
 }
@@ -2227,38 +2286,24 @@ function renderWorldCampaign() {
   const factions = new Map(
     worldState.factions.map((faction) => [faction.id, faction]),
   );
-  els.worldSectorGrid.style.setProperty("--world-cols", worldState.width);
-  els.worldSectorGrid.replaceChildren(
-    ...worldState.sectors.map((sector) => {
-      const button = document.createElement("button");
-      const faction = factions.get(sector.owner);
-      button.type = "button";
-      button.className = [
-        "world-sector",
-        sector.owner === null ? "neutral" : `owner-${sector.owner}`,
-        sector.contested ? "contested" : "",
-        sector.id === selectedWorldSectorId ? "selected" : "",
-      ]
-        .filter(Boolean)
-        .join(" ");
-      button.dataset.sectorId = sector.id;
-      button.style.setProperty("--sector-color", faction?.color ?? "#6f7568");
-      const biome = document.createElement("small");
-      biome.textContent = sector.biome.toUpperCase();
-      const number = document.createElement("strong");
-      number.textContent = String(
-        sector.y * worldState.width + sector.x + 1,
-      ).padStart(2, "0");
-      const owner = document.createElement("span");
-      owner.textContent = faction?.name ?? "UNCLAIMED";
-      button.append(biome, number, owner);
-      return button;
-    }),
+  const contestableIds = new Set(
+    worldState.sectors
+      .filter((sector) =>
+        canFactionContestSector(worldState, sector.id, localOwner),
+      )
+      .map((sector) => sector.id),
   );
+  worldGlobe?.setWorld(worldState, selectedWorldSectorId, contestableIds);
   const sector = worldState.sectors.find(
     (item) => item.id === selectedWorldSectorId,
   );
   const faction = sector ? factions.get(sector.owner) : null;
+  els.worldGlobeCanvas.setAttribute(
+    "aria-label",
+    sector
+      ? `Interactive campaign globe. Selected ${sector.name}, ${sector.biome}. Drag to rotate or use arrow keys to change sector.`
+      : "Interactive strategic campaign globe.",
+  );
   els.worldSectorBiome.textContent = sector
     ? sector.biome.toUpperCase()
     : "SELECT A SECTOR";
@@ -2275,31 +2320,36 @@ function renderWorldCampaign() {
       ? "CONNECTED"
       : "ISOLATED"
     : "—";
-  els.worldEnterSector.disabled = !sector;
-}
-
-function handleWorldSectorSelection(event) {
-  const button = event.target.closest("[data-sector-id]");
-  if (!button) return;
-  selectedWorldSectorId = button.dataset.sectorId;
-  renderWorldCampaign();
+  const contestable = Boolean(sector && contestableIds.has(sector.id));
+  els.worldEnterSector.disabled = !contestable;
+  els.worldEnterSector.textContent = contestable
+    ? "ENTER SECTOR"
+    : sector?.owner === localOwner
+      ? "SECTOR SECURED"
+      : "FRONT OUT OF RANGE";
 }
 
 async function enterSelectedWorldSector() {
   const sector = worldState?.sectors.find(
     (item) => item.id === selectedWorldSectorId,
   );
-  if (!sector) return;
+  if (
+    !sector ||
+    !canFactionContestSector(worldState, sector.id, localOwner)
+  )
+    return;
   activeWorldSectorId = sector.id;
   pendingTerrainSeed = sector.terrainSeed;
   activeTerrainModifications = cloneJson(sector.modifications ?? []);
-  await startAiCampaign(DEFAULT_MAP_ID);
+  await startAiCampaign(WORLD_CAMPAIGN_MAP_ID);
 }
 
 function showGameMenu(view = "home") {
   els.gameMenu.hidden = false;
   document.querySelector(".app-shell").inert = true;
+  document.body.classList.toggle("world-campaign-active", view === "world");
   setMenuView(view);
+  worldGlobe?.setActive(view === "world");
   if (view === "human" || view === "saves") renderSavedMatches();
 }
 
@@ -2708,13 +2758,35 @@ function generateTerrainInWorker(bounds, seed, config) {
         reject(new Error(data?.error ?? "Terrain worker failed."));
         return;
       }
-      resolve(data.terrain);
+      resolve({ terrain: data.terrain, raster: data.raster });
     };
     worker.onerror = (event) => {
       worker.terminate();
       reject(new Error(event.message || "Terrain worker failed."));
     };
-    worker.postMessage({ bounds, seed, config });
+    worker.postMessage({ bounds, seed, config, maxTextureSide: 512 });
+  });
+}
+
+function rasterizeTerrainInWorker(serializedTerrain) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL("./terrain/terrain-worker.js", import.meta.url),
+      { type: "module" },
+    );
+    worker.onmessage = ({ data }) => {
+      worker.terminate();
+      if (!data?.ok) {
+        reject(new Error(data?.error ?? "Terrain raster worker failed."));
+        return;
+      }
+      resolve(data.raster);
+    };
+    worker.onerror = (event) => {
+      worker.terminate();
+      reject(new Error(event.message || "Terrain raster worker failed."));
+    };
+    worker.postMessage({ serializedTerrain, maxTextureSide: 512 });
   });
 }
 
@@ -2746,6 +2818,7 @@ async function prepareBattlefieldAssets(mapId) {
   const cacheKey = terrainCacheKey(map, activeTerrainSeed, map.terrainConfig);
   updateLoadingProgress(24, "TERRAIN · CHECKING SEED CACHE");
   let serializedTerrain = authoredTerrainData;
+  let terrainRaster = null;
   if (!serializedTerrain)
     try {
       serializedTerrain = await getCachedTerrain(cacheKey);
@@ -2771,18 +2844,23 @@ async function prepareBattlefieldAssets(mapId) {
   }
   if (!serializedTerrain) {
     updateLoadingProgress(32, "TERRAIN · GENERATING DETAILED HEIGHT FIELD");
-    serializedTerrain = await generateTerrainInWorker(
+    const generatedTerrain = await generateTerrainInWorker(
       runtimeMap.bounds,
       activeTerrainSeed,
       map.terrainConfig,
     );
+    serializedTerrain = generatedTerrain.terrain;
+    terrainRaster = generatedTerrain.raster;
     cacheTerrain(cacheKey, serializedTerrain).catch((error) =>
       console.warn("Terrain cache write skipped.", error),
     );
   } else updateLoadingProgress(58, "TERRAIN · RESTORING CACHED SEED");
 
+  if (!terrainRaster)
+    terrainRaster = await rasterizeTerrainInWorker(serializedTerrain);
   const detailedTerrain = hydrateTerrain(serializedTerrain);
   if (!detailedTerrain) throw new Error("Generated terrain could not be restored.");
+  detailedTerrain.renderRaster = terrainRaster;
   applyRuntimeRules({ terrain: detailedTerrain });
   updateLoadingProgress(66, "WATER · LEVELING LAKES AND RIVERS");
   await yieldLoadingFrame();
@@ -2802,10 +2880,7 @@ async function prepareBattlefieldAssets(mapId) {
   updateLoadingProgress(86, "VEGETATION · DEPLOYING LOW-POLY TREES");
   await yieldLoadingFrame();
   updateLoadingProgress(93, "FOG · FORMING CLOUD COVER");
-  render();
-  await yieldLoadingFrame();
   updateLoadingProgress(97, "BATTLEFIELD · DRAWING TACTICAL MAP");
-  renderTacticalNavigation(battlefieldView);
   preparedMapId = map.id;
   markStartupPerformance("battlefield-core-ready");
   measureStartupPerformance(
@@ -5116,7 +5191,19 @@ function isValidBridgeEnd(start, x, y, owner = localOwner) {
   const { lengthMeters } = bridgeMetrics(start, { x, y });
   if (lengthMeters < 1) return false;
   const footprint = bridgeFootprintCoordinates(start, { x, y });
-  const interior = footprint.slice(1, -1);
+  const startCenter = tileCenter(start.x, start.y);
+  const endCenter = tileCenter(x, y);
+  const direction = {
+    x: (endCenter.x - startCenter.x) / lengthMeters,
+    y: (endCenter.y - startCenter.y) / lengthMeters,
+  };
+  const interior = footprint.filter((tile) => {
+    const center = tileCenter(tile.x, tile.y);
+    const projection =
+      (center.x - startCenter.x) * direction.x +
+      (center.y - startCenter.y) * direction.y;
+    return projection > 0.55 && projection < lengthMeters - 0.55;
+  });
   return (
     isFootprintClear(footprint, { expectedSize: null }) &&
     interior.length > 0 &&

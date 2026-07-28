@@ -125,10 +125,17 @@
             </div>
           </div>
           <div class="world-campaign-layout">
-            <div
-              class="world-sector-grid"
-              id="world-sector-grid"
-              aria-label="Strategic campaign sectors"></div>
+            <div class="world-globe-stage" id="world-sector-grid">
+              <canvas
+                id="world-globe-canvas"
+                tabindex="0"
+                aria-label="Interactive strategic campaign globe"></canvas>
+              <div class="world-globe-reticle" aria-hidden="true"></div>
+              <p class="world-globe-hint">
+                DRAG TO ROTATE <span>·</span> SCROLL TO ORBIT
+                <span>·</span> SELECT A HEX
+              </p>
+            </div>
             <aside class="world-sector-panel">
               <small id="world-sector-biome">SELECT A SECTOR</small>
               <h3 id="world-sector-name">THEATER OVERVIEW</h3>

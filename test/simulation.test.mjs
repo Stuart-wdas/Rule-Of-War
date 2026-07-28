@@ -8,6 +8,7 @@ import { createEntityIndex } from "../simulation/entity-index.js";
 import { resolveMedicalSupport } from "../simulation/support-resolution.js";
 import {
   applySectorOutcome,
+  canFactionContestSector,
   createWorldState,
   neighboringSectorIds,
   recomputeWorldSupply,
@@ -20,6 +21,10 @@ import {
   restoreFormationStrength,
 } from "../simulation/formation-state.js";
 import { worldViewForFaction } from "../simulation/world-interest.js";
+import {
+  getMapPreset,
+  WORLD_CAMPAIGN_MAP_ID,
+} from "../maps/map-catalog.js";
 
 const TYPES = {
   rifle: { lives: 3, damage: 1, hitChance: 1 },
@@ -111,10 +116,33 @@ test("field hospitals use the same automatic support rule", () => {
 
 test("world sectors have stable adjacency and capture events", () => {
   const world = createWorldState({ width: 3, height: 3, seed: "test" });
-  assert.equal(neighboringSectorIds(world, "sector-1-1").length, 4);
+  assert.equal(neighboringSectorIds(world, "sector-1-1").length, 6);
   const event = applySectorOutcome(world, "sector-1-1", 0);
   assert.equal(event.type, "sector-captured");
   assert.equal(world.sectors.find((item) => item.id === "sector-1-1").owner, 0);
+});
+
+test("world campaigns start from one capital and only contest adjacent hexes", () => {
+  const world = createWorldState();
+  assert.equal(world.sectors.length, 40);
+  assert.equal(world.sectors.filter((sector) => sector.owner === 0).length, 1);
+  assert.equal(world.sectors.filter((sector) => sector.owner === 1).length, 1);
+  const capital = world.sectors.find((sector) => sector.owner === 0);
+  const adjacent = neighboringSectorIds(world, capital.id);
+  assert.ok(adjacent.length >= 3);
+  assert.ok(
+    adjacent.every((sectorId) =>
+      canFactionContestSector(world, sectorId, 0),
+    ),
+  );
+  assert.equal(canFactionContestSector(world, "sector-5-0", 0), false);
+  assert.equal(canFactionContestSector(world, capital.id, 0), false);
+});
+
+test("world campaign battles use a 1024 by 1024 tactical map", () => {
+  const map = getMapPreset(WORLD_CAMPAIGN_MAP_ID);
+  assert.equal(map.cols, 1024);
+  assert.equal(map.rows, 1024);
 });
 
 test("strategic supply follows contiguous owned sectors automatically", () => {

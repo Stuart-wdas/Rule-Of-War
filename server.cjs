@@ -45,6 +45,7 @@ const publicRootFiles = new Set([
   'game-rules.js',
   'battlefield3d.js',
   'map-builder3d.js',
+  'world-globe.js',
   'model-gallery.html',
   'model-gallery.css',
   'model-gallery.js',

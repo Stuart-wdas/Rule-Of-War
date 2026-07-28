@@ -76,6 +76,7 @@ export function collectDomElements(root = document) {
     worldCampaignButton: root.querySelector("#world-campaign-button"),
     worldBackButton: root.querySelector("#world-back-button"),
     worldSectorGrid: root.querySelector("#world-sector-grid"),
+    worldGlobeCanvas: root.querySelector("#world-globe-canvas"),
     worldSectorBiome: root.querySelector("#world-sector-biome"),
     worldSectorName: root.querySelector("#world-sector-name"),
     worldSectorDescription: root.querySelector("#world-sector-description"),

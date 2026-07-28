@@ -207,6 +207,7 @@ export const MAP_CATALOG = Object.freeze([
 ]);
 
 export const DEFAULT_MAP_ID = "grand-front";
+export const WORLD_CAMPAIGN_MAP_ID = "galaxy-front";
 const customMapCatalog = [];
 
 export function registerCustomMaps(maps = []) {

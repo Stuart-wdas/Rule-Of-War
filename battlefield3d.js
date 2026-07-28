@@ -192,6 +192,7 @@ export class Battlefield3D {
       ? (x, y) => terrain.sample(x, y)
       : createTerrainSampler(this.mapBounds, terrainSeed);
     this.terrain = terrain?.sample ? terrain : this.terrainSampler.terrain;
+    this.terrainRaster = terrain?.renderRaster ?? null;
     this.terrainDebug = Boolean(terrainDebug);
     this.showElevationValues = Boolean(showElevationValues);
     this.deferVegetation = Boolean(deferVegetation);
@@ -617,7 +618,7 @@ export class Battlefield3D {
     const colorAt = (point) => {
       const [red, green, blue] = terrainColor(
         this.terrainSampler(point.x, point.y),
-        { debug: this.terrainDebug },
+        { debug: this.terrainDebug, x: point.x, y: point.y },
       );
       return new THREE.Color(red / 255, green / 255, blue / 255)
         .convertSRGBToLinear()
@@ -846,8 +847,8 @@ export class Battlefield3D {
       new THREE.PlaneGeometry(
         this.cols,
         this.rows,
-        Math.min(512, Math.max(1, Math.ceil(this.cols * 4))),
-        Math.min(512, Math.max(1, Math.ceil(this.rows * 4))),
+        Math.min(128, Math.max(16, Math.ceil(this.cols / 4))),
+        Math.min(128, Math.max(16, Math.ceil(this.rows / 4))),
       ),
       new THREE.ShaderMaterial({
         uniforms: {
@@ -1457,7 +1458,11 @@ export class Battlefield3D {
           const mapX =
             this.mapBounds.minX + ((pixelX + 0.5) / colorCanvas.width) * spanX;
           const sample = this._terrainSampleAtMapPoint(mapX, mapY);
-          const color = terrainColor(sample, { debug: this.terrainDebug });
+          const color = terrainColor(sample, {
+            debug: this.terrainDebug,
+            x: mapX,
+            y: mapY,
+          });
           const offset = (localY * regionWidth + localX) * 4;
           colorImage.data[offset] = color[0];
           colorImage.data[offset + 1] = color[1];
@@ -1670,10 +1675,10 @@ export class Battlefield3D {
       if (!terrain?.cellAtMapPoint) return;
       const placements = [];
       const cellCount = terrain.width * terrain.height;
-      const maximumCandidates = this.largeScale ? 20000 : 80000;
+      const maximumCandidates = this.largeScale ? 60000 : 80000;
       const densityScale = Math.min(
         1,
-        (this.largeScale ? 12000 : 40000) / Math.max(cellCount * 0.16, 1),
+        (this.largeScale ? 30000 : 40000) / Math.max(cellCount * 0.16, 1),
       );
       // Large maps keep a bounded vegetation candidate set. Tree placement is
       // visual only, so sampling representative cells avoids a multi-million
@@ -1943,17 +1948,20 @@ export class Battlefield3D {
   _getProceduralTerrainTexture() {
     if (this.proceduralTerrainTexture) return this.proceduralTerrainTexture;
     const longestSide = Math.max(this.cols, this.rows, 1);
-    const longestTextureSide =
-      longestSide > 128 ? 1024 : longestSide > 36 ? 768 : 512;
+    const longestTextureSide = 512;
     const canvas = document.createElement("canvas");
-    canvas.width = Math.max(
-      256,
-      Math.round((this.cols / longestSide) * longestTextureSide),
-    );
-    canvas.height = Math.max(
-      256,
-      Math.round((this.rows / longestSide) * longestTextureSide),
-    );
+    canvas.width =
+      this.terrainRaster?.width ??
+      Math.max(
+        256,
+        Math.round((this.cols / longestSide) * longestTextureSide),
+      );
+    canvas.height =
+      this.terrainRaster?.height ??
+      Math.max(
+        256,
+        Math.round((this.rows / longestSide) * longestTextureSide),
+      );
     const heightCanvas = document.createElement("canvas");
     heightCanvas.width = canvas.width;
     heightCanvas.height = canvas.height;
@@ -1964,28 +1972,38 @@ export class Battlefield3D {
       heightCanvas.width,
       heightCanvas.height,
     );
-    const spanX = this.mapBounds.maxX - this.mapBounds.minX;
-    const spanY = this.mapBounds.maxY - this.mapBounds.minY;
-    for (let pixelY = 0; pixelY < canvas.height; pixelY += 1) {
-      const mapY =
-        this.mapBounds.minY + ((pixelY + 0.5) / canvas.height) * spanY;
-      for (let pixelX = 0; pixelX < canvas.width; pixelX += 1) {
-        const mapX =
-          this.mapBounds.minX + ((pixelX + 0.5) / canvas.width) * spanX;
-        const sample = this._terrainSampleAtMapPoint(mapX, mapY);
-        const color = terrainColor(sample, { debug: this.terrainDebug });
-        const offset = (pixelY * canvas.width + pixelX) * 4;
-        image.data[offset] = color[0];
-        image.data[offset + 1] = color[1];
-        image.data[offset + 2] = color[2];
-        image.data[offset + 3] = 255;
-        const elevation = Math.round(
-          (sample.surfaceElevation ?? sample.elevation) * 255,
-        );
-        heightImage.data[offset] = elevation;
-        heightImage.data[offset + 1] = elevation;
-        heightImage.data[offset + 2] = elevation;
-        heightImage.data[offset + 3] = 255;
+    if (this.terrainRaster && !this.terrainDebug) {
+      image.data.set(this.terrainRaster.colorPixels);
+      heightImage.data.set(this.terrainRaster.heightPixels);
+      this.terrainRaster = null;
+    } else {
+      const spanX = this.mapBounds.maxX - this.mapBounds.minX;
+      const spanY = this.mapBounds.maxY - this.mapBounds.minY;
+      for (let pixelY = 0; pixelY < canvas.height; pixelY += 1) {
+        const mapY =
+          this.mapBounds.minY + ((pixelY + 0.5) / canvas.height) * spanY;
+        for (let pixelX = 0; pixelX < canvas.width; pixelX += 1) {
+          const mapX =
+            this.mapBounds.minX + ((pixelX + 0.5) / canvas.width) * spanX;
+          const sample = this._terrainSampleAtMapPoint(mapX, mapY);
+          const color = terrainColor(sample, {
+            debug: this.terrainDebug,
+            x: mapX,
+            y: mapY,
+          });
+          const offset = (pixelY * canvas.width + pixelX) * 4;
+          image.data[offset] = color[0];
+          image.data[offset + 1] = color[1];
+          image.data[offset + 2] = color[2];
+          image.data[offset + 3] = 255;
+          const elevation = Math.round(
+            (sample.surfaceElevation ?? sample.elevation) * 255,
+          );
+          heightImage.data[offset] = elevation;
+          heightImage.data[offset + 1] = elevation;
+          heightImage.data[offset + 2] = elevation;
+          heightImage.data[offset + 3] = 255;
+        }
       }
     }
     context.putImageData(image, 0, 0);
@@ -3202,7 +3220,7 @@ export class Battlefield3D {
 
   _buildBridge(group, piece, materials) {
     const bridgehead = new THREE.Mesh(
-      new THREE.BoxGeometry(0.72, 0.14, 0.82),
+      new THREE.BoxGeometry(0.72, 0.16, 1.9),
       materials.secondary,
     );
     bridgehead.position.y = 0.09;
@@ -3226,33 +3244,55 @@ export class Battlefield3D {
     const span = end.clone().sub(start);
     const length = span.length();
     if (length <= 0.1) return;
+    const lateral = new THREE.Vector3(-span.z, 0, span.x).normalize();
+    if (
+      lateral.z < 0 ||
+      (Math.abs(lateral.z) < 1e-6 && lateral.x < 0)
+    )
+      lateral.multiplyScalar(-1);
+    lateral.multiplyScalar(0.45);
+    bridgehead.position.x += lateral.x;
+    bridgehead.position.z += lateral.z;
 
     const assembly = new THREE.Group();
-    assembly.position.set(span.x / 2, span.y / 2 + 0.2, span.z / 2);
+    assembly.position.set(
+      span.x / 2 + lateral.x,
+      span.y / 2 + 0.2,
+      span.z / 2 + lateral.z,
+    );
     assembly.quaternion.setFromUnitVectors(
       new THREE.Vector3(1, 0, 0),
       span.clone().normalize(),
     );
     const deckLength = length + 0.55;
     const deck = new THREE.Mesh(
-      new THREE.BoxGeometry(deckLength, 0.14, 0.78),
+      new THREE.BoxGeometry(deckLength, 0.16, 1.82),
       materials.wood,
     );
     const underBeamLeft = new THREE.Mesh(
       new THREE.BoxGeometry(deckLength, 0.16, 0.1),
       materials.dark,
     );
-    underBeamLeft.position.set(0, -0.13, -0.31);
+    underBeamLeft.position.set(0, -0.15, -0.7);
     const underBeamRight = underBeamLeft.clone();
-    underBeamRight.position.z = 0.31;
+    underBeamRight.position.z = 0.7;
+    const centerBeam = underBeamLeft.clone();
+    centerBeam.position.z = 0;
     const railLeft = new THREE.Mesh(
       new THREE.BoxGeometry(deckLength, 0.08, 0.07),
       materials.primary,
     );
-    railLeft.position.set(0, 0.29, -0.39);
+    railLeft.position.set(0, 0.31, -0.93);
     const railRight = railLeft.clone();
-    railRight.position.z = 0.39;
-    assembly.add(deck, underBeamLeft, underBeamRight, railLeft, railRight);
+    railRight.position.z = 0.93;
+    assembly.add(
+      deck,
+      underBeamLeft,
+      centerBeam,
+      underBeamRight,
+      railLeft,
+      railRight,
+    );
 
     const postCount = THREE.MathUtils.clamp(Math.ceil(length / 0.7), 2, 48);
     for (let index = 0; index <= postCount; index += 1) {
@@ -3262,13 +3302,13 @@ export class Battlefield3D {
         index / postCount,
       );
       const sleeper = new THREE.Mesh(
-        new THREE.BoxGeometry(0.08, 0.07, 0.92),
+        new THREE.BoxGeometry(0.08, 0.07, 2.02),
         materials.pale,
       );
       sleeper.position.set(x, 0.11, 0);
       assembly.add(sleeper);
       if (index % 2 !== 0 && index !== postCount) continue;
-      for (const z of [-0.39, 0.39]) {
+      for (const z of [-0.93, 0.93]) {
         const post = new THREE.Mesh(
           new THREE.BoxGeometry(0.07, 0.48, 0.07),
           materials.primary,
@@ -3279,7 +3319,11 @@ export class Battlefield3D {
     }
 
     const farBridgehead = bridgehead.clone();
-    farBridgehead.position.set(span.x, span.y + 0.09, span.z);
+    farBridgehead.position.set(
+      span.x + lateral.x,
+      span.y + 0.09,
+      span.z + lateral.z,
+    );
     group.add(assembly, farBridgehead);
   }
 
