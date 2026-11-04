@@ -1,0 +1,19 @@
+[package]
+name = "rule-of-war-native"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+
+[[bin]]
+name = "rule-of-war"
+path = "src/main.rs"
+
+[features]
+default = ["nvidia-dlss"]
+nvidia-dlss = ["bevy/dlss"]
+
+[dependencies]
+bevy = { version = "=0.18.1", default-features = false, features = ["3d", "ui", "default_font", "png", "x11", "wayland", "bevy_audio", "wav", "pbr_light_textures"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+getrandom = "=0.3.4"
