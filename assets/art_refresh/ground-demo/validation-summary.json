@@ -1,0 +1,26 @@
+{
+  "nativeRenderChecks": [
+    "baseline-wide",
+    "photo-wide",
+    "baseline-close",
+    "photo-close",
+    "photo-low",
+    "photo-dlss",
+    "default-training"
+  ],
+  "unitTests": {
+    "passed": 327,
+    "failed": 0
+  },
+  "originalMeadowAlbedosMatchCatalog": {
+    "field_meadow_v1": true,
+    "meadow_relief_v1": true
+  },
+  "shaderHelpers": {
+    "validated": true,
+    "rejectsLegacyBuiltinSpelling": true,
+    "scope": "standalone terrain texture sampling helpers",
+    "validator": "C:\\Code\\Rule Of War\\native\\target\\debug\\deps\\libnaga-583a04f83364395a.rlib"
+  },
+  "dlssQualityActive": true
+}

@@ -1,0 +1,53 @@
+{
+  "exeSha256": "503aa86ce0de60bc9e494c4de88883ab49e5874e60e5a2a23d1f3e2b46af85f2",
+  "testsPassed": 361,
+  "strictClippy": true,
+  "highFineRadiusMetres": 96,
+  "balancedFineRadiusMetres": 80,
+  "highFineZoomCutoff": 165,
+  "balancedFineZoomCutoff": 140,
+  "highAndBalancedTerrainDetailWindowMetres": 384,
+  "lowRangeUnchanged": true,
+  "nativeChecks": 4,
+  "beforeTerrainVertices": 136960,
+  "afterTerrainVertices": 215680,
+  "beforeSceneryActiveBytes": 134086960,
+  "afterSceneryActiveBytes": 347212384,
+  "cameraFrameTiming": {
+    "calls": 6029,
+    "maxMs": 117.9193,
+    "over100Ms": 2,
+    "over16_7Ms": 14,
+    "over33_3Ms": 5,
+    "over50Ms": 3,
+    "p50Ms": 7.3438,
+    "p95Ms": 10.146799999999999,
+    "p99Ms": 11.9767,
+    "totalMs": 46015.76159999999
+  },
+  "cameraSceneryStreaming": {
+    "activeMeshBytes": 59391504,
+    "activeVariants": 6,
+    "cacheHits": 255,
+    "completedVariants": 610,
+    "discardedVariants": 8,
+    "inactiveCacheBudgetBytes": 67108864,
+    "inactiveCacheBytes": 60480784,
+    "maxPartVertices": 8192,
+    "peakUploadBytesPerFrame": 1048320,
+    "pendingVariants": 0,
+    "queuedUploadBytes": 0,
+    "residentMeshBytes": 119872288,
+    "retiringBytes": 0,
+    "uploadBudgetBytes": 1048576,
+    "uploadedBytes": 1725169456,
+    "workerRequests": 232
+  },
+  "cameraTerrainStreaming": {
+    "cachedDetailTiles": 64,
+    "peakUploadBytes": 334904,
+    "pendingTiles": 0,
+    "staleTiles": 23,
+    "uploadedBytes": 0
+  }
+}

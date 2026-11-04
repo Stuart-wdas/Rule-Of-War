@@ -1,0 +1,21 @@
+{
+  "cellPixels": 512,
+  "variants": 4,
+  "source": "materials\\pbr\\soil_albedo.png",
+  "sourceSha256": "114d4d3b62d1ff48aae1e007b019a5b8ec5c55fc99e6b95eabc776e641653200",
+  "lighting": "Unlit albedo and local micro normals; live game lighting",
+  "files": [
+    {
+      "path": "materials\\pbr\\impact_scar_albedo.png",
+      "sha256": "3dc88cf780b563bf0cfb81a74802b45c129cb316c328c4344ce60158e9a15ad7"
+    },
+    {
+      "path": "materials\\pbr\\impact_scar_normal.png",
+      "sha256": "b8180a6e0d2234b73c0787554e837f59d5e2323b94732edd7cad8f88ef6acdc1"
+    },
+    {
+      "path": "materials\\pbr\\impact_scar_orm.png",
+      "sha256": "a606471310c68a817281bba9d3e0e151b17fb61b293748de51bbf149064ade75"
+    }
+  ]
+}

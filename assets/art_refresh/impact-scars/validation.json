@@ -1,0 +1,42 @@
+{
+  "nativeScenarios": [
+    "flat",
+    "slope",
+    "cloud",
+    "low"
+  ],
+  "marksPerScenario": 5,
+  "weaponSizesMetres": [
+    1.65,
+    3.25,
+    3.9
+  ],
+  "matchingCameras": true,
+  "verifiedPbrHashes": [
+    {
+      "path": "materials\\pbr\\impact_scar_albedo.png",
+      "sha256": "3dc88cf780b563bf0cfb81a74802b45c129cb316c328c4344ce60158e9a15ad7"
+    },
+    {
+      "path": "materials\\pbr\\impact_scar_normal.png",
+      "sha256": "b8180a6e0d2234b73c0787554e837f59d5e2323b94732edd7cad8f88ef6acdc1"
+    },
+    {
+      "path": "materials\\pbr\\impact_scar_orm.png",
+      "sha256": "a606471310c68a817281bba9d3e0e151b17fb61b293748de51bbf149064ade75"
+    }
+  ],
+  "changedPixelsUnderCloudShade": 308279,
+  "captures": {
+    "after-flat": "4dfbd32da25933a469a1cc75f098439f800b0fa951cfdeec3d95cf54ca67e788",
+    "after-slope": "215bef27ae78c1fbdc8873ae7be3e7ae7ef9bf499aa984958202fc07d34204e3",
+    "after-cloud": "4ea02586f22a435b264656a3cb2a805363573f6d004d71612285a652066768aa",
+    "after-low": "5863ae35e3f27bf2116782748d8bd8829f820ef3197b69e7bdf399a8bacc91b1"
+  },
+  "unitTests": {
+    "status": "ok",
+    "passed": 422,
+    "failed": 0
+  },
+  "formatCheckPassed": true
+}

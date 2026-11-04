@@ -1,0 +1,54 @@
+{
+  "meadow": {
+    "repeat_m": [
+      14.0,
+      14.0
+    ],
+    "size": [
+      1254,
+      1254
+    ],
+    "albedo_linear_mean_rgb": [
+      0.20953520462651806,
+      0.1616998129195155,
+      0.07859508836212653
+    ],
+    "source": "OpenAI built-in image generation",
+    "provenance": "assets/art_refresh/ground-demo/generation.json",
+    "normal": "OpenGL +Y, central differences of AI companion height, approximate shallow relief",
+    "normal_height_range_m": 0.1,
+    "orm": "R=gentle local cavity AO G=matte roughness B=0",
+    "usage": "Opt-in --ground-demo only; no baked moving-object shadows",
+    "runtime_sha256": {
+      "albedo": "a0287af5f311703de6093cecca7af669a5b03915de9457b2e85a0071f9b9c2fd",
+      "normal": "03f3b7ad13b6e24b5062cad9f1a212c0cbc87a26b9206ba0baa017d822df4f83",
+      "orm": "95429e178f6f089bb9320c7c8707230cd44bdf1878f8193abceefcd72f23b6cd"
+    }
+  },
+  "shoulder": {
+    "repeat_m": [
+      8.0,
+      8.0
+    ],
+    "size": [
+      1254,
+      1254
+    ],
+    "albedo_linear_mean_rgb": [
+      0.33031694396497124,
+      0.25632748310750825,
+      0.17653751404846657
+    ],
+    "source": "OpenAI built-in image generation",
+    "provenance": "assets/art_refresh/ground-demo/generation.json",
+    "normal": "OpenGL +Y, central differences of AI companion height, approximate shallow relief",
+    "normal_height_range_m": 0.045,
+    "orm": "R=gentle local cavity AO G=matte roughness B=0",
+    "usage": "Opt-in --ground-demo only; no baked moving-object shadows",
+    "runtime_sha256": {
+      "albedo": "8045a5bcb00bf5deb6361eeac010d2a56b5e55507e70e49bab07121f81ab0fd0",
+      "normal": "476a54276cb319872d26d6519232113d39141d9d19e0332eaebdbf6e84dd06fc",
+      "orm": "90c564ed8de2ee93b64a7ef96099f5c402026b358b5f859321f7288b4fc421a2"
+    }
+  }
+}

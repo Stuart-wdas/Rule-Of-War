@@ -1,0 +1,26 @@
+{
+  "tool": "OpenAI built-in image generation",
+  "created": "2026-10-26",
+  "assets": [
+    {
+      "name": "meadow",
+      "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-b39511bd-8df1-4c3c-9686-6eab119d743d.png",
+      "prompt": "Use case: photorealistic-natural. Production game terrain base-colour texture, square, seamless repeat in both axes, true orthographic overhead (camera perpendicular to ground), no perspective. Fine irregular detail that survives an RTS view. Neutral diffuse lighting, only tiny crevice/contact darkening; NO cast shadows, directional lighting, vignette, gloss, buildings, trees, vehicles, text, borders or roads. Natural muted warm olive, dry straw, grey limestone and beige-brown soil palette. Entire image is continuous ground, equal focus everywhere. Real photographed material appearance, no cartoon or painterly smoothing. Show a sun-dried stony meadow representing a 14 by 14 metre patch: approximately 45% irregular low olive grass mats, 25% sparse straw blades and flattened grass, 20% exposed gritty earth, 10% embedded small fractured limestone pebbles. Clusters of 2-10cm stones around exposed earth, little micro crevices; 30-50cm matted tufts with ragged edges. Varied local density without a large central object. Rich microstructure and clear small-scale separation of earthy crevices and grass, avoid broad hazy blotches."
+    },
+    {
+      "name": "shoulder",
+      "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-337d6a90-6146-4ab4-bbe3-397c31791451.png",
+      "prompt": "Use case: photorealistic-natural. Production game terrain base-colour texture, square, seamless repeat in both axes, true orthographic overhead (camera perpendicular to ground), no perspective. Fine irregular detail that survives an RTS view. Neutral diffuse lighting, only tiny crevice/contact darkening; NO cast shadows, directional lighting, vignette, gloss, buildings, trees, vehicles, text, borders or roads. Natural muted warm olive, dry straw, grey limestone and beige-brown soil palette. Entire image is continuous ground, equal focus everywhere. Real photographed material appearance, no cartoon or painterly smoothing. Show a worn road shoulder representing an 8 by 8 metre patch: densely compacted dusty beige gravel, angular 1-5cm limestone aggregate, sparse wiry dead grass at irregular little pockets, shallow scuffs, fine tyre-compressed grit, some darker exposed earth. Rough transition material, NOT actual asphalt or a painted stripe, no large tyre-track marks, no large stones. Nonuniform granular sizes, subtle accumulated dirt and depressions, physically believable close detail."
+    },
+    {
+      "name": "meadow_height",
+      "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-1510c866-0434-4778-aa66-b4961af6a893.png",
+      "prompt": "Use case: precise-object-edit. Asset: grayscale material HEIGHT MAP companion for the supplied exact terrain base-colour texture. The supplied image is the edit target. Preserve pixel alignment, every stone, grass clump and gap at exactly the same position and footprint. Do NOT invent, move or resize any feature. Convert its physical surface relief to continuous pure grayscale: mid-grey for compacted ground, slightly darker for crevices, brighter for the tops of stones and grass clumps. In the meadow grass mats have shallow raised mounds, stone surfaces have rounded or fractured tops, cracks are narrow dark recesses. In gravel stones rise slightly from the soil. This is height data, not a lit picture: remove all light/shadow direction and colour, no outlines, no white sparkle noise, no scene shadows, no text, no frame. Keep low-frequency ground level uniformly mid-grey; avoid deep pits or tall spikes. Strict flat perpendicular top-down view with identical square extent and seamless repeating edges. Retain the reference detail and shape layout exactly, grayscale only."
+    },
+    {
+      "name": "shoulder_height",
+      "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-6ffa330c-0998-4bbc-80f0-95ffc4d46ea2.png",
+      "prompt": "Use case: precise-object-edit. Asset: grayscale material HEIGHT MAP companion for the supplied exact terrain base-colour texture. The supplied image is the edit target. Preserve pixel alignment, every stone, grass clump and gap at exactly the same position and footprint. Do NOT invent, move or resize any feature. Convert its physical surface relief to continuous pure grayscale: mid-grey for compacted ground, slightly darker for crevices, brighter for the tops of stones and grass clumps. In the meadow grass mats have shallow raised mounds, stone surfaces have rounded or fractured tops, cracks are narrow dark recesses. In gravel stones rise slightly from the soil. This is height data, not a lit picture: remove all light/shadow direction and colour, no outlines, no white sparkle noise, no scene shadows, no text, no frame. Keep low-frequency ground level uniformly mid-grey; avoid deep pits or tall spikes. Strict flat perpendicular top-down view with identical square extent and seamless repeating edges. Retain the reference detail and shape layout exactly, grayscale only."
+    }
+  ]
+}
