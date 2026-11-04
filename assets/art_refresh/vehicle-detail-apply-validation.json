@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-26",
+  "status": "applied",
+  "nativeBuild": "passed",
+  "testsPassed": 327,
+  "testsFailed": 0,
+  "strictClippy": "passed",
+  "renderChecksPassed": 8,
+  "renderCases": [
+    "tank",
+    "support",
+    "carrier",
+    "apache",
+    "a10",
+    "low",
+    "dlss",
+    "battlefield"
+  ],
+  "legacyComparisons": [
+    "tank",
+    "a10"
+  ],
+  "approvedImagePixelMatches": 16,
+  "whiteMaterialTintsVerified": true,
+  "shaderPbrMaps": "existing normals/ORM retained",
+  "buildings": "separate unchanged material path",
+  "diagnostics": ".data/render-checks/vehicle-detail-apply/verification.json",
+  "runtimeCatalog": "materials/vehicle_detail/catalog.json"
+}

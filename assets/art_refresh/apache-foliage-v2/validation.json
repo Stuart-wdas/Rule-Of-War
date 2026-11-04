@@ -1,0 +1,19 @@
+{
+  "appliedToGame": true,
+  "trainingGround": true,
+  "testsPassed": 333,
+  "strictClippy": true,
+  "nativeChecks": 8,
+  "triangles": 17712,
+  "changedFoliagePixels": 4680,
+  "medianFoliageBrightnessRatio": 0.7839312367321087,
+  "airfieldClearancePassed": true,
+  "trainingMarkerRegressionPassed": true,
+  "factionAndLowQualityPassed": true,
+  "inspiration": [
+    "https://www.boeing.com/defense/military-rotorcraft/ah-64-apache",
+    "https://www.army.mod.uk/learn-and-explore/equipment/aircraft/ah-64e-apache-attack-helicopter/"
+  ],
+  "executableSha256": "2aaefa96957c2fd331d4b046e3843a55a0c73f6d0cbc7dfe6687a8dec83752f4",
+  "geometrySha256": "e79d3543e163035565b11f9b3692fad17859bf2ae75d7d2b329b62ee7a60c5c4"
+}

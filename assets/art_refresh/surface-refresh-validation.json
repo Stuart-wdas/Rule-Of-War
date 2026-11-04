@@ -1,0 +1,43 @@
+{
+  "nativeTestsPassed": 323,
+  "strictClippyPassed": true,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "gpuCases": [
+    "apron-close",
+    "apron",
+    "ground",
+    "plains",
+    "town",
+    "low",
+    "dlss",
+    "settings-cycle",
+    "training",
+    "battle"
+  ],
+  "textureQualityPixels": {
+    "low": 512,
+    "settings-cycle": 1024,
+    "apron-close": 2048,
+    "dlss": 2048
+  },
+  "dlssGPUExecuted": true,
+  "sharedMeadowNormal": "materials\\pbr\\meadow_normal.png",
+  "sharedMeadowNormalSha256": "d788d8ff7d74c497b5b99c89c7f08d74d9fbd0aeed84c57666515dbcb8af8a0b",
+  "concreteSource": "https://polyhaven.com/a/hangar_concrete_floor",
+  "sourceLicense": "CC0 1.0 Universal",
+  "apronDetailRepeatMetres": 6.0,
+  "slabSpacingMetres": 5.5,
+  "changedSimulationOrCollision": false,
+  "battleWeaponEvents": {
+    "antiAir": 15,
+    "engineer": 33,
+    "medium": 16,
+    "scout": 10,
+    "short": 47,
+    "xtralong": 7
+  },
+  "details": ".data/render-checks/surface-refresh/verification.json"
+}

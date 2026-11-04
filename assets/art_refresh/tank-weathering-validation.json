@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-25",
+  "nativeBuild": "passed",
+  "testsPassed": 326,
+  "testsFailed": 0,
+  "strictClippy": "passed",
+  "renderChecksPassed": 5,
+  "renderCases": [
+    "tank",
+    "support",
+    "carrier",
+    "low",
+    "dlss"
+  ],
+  "diagnosticFile": ".data/render-checks/tank-weathering/after-verification.json",
+  "lightingChanged": false,
+  "geometryChanged": false,
+  "newTextures": false,
+  "visuallyReviewed": [
+    "battle tank before/after",
+    "support tank before/after"
+  ],
+  "scope": "Shared vehicle finish in gameplay and training; no aircraft material changes"
+}

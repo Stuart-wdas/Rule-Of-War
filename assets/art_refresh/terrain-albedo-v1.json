@@ -1,0 +1,21 @@
+{
+  "generator": "OpenAI built-in image_gen",
+  "prompt": "Create a photorealistic seamless square TOP-DOWN terrain ALBEDO texture for a realistic strategy game. Cover 18 metres of natural rough temperate grassland, NOT a close macro photograph. Natural irregular interlocking areas of short muted olive and sage green grass (55%), thin bare gritty ochre-brown soil (30%), embedded small broken grey stones and gravel (15%). Grass should read as tiny short dark and green flecks, fine low clumps of turf and mossy ground cover; blades are barely individually discernible at this scale. Soil is finely granular with varied weathered pebble fragments. Patches have several scales: broad uneven grass coverage, smaller eroded bare earth areas, subtle fine gravel everywhere. Large enough color features to read from an elevated RTS camera, without obvious repeating motifs. Absolutely NO long straw, NO curling fibers, NO yellow noodles, NO pale white looping lines, NO web patterns, NO carpet-like or fur-like texture. No large boulders, bushes, trees, flowers, paths, roads, markings, buildings. Strictly flat orthographic base-color surface with perfectly diffuse neutral lighting, no shadows, no baked directional highlights or AO, no perspective or horizon. Seamless on all edges. Sharp natural material detail, restrained color, organic irregularity. A realistic aerial grass-and-dirt ground scan rather than a decorative grass pattern. Square 2048x2048 texture.",
+  "sourcePath": "C:/Users/StuartKieser/.codex/generated_images/01a13e40-ec70-76d3-816b-f2683d27449e/exec-59387471-fc29-4566-8ed8-4adf62c07f4e.png",
+  "runtimePath": "materials/pbr/field_meadow_v1_albedo.png",
+  "requestedSize": [
+    2048,
+    2048
+  ],
+  "actualSize": [
+    1254,
+    1254
+  ],
+  "repeatMetres": 22,
+  "notes": "Original generated colour pixels copied unchanged. Neutral normal and constant roughness maps avoid unrelated or inferred geometry. Blended 50–65% with the previous aerial meadow scan 35–50%; road and dirt coverage retained. A larger physical repeat preserves readable texture at the elevated game camera. Runtime texture presets still control mip resolution; High does not add source detail.",
+  "draft": {
+    "prompt": "Create a production-ready seamless tileable terrain ALBEDO / BASE COLOR texture for a photorealistic real-time strategy battlefield. Output one square high-resolution 2048x2048 or larger image, viewed perfectly straight down, covering roughly 10 meters of ground. A natural temperate dry meadow: irregular short olive-green and sage grass mixed with fine straw-colored dead grass, granular brown earth exposed in small irregular patches, and scattered tiny muted grey limestone gravel. Approximately 70 percent grass, 25 percent earth and dry grass, 5 percent very small gravel. Rich fine photographic surface detail with coherent mid-scale variations, subtle irregular bare patches, restrained earthy palette, convincing natural complexity. Stones must be small individual grains, not large slabs or islands. Surface should feel realistic from an elevated fixed-angle game camera. Texture must tile seamlessly on all four edges without obvious repeated motifs. Diffuse reflectance only: completely flat neutral diffuse illumination, no directional lighting, no cast shadows, no ambient occlusion baked in, no specular highlights, no perspective, no horizon, no depth of field, no objects, no bushes, no trees, no flowers, no roads, no tracks, no borders, no text. Avoid cloudy blurry noise, smooth green carpet, cartoon painting, oversized stone clusters, and strong contrasting patches. Keep natural fine-scale variation sharp and clear while avoiding excessive white flecks.",
+    "sourcePath": "C:/Users/StuartKieser/.codex/generated_images/01a13e40-ec70-76d3-816b-f2683d27449e/exec-74c2dd1e-b0a5-4b97-8673-f41bf7be423d.png",
+    "reasonReplaced": "Pale looping straw looked stringy in the in-game comparison."
+  }
+}
