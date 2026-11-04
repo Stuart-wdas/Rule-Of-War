@@ -1,3 +1,28 @@
 .data/
 /target/
 /prototypes/real-world-hottot/bin/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# Blender backups
+*.blend[0-9]*
+
+# Generated output
+*.log
+*.tmp
+/exports/*.zip
+/prototypes/real-world-hottot/review/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+!.env.template
+
+# OS clutter
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
