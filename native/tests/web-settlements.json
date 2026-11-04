@@ -1,0 +1,476 @@
+{
+  "townLots": [
+    {
+      "x": -8.5,
+      "z": -8.5,
+      "width": 3.4,
+      "depth": 3.2,
+      "height": 5.2,
+      "rotation": 0,
+      "style": "townhouse"
+    },
+    {
+      "x": -3.5,
+      "z": -8.5,
+      "width": 3.75,
+      "depth": 3.9000000000000004,
+      "height": 4.25,
+      "rotation": 0,
+      "style": "warehouse"
+    },
+    {
+      "x": 3.5,
+      "z": -8.5,
+      "width": 4.1,
+      "depth": 3.5500000000000003,
+      "height": 4.7,
+      "rotation": 0,
+      "style": "inn"
+    },
+    {
+      "x": 8.5,
+      "z": -8.5,
+      "width": 3.4,
+      "depth": 3.2,
+      "height": 5.2,
+      "rotation": 0,
+      "style": "townhouse"
+    },
+    {
+      "x": -8.5,
+      "z": -3.5,
+      "width": 4.1,
+      "depth": 3.5500000000000003,
+      "height": 5.65,
+      "rotation": 0,
+      "style": "townhouse"
+    },
+    {
+      "x": -3.5,
+      "z": -3.5,
+      "rotation": 0,
+      "style": "station",
+      "width": 4.5,
+      "depth": 4.2,
+      "height": 4.8
+    },
+    {
+      "x": 3.5,
+      "z": -3.5,
+      "rotation": 0,
+      "style": "market",
+      "width": 4.5,
+      "depth": 4.2,
+      "height": 4.2
+    },
+    {
+      "x": 8.5,
+      "z": -3.5,
+      "width": 4.1,
+      "depth": 3.5500000000000003,
+      "height": 4.25,
+      "rotation": 0,
+      "style": "inn"
+    },
+    {
+      "x": -8.5,
+      "z": 3.5,
+      "width": 3.75,
+      "depth": 3.9000000000000004,
+      "height": 4.7,
+      "rotation": 3.141592653589793,
+      "style": "warehouse"
+    },
+    {
+      "x": -3.5,
+      "z": 3.5,
+      "rotation": 3.141592653589793,
+      "style": "townHall",
+      "width": 4.8,
+      "depth": 4.5,
+      "height": 5.5
+    },
+    {
+      "x": 3.5,
+      "z": 3.5,
+      "rotation": 3.141592653589793,
+      "style": "church",
+      "width": 4.4,
+      "depth": 4.8,
+      "height": 6
+    },
+    {
+      "x": 8.5,
+      "z": 3.5,
+      "width": 3.75,
+      "depth": 3.9000000000000004,
+      "height": 4.7,
+      "rotation": 3.141592653589793,
+      "style": "warehouse"
+    },
+    {
+      "x": -8.5,
+      "z": 8.5,
+      "width": 3.4,
+      "depth": 3.2,
+      "height": 3.8,
+      "rotation": 3.141592653589793,
+      "style": "warehouse"
+    },
+    {
+      "x": -3.5,
+      "z": 8.5,
+      "width": 3.75,
+      "depth": 3.9000000000000004,
+      "height": 4.25,
+      "rotation": 3.141592653589793,
+      "style": "warehouse"
+    },
+    {
+      "x": 3.5,
+      "z": 8.5,
+      "width": 4.1,
+      "depth": 3.5500000000000003,
+      "height": 6.1000000000000005,
+      "rotation": 3.141592653589793,
+      "style": "townhouse"
+    },
+    {
+      "x": 8.5,
+      "z": 8.5,
+      "width": 3.4,
+      "depth": 3.2,
+      "height": 5.2,
+      "rotation": 3.141592653589793,
+      "style": "townhouse"
+    }
+  ],
+  "villageLots": [
+    {
+      "x": -9,
+      "z": -9,
+      "width": 3.1,
+      "depth": 2.8,
+      "height": 1.8,
+      "rotation": 0,
+      "style": "shop"
+    },
+    {
+      "x": -3.5,
+      "z": -9,
+      "width": 3.6500000000000004,
+      "depth": 2.8,
+      "height": 2.25,
+      "rotation": 0,
+      "style": "house"
+    },
+    {
+      "x": 3.5,
+      "z": -9,
+      "width": 3.1,
+      "depth": 2.8,
+      "height": 2.7,
+      "rotation": 0,
+      "style": "house"
+    },
+    {
+      "x": 9,
+      "z": -9,
+      "width": 3.6500000000000004,
+      "depth": 2.8,
+      "height": 1.8,
+      "rotation": 0,
+      "style": "house"
+    },
+    {
+      "x": -9,
+      "z": -3.5,
+      "width": 3.6500000000000004,
+      "depth": 3.3,
+      "height": 2.7,
+      "rotation": 0,
+      "style": "house"
+    },
+    {
+      "x": -3.5,
+      "z": -3.5,
+      "width": 3.1,
+      "depth": 3.3,
+      "height": 1.8,
+      "rotation": 0,
+      "style": "house"
+    },
+    {
+      "x": 3.5,
+      "z": -3.5,
+      "width": 3.6500000000000004,
+      "depth": 3.3,
+      "height": 2.25,
+      "rotation": 0,
+      "style": "warehouse"
+    },
+    {
+      "x": 9,
+      "z": -3.5,
+      "width": 3.1,
+      "depth": 3.3,
+      "height": 2.7,
+      "rotation": 0,
+      "style": "house"
+    },
+    {
+      "x": -9,
+      "z": 3.5,
+      "width": 3.1,
+      "depth": 2.8,
+      "height": 2.25,
+      "rotation": 3.141592653589793,
+      "style": "house"
+    },
+    {
+      "x": -3.5,
+      "z": 3.5,
+      "width": 3.6500000000000004,
+      "depth": 2.8,
+      "height": 2.7,
+      "rotation": 3.141592653589793,
+      "style": "house"
+    },
+    {
+      "x": 3.5,
+      "z": 3.5,
+      "width": 3.1,
+      "depth": 2.8,
+      "height": 1.8,
+      "rotation": 3.141592653589793,
+      "style": "house"
+    },
+    {
+      "x": 9,
+      "z": 3.5,
+      "width": 3.6500000000000004,
+      "depth": 2.8,
+      "height": 2.25,
+      "rotation": 3.141592653589793,
+      "style": "shop"
+    },
+    {
+      "x": -9,
+      "z": 9,
+      "width": 3.6500000000000004,
+      "depth": 3.3,
+      "height": 1.8,
+      "rotation": 3.141592653589793,
+      "style": "house"
+    },
+    {
+      "x": -3.5,
+      "z": 9,
+      "width": 3.1,
+      "depth": 3.3,
+      "height": 2.25,
+      "rotation": 3.141592653589793,
+      "style": "house"
+    },
+    {
+      "x": 3.5,
+      "z": 9,
+      "width": 3.6500000000000004,
+      "depth": 3.3,
+      "height": 2.7,
+      "rotation": 3.141592653589793,
+      "style": "shop"
+    },
+    {
+      "x": 9,
+      "z": 9,
+      "width": 3.1,
+      "depth": 3.3,
+      "height": 1.8,
+      "rotation": 3.141592653589793,
+      "style": "house"
+    }
+  ],
+  "cases": [
+    {
+      "seed": "custom:64:64",
+      "blocks": [
+        {
+          "gridX": 0,
+          "gridY": 0,
+          "rotation": 0,
+          "variant": 0,
+          "role": "civic"
+        },
+        {
+          "gridX": -1,
+          "gridY": 0,
+          "rotation": 1,
+          "variant": 0,
+          "role": "residential",
+          "attachedVia": "east"
+        },
+        {
+          "gridX": -2,
+          "gridY": 0,
+          "rotation": 1,
+          "variant": 3,
+          "role": "residential",
+          "attachedVia": "east"
+        },
+        {
+          "gridX": -3,
+          "gridY": 0,
+          "rotation": 0,
+          "variant": 2,
+          "role": "commercial",
+          "attachedVia": "east"
+        },
+        {
+          "gridX": 0,
+          "gridY": 1,
+          "rotation": 0,
+          "variant": 0,
+          "role": "commercial",
+          "attachedVia": "north"
+        },
+        {
+          "gridX": -4,
+          "gridY": 0,
+          "rotation": 3,
+          "variant": 1,
+          "role": "industrial",
+          "attachedVia": "east"
+        },
+        {
+          "gridX": -5,
+          "gridY": 0,
+          "rotation": 3,
+          "variant": 2,
+          "role": "residential",
+          "attachedVia": "east"
+        }
+      ]
+    },
+    {
+      "seed": "grand-front:30:40",
+      "blocks": [
+        {
+          "gridX": 0,
+          "gridY": 0,
+          "rotation": 0,
+          "variant": 0,
+          "role": "civic"
+        },
+        {
+          "gridX": 0,
+          "gridY": -1,
+          "rotation": 0,
+          "variant": 1,
+          "role": "industrial",
+          "attachedVia": "south"
+        },
+        {
+          "gridX": 0,
+          "gridY": 1,
+          "rotation": 2,
+          "variant": 2,
+          "role": "commercial",
+          "attachedVia": "north"
+        },
+        {
+          "gridX": -1,
+          "gridY": 0,
+          "rotation": 3,
+          "variant": 2,
+          "role": "commercial",
+          "attachedVia": "east"
+        },
+        {
+          "gridX": -1,
+          "gridY": 1,
+          "rotation": 2,
+          "variant": 0,
+          "role": "industrial",
+          "attachedVia": "north"
+        },
+        {
+          "gridX": 1,
+          "gridY": -1,
+          "rotation": 3,
+          "variant": 0,
+          "role": "residential",
+          "attachedVia": "west"
+        },
+        {
+          "gridX": -2,
+          "gridY": 0,
+          "rotation": 3,
+          "variant": 2,
+          "role": "industrial",
+          "attachedVia": "east"
+        }
+      ]
+    },
+    {
+      "seed": "terrain-🌍",
+      "blocks": [
+        {
+          "gridX": 0,
+          "gridY": 0,
+          "rotation": 0,
+          "variant": 0,
+          "role": "civic"
+        },
+        {
+          "gridX": 1,
+          "gridY": 0,
+          "rotation": 3,
+          "variant": 2,
+          "role": "commercial",
+          "attachedVia": "west"
+        },
+        {
+          "gridX": 1,
+          "gridY": 1,
+          "rotation": 3,
+          "variant": 0,
+          "role": "residential",
+          "attachedVia": "north"
+        },
+        {
+          "gridX": 0,
+          "gridY": -1,
+          "rotation": 0,
+          "variant": 3,
+          "role": "industrial",
+          "attachedVia": "south"
+        },
+        {
+          "gridX": 1,
+          "gridY": 2,
+          "rotation": 1,
+          "variant": 2,
+          "role": "commercial",
+          "attachedVia": "north"
+        },
+        {
+          "gridX": 2,
+          "gridY": 1,
+          "rotation": 0,
+          "variant": 0,
+          "role": "residential",
+          "attachedVia": "west"
+        },
+        {
+          "gridX": 1,
+          "gridY": 3,
+          "rotation": 2,
+          "variant": 2,
+          "role": "residential",
+          "attachedVia": "north"
+        }
+      ]
+    }
+  ]
+}

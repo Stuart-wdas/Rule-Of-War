@@ -1,0 +1,846 @@
+{
+  "Diffuse": {
+    "8k": {
+      "jpg": {
+        "size": 31292382,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_diff_8k.jpg",
+        "md5": "8a1fb4bacc14fe27fd06d44a8b74c98a"
+      },
+      "png": {
+        "size": 330243221,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/hangar_concrete_floor/hangar_concrete_floor_diff_8k.png",
+        "md5": "903949797826fd2a18efc35b5ffc7e6e"
+      },
+      "exr": {
+        "size": 60330216,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_diff_8k.exr",
+        "md5": "30d663ce09ce307fbd00c07a4b2e0609"
+      }
+    },
+    "4k": {
+      "jpg": {
+        "size": 9845645,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_diff_4k.jpg",
+        "md5": "7cf5dc40cfe4912a8ef2cf26bbbe62b6"
+      },
+      "png": {
+        "size": 85281106,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/hangar_concrete_floor/hangar_concrete_floor_diff_4k.png",
+        "md5": "6b1189a2215f9c983f24c23ecd8f3f1d"
+      },
+      "exr": {
+        "size": 19054600,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_diff_4k.exr",
+        "md5": "cd14ef8d516b024cb6b764b38ef4dfef"
+      }
+    },
+    "2k": {
+      "jpg": {
+        "size": 2559056,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_diff_2k.jpg",
+        "md5": "35e620ca791e0105e680ef775ecf719d"
+      },
+      "png": {
+        "size": 21617470,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hangar_concrete_floor/hangar_concrete_floor_diff_2k.png",
+        "md5": "a0ca888ea3f43f9b14cd66281bb150d2"
+      },
+      "exr": {
+        "size": 5169399,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_diff_2k.exr",
+        "md5": "a088694f7ae8d7391d9d8cb77fa7258b"
+      }
+    },
+    "1k": {
+      "jpg": {
+        "size": 614854,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_diff_1k.jpg",
+        "md5": "a073051aeaf7242f5e354ca4c89ac179"
+      },
+      "png": {
+        "size": 5398637,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/hangar_concrete_floor/hangar_concrete_floor_diff_1k.png",
+        "md5": "9976638818a6b5ceb4c4825a33176695"
+      },
+      "exr": {
+        "size": 1284058,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_diff_1k.exr",
+        "md5": "6b40fea6000bee61cbe4379de3a52cbe"
+      }
+    }
+  },
+  "nor_dx": {
+    "8k": {
+      "jpg": {
+        "size": 50494355,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_8k.jpg",
+        "md5": "fc832020dbba0a2ac5446df8f147a672"
+      },
+      "png": {
+        "size": 337650639,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_8k.png",
+        "md5": "71bb6ff46196d255a88c15b789857ec3"
+      },
+      "exr": {
+        "size": 108851880,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_8k.exr",
+        "md5": "ea7180098950542dbeebe0625d1ed747"
+      }
+    },
+    "4k": {
+      "jpg": {
+        "size": 12541956,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_4k.jpg",
+        "md5": "3c49e2a7a41fc6da8322922dce4dcb19"
+      },
+      "png": {
+        "size": 86396450,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_4k.png",
+        "md5": "17a865cb02c08854c4a59713bfffcacf"
+      },
+      "exr": {
+        "size": 27916288,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_4k.exr",
+        "md5": "cfb8ceed26b05a92923b939b6328681e"
+      }
+    },
+    "2k": {
+      "jpg": {
+        "size": 3097643,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_2k.jpg",
+        "md5": "6b8d03f9b8bf92906afc213a483f6ce5"
+      },
+      "png": {
+        "size": 21491875,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_2k.png",
+        "md5": "024ab22032d5de27c78685064d8451f8"
+      },
+      "exr": {
+        "size": 6861713,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_2k.exr",
+        "md5": "381ee09bab38dd81b5d23401a8b8b7a1"
+      }
+    },
+    "1k": {
+      "jpg": {
+        "size": 792779,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_1k.jpg",
+        "md5": "56224df21e58adf444f80a11f05d16f2"
+      },
+      "png": {
+        "size": 5397390,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_1k.png",
+        "md5": "46cba5686954001166edee46ee856b8b"
+      },
+      "exr": {
+        "size": 1773015,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_nor_dx_1k.exr",
+        "md5": "465ce5b0b2e129126342e6b8d8d9d6b5"
+      }
+    }
+  },
+  "nor_gl": {
+    "8k": {
+      "jpg": {
+        "size": 50520555,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_8k.jpg",
+        "md5": "408c02b20aca4763d9b314b38fb2f3b1"
+      },
+      "png": {
+        "size": 348948241,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_8k.png",
+        "md5": "0d925a16e3d0c3105578c1a2d3ab6fc8"
+      },
+      "exr": {
+        "size": 108917279,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_8k.exr",
+        "md5": "f0b48db26fbee2ac9ebeb805c91497d3"
+      }
+    },
+    "4k": {
+      "jpg": {
+        "size": 12557020,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_4k.jpg",
+        "md5": "ea305ccf9653f7abb08608065ab77811"
+      },
+      "png": {
+        "size": 86397740,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_4k.png",
+        "md5": "02f6f33a1f70fce3ba9426c690b590c8"
+      },
+      "exr": {
+        "size": 27925424,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_4k.exr",
+        "md5": "4ad980203f022cd6e4212661c82c9776"
+      }
+    },
+    "2k": {
+      "jpg": {
+        "size": 3100672,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_2k.jpg",
+        "md5": "c255711a514478d91cd6e0424def0471"
+      },
+      "png": {
+        "size": 21491528,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_2k.png",
+        "md5": "c8043d019a0f86c36e431ee389b486aa"
+      },
+      "exr": {
+        "size": 6865057,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_2k.exr",
+        "md5": "27fd36389abe22e6c77c7fb2bed4295c"
+      }
+    },
+    "1k": {
+      "jpg": {
+        "size": 792876,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_1k.jpg",
+        "md5": "28309c8eaf4dbf8647255d75a5bb8282"
+      },
+      "png": {
+        "size": 5397056,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_1k.png",
+        "md5": "145be3f82872e72a3c53f7b9c3598902"
+      },
+      "exr": {
+        "size": 1774286,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_1k.exr",
+        "md5": "24f8bba670f91741ae1c3194939130e2"
+      }
+    }
+  },
+  "blend": {
+    "8k": {
+      "blend": {
+        "include": {
+          "textures/hangar_concrete_floor_rough_8k.exr": {
+            "size": 27167064,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_rough_8k.exr",
+            "md5": "df242e27b61044a77bff82598f4988cf"
+          },
+          "textures/hangar_concrete_floor_nor_gl_8k.exr": {
+            "size": 108917279,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_8k.exr",
+            "md5": "f0b48db26fbee2ac9ebeb805c91497d3"
+          },
+          "textures/hangar_concrete_floor_disp_8k.png": {
+            "size": 89530775,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/hangar_concrete_floor/hangar_concrete_floor_disp_8k.png",
+            "md5": "d3e144ca0b72f70b6dae0953b4b092cc"
+          },
+          "textures/hangar_concrete_floor_diff_8k.jpg": {
+            "size": 31292382,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_diff_8k.jpg",
+            "md5": "8a1fb4bacc14fe27fd06d44a8b74c98a"
+          }
+        },
+        "size": 216274,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/blend/8k/hangar_concrete_floor/hangar_concrete_floor_8k.blend",
+        "md5": "c95da0f30ec2940cff3bd165249bcfba"
+      }
+    },
+    "4k": {
+      "blend": {
+        "include": {
+          "textures/hangar_concrete_floor_rough_4k.exr": {
+            "size": 9244387,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_rough_4k.exr",
+            "md5": "a627092fb04d8d21d87137bbc92f83ea"
+          },
+          "textures/hangar_concrete_floor_nor_gl_4k.exr": {
+            "size": 27925424,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_4k.exr",
+            "md5": "4ad980203f022cd6e4212661c82c9776"
+          },
+          "textures/hangar_concrete_floor_diff_4k.jpg": {
+            "size": 9845645,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_diff_4k.jpg",
+            "md5": "7cf5dc40cfe4912a8ef2cf26bbbe62b6"
+          },
+          "textures/hangar_concrete_floor_disp_4k.png": {
+            "size": 24078273,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/hangar_concrete_floor/hangar_concrete_floor_disp_4k.png",
+            "md5": "5b809749da9913b1043e37780bb0ab33"
+          }
+        },
+        "size": 216278,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/blend/4k/hangar_concrete_floor/hangar_concrete_floor_4k.blend",
+        "md5": "056e15cceaf0d725169b7e1ad294f93a"
+      }
+    },
+    "2k": {
+      "blend": {
+        "include": {
+          "textures/hangar_concrete_floor_rough_2k.exr": {
+            "size": 2402492,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_rough_2k.exr",
+            "md5": "8d2193e5debce3f4b74a29d350991ebe"
+          },
+          "textures/hangar_concrete_floor_diff_2k.jpg": {
+            "size": 2559056,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_diff_2k.jpg",
+            "md5": "35e620ca791e0105e680ef775ecf719d"
+          },
+          "textures/hangar_concrete_floor_disp_2k.png": {
+            "size": 6260408,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hangar_concrete_floor/hangar_concrete_floor_disp_2k.png",
+            "md5": "511be2dfa8d24397b96a879b4c364f4e"
+          },
+          "textures/hangar_concrete_floor_nor_gl_2k.exr": {
+            "size": 6865057,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_2k.exr",
+            "md5": "27fd36389abe22e6c77c7fb2bed4295c"
+          }
+        },
+        "size": 216185,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/blend/2k/hangar_concrete_floor/hangar_concrete_floor_2k.blend",
+        "md5": "90f4ba1b1d6770124526afd96857a5ab"
+      }
+    },
+    "1k": {
+      "blend": {
+        "include": {
+          "textures/hangar_concrete_floor_disp_1k.png": {
+            "size": 1654544,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/hangar_concrete_floor/hangar_concrete_floor_disp_1k.png",
+            "md5": "0fceaff96298179558bd7fbc5a49cff5"
+          },
+          "textures/hangar_concrete_floor_nor_gl_1k.exr": {
+            "size": 1774286,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_1k.exr",
+            "md5": "24f8bba670f91741ae1c3194939130e2"
+          },
+          "textures/hangar_concrete_floor_diff_1k.jpg": {
+            "size": 614854,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_diff_1k.jpg",
+            "md5": "a073051aeaf7242f5e354ca4c89ac179"
+          },
+          "textures/hangar_concrete_floor_rough_1k.exr": {
+            "size": 545177,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_rough_1k.exr",
+            "md5": "0760be67bd2d66a8dff8c6440fa8cef8"
+          }
+        },
+        "size": 216267,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/blend/1k/hangar_concrete_floor/hangar_concrete_floor_1k.blend",
+        "md5": "96252a9d0c2e93a78d9a62d5994d7443"
+      }
+    }
+  },
+  "gltf": {
+    "8k": {
+      "gltf": {
+        "include": {
+          "textures/hangar_concrete_floor_nor_gl_8k.jpg": {
+            "size": 50520555,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_8k.jpg",
+            "md5": "408c02b20aca4763d9b314b38fb2f3b1"
+          },
+          "hangar_concrete_floor.bin": {
+            "size": 2369140,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/gltf/8k/hangar_concrete_floor/hangar_concrete_floor.bin",
+            "md5": "06165d7fc6c0bf56a7470d70a7636d2b"
+          },
+          "textures/hangar_concrete_floor_arm_8k.jpg": {
+            "size": 45387773,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_arm_8k.jpg",
+            "md5": "f111e0ce835157ac3f0258b794d586a5"
+          },
+          "textures/hangar_concrete_floor_diff_8k.jpg": {
+            "size": 31292382,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_diff_8k.jpg",
+            "md5": "8a1fb4bacc14fe27fd06d44a8b74c98a"
+          }
+        },
+        "size": 2853,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/gltf/8k/hangar_concrete_floor/hangar_concrete_floor_8k.gltf",
+        "md5": "a99cd58dde5ace1958bfa489a1895280"
+      }
+    },
+    "4k": {
+      "gltf": {
+        "include": {
+          "textures/hangar_concrete_floor_nor_gl_4k.jpg": {
+            "size": 12557020,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_4k.jpg",
+            "md5": "ea305ccf9653f7abb08608065ab77811"
+          },
+          "hangar_concrete_floor.bin": {
+            "size": 2369140,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/gltf/8k/hangar_concrete_floor/hangar_concrete_floor.bin",
+            "md5": "06165d7fc6c0bf56a7470d70a7636d2b"
+          },
+          "textures/hangar_concrete_floor_arm_4k.jpg": {
+            "size": 12467846,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_arm_4k.jpg",
+            "md5": "7186999f43834ec7269b1382ba0e1102"
+          },
+          "textures/hangar_concrete_floor_diff_4k.jpg": {
+            "size": 9845645,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_diff_4k.jpg",
+            "md5": "7cf5dc40cfe4912a8ef2cf26bbbe62b6"
+          }
+        },
+        "size": 2853,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/gltf/4k/hangar_concrete_floor/hangar_concrete_floor_4k.gltf",
+        "md5": "33a80f5d7a0a7dd0b32c9fa54fa4d156"
+      }
+    },
+    "2k": {
+      "gltf": {
+        "include": {
+          "textures/hangar_concrete_floor_nor_gl_2k.jpg": {
+            "size": 3100672,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_2k.jpg",
+            "md5": "c255711a514478d91cd6e0424def0471"
+          },
+          "textures/hangar_concrete_floor_diff_2k.jpg": {
+            "size": 2559056,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_diff_2k.jpg",
+            "md5": "35e620ca791e0105e680ef775ecf719d"
+          },
+          "textures/hangar_concrete_floor_arm_2k.jpg": {
+            "size": 2994585,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_arm_2k.jpg",
+            "md5": "d99c4dc230d549d6cb6cd8927920f95c"
+          },
+          "hangar_concrete_floor.bin": {
+            "size": 2369140,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/gltf/8k/hangar_concrete_floor/hangar_concrete_floor.bin",
+            "md5": "06165d7fc6c0bf56a7470d70a7636d2b"
+          }
+        },
+        "size": 2853,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/gltf/2k/hangar_concrete_floor/hangar_concrete_floor_2k.gltf",
+        "md5": "829dae4adb23cd4874b0a03df71210a4"
+      }
+    },
+    "1k": {
+      "gltf": {
+        "include": {
+          "textures/hangar_concrete_floor_arm_1k.jpg": {
+            "size": 686273,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_arm_1k.jpg",
+            "md5": "9e2c31aa6bb89204e5d2ebd3fa27bbf8"
+          },
+          "textures/hangar_concrete_floor_diff_1k.jpg": {
+            "size": 614854,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_diff_1k.jpg",
+            "md5": "a073051aeaf7242f5e354ca4c89ac179"
+          },
+          "textures/hangar_concrete_floor_nor_gl_1k.jpg": {
+            "size": 792876,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_1k.jpg",
+            "md5": "28309c8eaf4dbf8647255d75a5bb8282"
+          },
+          "hangar_concrete_floor.bin": {
+            "size": 2369140,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/gltf/8k/hangar_concrete_floor/hangar_concrete_floor.bin",
+            "md5": "06165d7fc6c0bf56a7470d70a7636d2b"
+          }
+        },
+        "size": 2853,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/gltf/1k/hangar_concrete_floor/hangar_concrete_floor_1k.gltf",
+        "md5": "9d424db925fc4338aa7db0b644a5f337"
+      }
+    }
+  },
+  "arm": {
+    "8k": {
+      "jpg": {
+        "size": 45387773,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_arm_8k.jpg",
+        "md5": "f111e0ce835157ac3f0258b794d586a5"
+      },
+      "png": {
+        "size": 255538363,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/hangar_concrete_floor/hangar_concrete_floor_arm_8k.png",
+        "md5": "4a138e9ab253aa01cd37dd60c0fff3eb"
+      },
+      "exr": {
+        "size": 78289448,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_arm_8k.exr",
+        "md5": "4792491f4993ddb66376d217868c1e1e"
+      }
+    },
+    "4k": {
+      "jpg": {
+        "size": 12467846,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_arm_4k.jpg",
+        "md5": "7186999f43834ec7269b1382ba0e1102"
+      },
+      "png": {
+        "size": 68479173,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/hangar_concrete_floor/hangar_concrete_floor_arm_4k.png",
+        "md5": "b3ca7230e59627af714b75019f0d858e"
+      },
+      "exr": {
+        "size": 24208431,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_arm_4k.exr",
+        "md5": "75eb44a0770ba7d3e9e8c4bba963773d"
+      }
+    },
+    "2k": {
+      "jpg": {
+        "size": 2994585,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_arm_2k.jpg",
+        "md5": "d99c4dc230d549d6cb6cd8927920f95c"
+      },
+      "png": {
+        "size": 17352035,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hangar_concrete_floor/hangar_concrete_floor_arm_2k.png",
+        "md5": "467bb0f1e80a74ba29fc0b0e63f2da52"
+      },
+      "exr": {
+        "size": 6116720,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_arm_2k.exr",
+        "md5": "cbd713cc70593cb400e0c39c6fc35dc1"
+      }
+    },
+    "1k": {
+      "jpg": {
+        "size": 686273,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_arm_1k.jpg",
+        "md5": "9e2c31aa6bb89204e5d2ebd3fa27bbf8"
+      },
+      "png": {
+        "size": 4277812,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/hangar_concrete_floor/hangar_concrete_floor_arm_1k.png",
+        "md5": "92ca705ab57f40587dc0386004c90020"
+      },
+      "exr": {
+        "size": 1389315,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_arm_1k.exr",
+        "md5": "3aab2fe1f45783dd88450004d18f19c3"
+      }
+    }
+  },
+  "AO": {
+    "8k": {
+      "jpg": {
+        "size": 41614005,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_ao_8k.jpg",
+        "md5": "1bb83399ba0e7bf7f7685529fad31136"
+      },
+      "png": {
+        "size": 105914034,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/hangar_concrete_floor/hangar_concrete_floor_ao_8k.png",
+        "md5": "577ef8d17d16cb93b5e775201ee8025d"
+      },
+      "exr": {
+        "size": 39218276,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_ao_8k.exr",
+        "md5": "1b263e35c3321d6e4b33a403995c6b2e"
+      }
+    },
+    "4k": {
+      "jpg": {
+        "size": 10783339,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_ao_4k.jpg",
+        "md5": "4dc5bcaed833884632cab9d031a0f1b2"
+      },
+      "png": {
+        "size": 29195541,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/hangar_concrete_floor/hangar_concrete_floor_ao_4k.png",
+        "md5": "e64e526691f4fdeefa27c7138a46e87a"
+      },
+      "exr": {
+        "size": 10377935,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_ao_4k.exr",
+        "md5": "ba9e6252d34077c347e164058277477e"
+      }
+    },
+    "2k": {
+      "jpg": {
+        "size": 2544118,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_ao_2k.jpg",
+        "md5": "42103d623f34773aeb5228429da57199"
+      },
+      "png": {
+        "size": 7432323,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hangar_concrete_floor/hangar_concrete_floor_ao_2k.png",
+        "md5": "9e939b2a5f94b8fae1dd9ba77d3f5ebb"
+      },
+      "exr": {
+        "size": 2508656,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_ao_2k.exr",
+        "md5": "b7366c8190daaa3938d25537bb9c5bcd"
+      }
+    },
+    "1k": {
+      "jpg": {
+        "size": 622830,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_ao_1k.jpg",
+        "md5": "bb3f8ed4907dc25daf76220350b5c288"
+      },
+      "png": {
+        "size": 1850854,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/hangar_concrete_floor/hangar_concrete_floor_ao_1k.png",
+        "md5": "8776d237a2a9730747d49d7a18dc0dc5"
+      },
+      "exr": {
+        "size": 632305,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_ao_1k.exr",
+        "md5": "feb75ca2097d46ebbe62ea4ad060f9f6"
+      }
+    }
+  },
+  "Displacement": {
+    "8k": {
+      "jpg": {
+        "size": 9491184,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_disp_8k.jpg",
+        "md5": "faaad18512d3c65757ae1c2669936351"
+      },
+      "png": {
+        "size": 89530775,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/hangar_concrete_floor/hangar_concrete_floor_disp_8k.png",
+        "md5": "d3e144ca0b72f70b6dae0953b4b092cc"
+      },
+      "exr": {
+        "size": 6868132,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_disp_8k.exr",
+        "md5": "7c3c99adfcdc442f9049dc0b9295cee0"
+      }
+    },
+    "4k": {
+      "jpg": {
+        "size": 2931853,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_disp_4k.jpg",
+        "md5": "3cd11156708dbcefa3cac7de74d6166d"
+      },
+      "png": {
+        "size": 24078273,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/hangar_concrete_floor/hangar_concrete_floor_disp_4k.png",
+        "md5": "5b809749da9913b1043e37780bb0ab33"
+      },
+      "exr": {
+        "size": 2360659,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_disp_4k.exr",
+        "md5": "f664eb91b58bd9122d5f2031a9498acd"
+      }
+    },
+    "2k": {
+      "jpg": {
+        "size": 922332,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_disp_2k.jpg",
+        "md5": "a69e3aca5a8a120433c96accb89a3362"
+      },
+      "png": {
+        "size": 6260408,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hangar_concrete_floor/hangar_concrete_floor_disp_2k.png",
+        "md5": "511be2dfa8d24397b96a879b4c364f4e"
+      },
+      "exr": {
+        "size": 852870,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_disp_2k.exr",
+        "md5": "fec78a95762ba20b6f7cd2b6aedad17d"
+      }
+    },
+    "1k": {
+      "jpg": {
+        "size": 308742,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_disp_1k.jpg",
+        "md5": "d2106fb192c95a49763c12a644658c14"
+      },
+      "png": {
+        "size": 1654544,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/hangar_concrete_floor/hangar_concrete_floor_disp_1k.png",
+        "md5": "0fceaff96298179558bd7fbc5a49cff5"
+      },
+      "exr": {
+        "size": 307389,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_disp_1k.exr",
+        "md5": "4350342b41bc755e84846ec7f9bd6d10"
+      }
+    }
+  },
+  "Rough": {
+    "8k": {
+      "jpg": {
+        "size": 28718845,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_rough_8k.jpg",
+        "md5": "395f8077fe7b3cf7a2eec7ffedbdb56c"
+      },
+      "png": {
+        "size": 112136587,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/hangar_concrete_floor/hangar_concrete_floor_rough_8k.png",
+        "md5": "0f5332836a9b5e8d3cb1d35cba56c2ad"
+      },
+      "exr": {
+        "size": 27167064,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_rough_8k.exr",
+        "md5": "df242e27b61044a77bff82598f4988cf"
+      }
+    },
+    "4k": {
+      "jpg": {
+        "size": 9461846,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_rough_4k.jpg",
+        "md5": "8d677d6bc1bdf4f4583e3705fa2c08ae"
+      },
+      "png": {
+        "size": 29266217,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/hangar_concrete_floor/hangar_concrete_floor_rough_4k.png",
+        "md5": "bed70c2e80c904ca56d183bd5ff2fc5c"
+      },
+      "exr": {
+        "size": 9244387,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_rough_4k.exr",
+        "md5": "a627092fb04d8d21d87137bbc92f83ea"
+      }
+    },
+    "2k": {
+      "jpg": {
+        "size": 2367272,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_rough_2k.jpg",
+        "md5": "ade247a5fb74d12f1cbffdac5ebfd630"
+      },
+      "png": {
+        "size": 7366845,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hangar_concrete_floor/hangar_concrete_floor_rough_2k.png",
+        "md5": "08c651d5408814a818e51aec62b495ad"
+      },
+      "exr": {
+        "size": 2402492,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_rough_2k.exr",
+        "md5": "8d2193e5debce3f4b74a29d350991ebe"
+      }
+    },
+    "1k": {
+      "jpg": {
+        "size": 518102,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_rough_1k.jpg",
+        "md5": "785ce74ed3a3c00dead34424c5e23749"
+      },
+      "png": {
+        "size": 1795659,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/hangar_concrete_floor/hangar_concrete_floor_rough_1k.png",
+        "md5": "5e8b692dbf533b84306e2f694f14fc6c"
+      },
+      "exr": {
+        "size": 545177,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_rough_1k.exr",
+        "md5": "0760be67bd2d66a8dff8c6440fa8cef8"
+      }
+    }
+  },
+  "mtlx": {
+    "8k": {
+      "mtlx": {
+        "include": {
+          "textures/hangar_concrete_floor_rough_8k.exr": {
+            "size": 27167064,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_rough_8k.exr",
+            "md5": "df242e27b61044a77bff82598f4988cf"
+          },
+          "textures/hangar_concrete_floor_nor_gl_8k.exr": {
+            "size": 108917279,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/8k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_8k.exr",
+            "md5": "f0b48db26fbee2ac9ebeb805c91497d3"
+          },
+          "textures/hangar_concrete_floor_disp_8k.png": {
+            "size": 89530775,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/8k/hangar_concrete_floor/hangar_concrete_floor_disp_8k.png",
+            "md5": "d3e144ca0b72f70b6dae0953b4b092cc"
+          },
+          "textures/hangar_concrete_floor_diff_8k.jpg": {
+            "size": 31292382,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/8k/hangar_concrete_floor/hangar_concrete_floor_diff_8k.jpg",
+            "md5": "8a1fb4bacc14fe27fd06d44a8b74c98a"
+          }
+        },
+        "size": 4820,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/mtlx/8k/hangar_concrete_floor/hangar_concrete_floor_8k.mtlx",
+        "md5": "81ea8bfb50c06008b08728b49ef4e598"
+      }
+    },
+    "4k": {
+      "mtlx": {
+        "include": {
+          "textures/hangar_concrete_floor_rough_4k.exr": {
+            "size": 9244387,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_rough_4k.exr",
+            "md5": "a627092fb04d8d21d87137bbc92f83ea"
+          },
+          "textures/hangar_concrete_floor_nor_gl_4k.exr": {
+            "size": 27925424,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/4k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_4k.exr",
+            "md5": "4ad980203f022cd6e4212661c82c9776"
+          },
+          "textures/hangar_concrete_floor_diff_4k.jpg": {
+            "size": 9845645,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/hangar_concrete_floor/hangar_concrete_floor_diff_4k.jpg",
+            "md5": "7cf5dc40cfe4912a8ef2cf26bbbe62b6"
+          },
+          "textures/hangar_concrete_floor_disp_4k.png": {
+            "size": 24078273,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/hangar_concrete_floor/hangar_concrete_floor_disp_4k.png",
+            "md5": "5b809749da9913b1043e37780bb0ab33"
+          }
+        },
+        "size": 4820,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/mtlx/4k/hangar_concrete_floor/hangar_concrete_floor_4k.mtlx",
+        "md5": "e10fcc49b0bcf7da41bf865b216d4318"
+      }
+    },
+    "2k": {
+      "mtlx": {
+        "include": {
+          "textures/hangar_concrete_floor_rough_2k.exr": {
+            "size": 2402492,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_rough_2k.exr",
+            "md5": "8d2193e5debce3f4b74a29d350991ebe"
+          },
+          "textures/hangar_concrete_floor_diff_2k.jpg": {
+            "size": 2559056,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/hangar_concrete_floor/hangar_concrete_floor_diff_2k.jpg",
+            "md5": "35e620ca791e0105e680ef775ecf719d"
+          },
+          "textures/hangar_concrete_floor_disp_2k.png": {
+            "size": 6260408,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hangar_concrete_floor/hangar_concrete_floor_disp_2k.png",
+            "md5": "511be2dfa8d24397b96a879b4c364f4e"
+          },
+          "textures/hangar_concrete_floor_nor_gl_2k.exr": {
+            "size": 6865057,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/2k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_2k.exr",
+            "md5": "27fd36389abe22e6c77c7fb2bed4295c"
+          }
+        },
+        "size": 4820,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/mtlx/2k/hangar_concrete_floor/hangar_concrete_floor_2k.mtlx",
+        "md5": "e7d4df47464c66c2bf1fd2e9d83d43f4"
+      }
+    },
+    "1k": {
+      "mtlx": {
+        "include": {
+          "textures/hangar_concrete_floor_disp_1k.png": {
+            "size": 1654544,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/hangar_concrete_floor/hangar_concrete_floor_disp_1k.png",
+            "md5": "0fceaff96298179558bd7fbc5a49cff5"
+          },
+          "textures/hangar_concrete_floor_nor_gl_1k.exr": {
+            "size": 1774286,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_nor_gl_1k.exr",
+            "md5": "24f8bba670f91741ae1c3194939130e2"
+          },
+          "textures/hangar_concrete_floor_diff_1k.jpg": {
+            "size": 614854,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/hangar_concrete_floor/hangar_concrete_floor_diff_1k.jpg",
+            "md5": "a073051aeaf7242f5e354ca4c89ac179"
+          },
+          "textures/hangar_concrete_floor_rough_1k.exr": {
+            "size": 545177,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Textures/exr/1k/hangar_concrete_floor/hangar_concrete_floor_rough_1k.exr",
+            "md5": "0760be67bd2d66a8dff8c6440fa8cef8"
+          }
+        },
+        "size": 4820,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/mtlx/1k/hangar_concrete_floor/hangar_concrete_floor_1k.mtlx",
+        "md5": "cfca2e50b787f6bf7542041621a23c04"
+      }
+    }
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "appliedToGame": true,
+  "trainingGround": true,
+  "vehicleKinds": [
+    "long",
+    "xtralong",
+    "troopCarrier",
+    "antiAir",
+    "helicopter",
+    "plane"
+  ],
+  "testsPassed": 331,
+  "strictClippy": true,
+  "nativeRenderChecks": 13,
+  "sourceUVTrianglesPreserved": 75720,
+  "textureQuality": "Live LOW / BALANCED / HIGH; existing graphics options",
+  "executableSha256": "0287b32a350ac3e3c214e2c181ebd522993357a20d0e218988b4c26debf3fe75",
+  "cases": {
+    "support": {
+      "atlasModels": 6,
+      "atlasBatches": 122,
+      "graphics": {
+        "environment": "high",
+        "explosions": "balanced",
+        "shadows": "high",
+        "textures": "high",
+        "upscaler": "native"
+      },
+      "cameraZoom": 18.0,
+      "exitCode": 0,
+      "meanVehicleRegionDifference": 3.2001091232077146
+    },
+    "legacy-support": {
+      "atlasModels": 0,
+      "atlasBatches": 0,
+      "graphics": {
+        "environment": "high",
+        "explosions": "balanced",
+        "shadows": "high",
+        "textures": "high",
+        "upscaler": "native"
+      },
+      "cameraZoom": 18.0,
+      "exitCode": 0
+    },
+    "rocket": {
+      "atlasModels": 6,
+      "atlasBatches": 93,
+      "graphics": {
+        "environment": "high",
+        "explosions": "balanced",
+        "shadows": "high",
+        "textures": "high",
+        "upscaler": "native"
+      },
+      "cameraZoom": 18.0,
+      "exitCode": 0
+    },
+    "carrier": {
+      "atlasModels": 6,
+      "atlasBatches": 90,
+      "graphics": {
+        "environment": "high",
+        "explosions": "balanced",
+        "shadows": "high",
+        "textures": "high",
+        "upscaler": "native"
+      },
+      "cameraZoom": 18.0,
+      "exitCode": 0
+    },
+    "anti-air": {
+      "atlasModels": 6,
+      "atlasBatches": 122,
+      "graphics": {
+        "environment": "high",
+        "explosions": "balanced",
+        "shadows": "high",
+        "textures": "high",
+        "upscaler": "native"
+      },
+      "cameraZoom": 18.0,
+      "exitCode": 0
+    },
+    "apache": {
+      "atlasModels": 6,
+      "atlasBatches": 115,
+      "graphics": {
+        "environment": "high",
+        "explosions": "balanced",
+        "shadows": "high",
+        "textures": "high",
+        "upscaler": "native"
+      },
+      "cameraZoom": 36.0,
+      "exitCode": 0
+    },
+    "legacy-a10": {
+      "atlasModels": 0,
+      "atlasBatches": 0,
+      "graphics": {
+        "environment": "high",
+        "explosions": "balanced",
+        "shadows": "high",
+        "textures": "high",
+        "upscaler": "native"
+      },
+      "cameraZoom": 48.0,
+      "exitCode": 0
+    },
+    "a10": {
+      "atlasModels": 6,
+      "atlasBatches": 115,
+      "graphics": {
+        "environment": "high",
+        "explosions": "balanced",
+        "shadows": "high",
+        "textures": "high",
+        "upscaler": "native"
+      },
+      "cameraZoom": 48.0,
+      "exitCode": 0,
+      "meanVehicleRegionDifference": 1.4655589783083045
+    },
+    "enemy-support": {
+      "atlasModels": 6,
+      "atlasBatches": 122,
+      "graphics": {
+        "environment": "high",
+        "explosions": "balanced",
+        "shadows": "high",
+        "textures": "high",
+        "upscaler": "native"
+      },
+      "cameraZoom": 18.0,
+      "exitCode": 0
+    },
+    "enemy-a10": {
+      "atlasModels": 6,
+      "atlasBatches": 115,
+      "graphics": {
+        "environment": "high",
+        "explosions": "balanced",
+        "shadows": "high",
+        "textures": "high",
+        "upscaler": "native"
+      },
+      "cameraZoom": 48.0,
+      "exitCode": 0
+    },
+    "low": {
+      "atlasModels": 6,
+      "atlasBatches": 122,
+      "graphics": {
+        "environment": "low",
+        "explosions": "balanced",
+        "shadows": "low",
+        "textures": "low",
+        "upscaler": "native"
+      },
+      "cameraZoom": 18.0,
+      "exitCode": 0
+    },
+    "overview": {
+      "atlasModels": 6,
+      "atlasBatches": 271,
+      "graphics": {
+        "environment": "balanced",
+        "explosions": "balanced",
+        "shadows": "balanced",
+        "textures": "balanced",
+        "upscaler": "native"
+      },
+      "cameraZoom": 48.0,
+      "exitCode": 0
+    },
+    "training": {
+      "atlasModels": 6,
+      "atlasBatches": 70,
+      "graphics": {
+        "environment": "balanced",
+        "explosions": "balanced",
+        "shadows": "balanced",
+        "textures": "balanced",
+        "upscaler": "native"
+      },
+      "cameraZoom": 160.0,
+      "exitCode": 0
+    }
+  }
+}

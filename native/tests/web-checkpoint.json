@@ -1,0 +1,203 @@
+{
+  "schema": 1,
+  "config": {
+    "cols": 128,
+    "rows": 128,
+    "playerSupply": 25,
+    "enemySupply": 25,
+    "mineIncome": 5,
+    "playerMines": 1,
+    "enemyMines": 1,
+    "playerBarracks": 1,
+    "enemyBarracks": 1,
+    "playerShort": 1,
+    "enemyShort": 1,
+    "playerMedium": 1,
+    "enemyMedium": 1,
+    "playerLong": 0,
+    "enemyLong": 1,
+    "playerXtralong": 1,
+    "enemyXtralong": 1,
+    "shortRange": 10,
+    "mediumRange": 25,
+    "longRange": 50,
+    "xtralongRange": 100,
+    "fogEnabled": true,
+    "terrainDebug": false,
+    "terrainDebugElevation": false
+  },
+  "game": {
+    "round": 1,
+    "phase": "realtime",
+    "mode": "realtime",
+    "simulationTick": 7,
+    "tickRate": 20,
+    "elapsedSeconds": 0.35,
+    "nextRuntimeId": 5,
+    "rtsIncomePerMinePerMinute": 30,
+    "winner": null,
+    "objectiveControl": {
+      "owner": null,
+      "rounds": 0
+    },
+    "objectiveWinner": null,
+    "players": [
+      {
+        "id": 0,
+        "resources": 61
+      },
+      {
+        "id": 1,
+        "resources": 47
+      }
+    ],
+    "structures": [
+      {
+        "id": "web-base",
+        "type": "barracks",
+        "owner": 0,
+        "x": 25,
+        "y": 25,
+        "hp": 1,
+        "revealsFog": true,
+        "footprint": [
+          {
+            "x": 25,
+            "y": 25
+          }
+        ]
+      }
+    ],
+    "units": [
+      {
+        "id": "web-infantry",
+        "type": "short",
+        "owner": 0,
+        "x": 30,
+        "y": 30,
+        "hp": 3,
+        "revealsFog": true,
+        "movementRange": 10,
+        "damage": 1,
+        "strength": 120,
+        "maxStrength": 120,
+        "worldX": 30.187,
+        "worldY": 30,
+        "previousWorldX": 30.146,
+        "previousWorldY": 30,
+        "velocityX": 0.82,
+        "velocityY": 0,
+        "heading": 0,
+        "stance": "attack",
+        "weaponCooldownTicks": 0,
+        "weaponWindupTicks": 0,
+        "stationaryTicks": 0,
+        "firingLocked": false,
+        "acquiredTargetId": null,
+        "explicitTargetId": null,
+        "path": [
+          {
+            "x": 40,
+            "y": 30
+          }
+        ],
+        "pathIndex": 0,
+        "stuckTicks": 0,
+        "transportId": null,
+        "passengerIds": [],
+        "engagementMode": "engage",
+        "pathDestination": {
+          "x": 40,
+          "y": 30
+        },
+        "nextRepathTick": 20
+      },
+      {
+        "id": "web-tank",
+        "type": "medium",
+        "owner": 1,
+        "x": 100,
+        "y": 100,
+        "hp": 2,
+        "revealsFog": true,
+        "movementRange": 10,
+        "damage": 2,
+        "strength": 18,
+        "maxStrength": 18,
+        "worldX": 100,
+        "worldY": 100,
+        "previousWorldX": 100,
+        "previousWorldY": 100,
+        "velocityX": 0,
+        "velocityY": 0,
+        "heading": 3.141592653589793,
+        "stance": "attack",
+        "weaponCooldownTicks": 0,
+        "weaponWindupTicks": 0,
+        "stationaryTicks": 0,
+        "firingLocked": false,
+        "acquiredTargetId": null,
+        "explicitTargetId": null,
+        "path": [],
+        "pathIndex": 0,
+        "stuckTicks": 0,
+        "transportId": null,
+        "passengerIds": []
+      }
+    ],
+    "jobs": [
+      {
+        "id": "web-job",
+        "kind": "recruit",
+        "owner": 0,
+        "type": "medic",
+        "producerId": "web-base",
+        "cost": 12,
+        "durationTicks": 200,
+        "progressTicks": 24
+      }
+    ],
+    "orders": [
+      {
+        "id": "command-rt-1",
+        "sequence": 1,
+        "kind": "command",
+        "commandType": "move",
+        "owner": 0,
+        "unitId": "web-infantry",
+        "targetId": null,
+        "x": 40,
+        "y": 30,
+        "issuedAtTick": 0
+      },
+      {
+        "id": "command-rt-3",
+        "sequence": 2,
+        "kind": "command",
+        "commandType": "attack-move",
+        "owner": 0,
+        "unitId": "web-infantry",
+        "targetId": null,
+        "x": 45,
+        "y": 35,
+        "issuedAtTick": 0
+      }
+    ],
+    "projectiles": []
+  },
+  "terrain": {
+    "mapId": "grand-front",
+    "seed": "grand-front",
+    "modifications": [
+      {
+        "x": 17,
+        "y": 19,
+        "patch": {
+          "elevation": 0.51,
+          "surfaceElevation": 0.51,
+          "terrainType": "plains"
+        }
+      }
+    ]
+  }
+}

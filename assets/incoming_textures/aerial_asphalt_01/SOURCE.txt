@@ -1,0 +1,4 @@
+aerial_asphalt_01 / Poly Haven. CC0 1.0 Universal.
+https://polyhaven.com/a/aerial_asphalt_01
+https://polyhaven.com/license
+Source PNGs are untouched; runtime derivatives are in materials/pbr/catalog.json.
