@@ -34,7 +34,7 @@ firepower.
 
 ### Compact command dock
 
-The bottom dock keeps **Barracks**, **Depot**, **Airfield**, and **Orders** within
+The bottom dock keeps **Barracks**, **Depot**, **Airfield**, **AC-130**, and **Orders** within
 reach. Click a building tab to slide its recruitment panel open; click the same
 tab again, its close icon, or **Escape** to collapse it. Selecting a unit or a
 production building on the battlefield opens its matching panel. Escape cancels
@@ -180,6 +180,17 @@ Weapons differ in range, accuracy, reload time, and blast size. Some support
 weapons must stop and set up before firing. Direct attack orders keep their chosen
 target while moving into range or waiting for visibility; attack-move still
 engages nearby enemies automatically.
+
+The **AC-130 gunship** is an off-map support call-in. Click **AC-130** on the
+dock or press **J**, then click a target area. It costs **60 supply**, with one
+active gunship per player. It arrives already airborne from your side of the
+map and circles the fixed target point **five full times** while its port-side
+guns fire. The 30 mm fires every **1.2 seconds**, and the 105 mm every **3.8
+seconds**, producing larger earth, smoke and debris impacts. It rolls out of
+the fifth orbit, climbs and flies off map. It uses no airfield stand or runway.
+The roster shows completed orbits; the mission resumes when loading a save.
+The same call-in is available in training. Right-click or Escape cancels target
+selection. [Aircraft photographs and modelling notes](assets/aircraft/c130/README.md).
 
 The **A-10 Warthog** taxis to the runway, takes off and climbs to about
 **72 metres**. Right-click a ground target or use **Q** for a cannon strafing
