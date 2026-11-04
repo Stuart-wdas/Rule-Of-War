@@ -1,0 +1,38 @@
+{
+  "medium": {
+    "groups": 63,
+    "vertices": 23234,
+    "minimumVisibility": 0.38,
+    "meanVisibility": 0.6761843697080987
+  },
+  "long": {
+    "groups": 63,
+    "vertices": 25232,
+    "minimumVisibility": 0.38,
+    "meanVisibility": 0.6723526158080209
+  },
+  "antiAir": {
+    "groups": 63,
+    "vertices": 23840,
+    "minimumVisibility": 0.38,
+    "meanVisibility": 0.6797455099146953
+  },
+  "troopCarrier": {
+    "groups": 31,
+    "vertices": 37904,
+    "minimumVisibility": 0.38,
+    "meanVisibility": 0.7583340000970491
+  },
+  "xtralong": {
+    "groups": 34,
+    "vertices": 23582,
+    "minimumVisibility": 0.38,
+    "meanVisibility": 0.7820655476051773
+  },
+  "helicopter": {
+    "groups": 13,
+    "vertices": 53136,
+    "minimumVisibility": 0.38,
+    "meanVisibility": 0.76705030231783
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "nativeTestsPassed": 325,
+  "strictClippyPassed": true,
+  "gpuCases": [
+    "early",
+    "tail",
+    "low",
+    "high",
+    "scale-large",
+    "vehicle"
+  ],
+  "baseDustParticles": {
+    "low": 28,
+    "balanced": 48,
+    "high": 64
+  },
+  "innerBillows": {
+    "low": 8,
+    "balanced": 16,
+    "high": 24
+  },
+  "sharedParticleLimit": 768,
+  "bakedExplosionChanged": false,
+  "newTextureImages": 0,
+  "comparison": {
+    "early": {
+      "beforePeakEffects": 63,
+      "afterPeakEffects": 87,
+      "beforeVisibleAtCapture": 63,
+      "afterVisibleAtCapture": 87
+    },
+    "tail": {
+      "beforePeakEffects": 63,
+      "afterPeakEffects": 87,
+      "beforeVisibleAtCapture": 32,
+      "afterVisibleAtCapture": 48
+    }
+  },
+  "details": ".data/render-checks/mushroom-base/verification.json"
+}

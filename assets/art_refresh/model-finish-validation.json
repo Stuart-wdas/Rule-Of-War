@@ -1,0 +1,52 @@
+{
+  "nativeTestsPassed": 320,
+  "strictClippyPassed": true,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "gpuCases": [
+    "tank",
+    "support",
+    "carrier",
+    "rocket",
+    "anti-air",
+    "infantry",
+    "apache",
+    "a10",
+    "town",
+    "low",
+    "dlss",
+    "battle",
+    "explosion"
+  ],
+  "daylightProbeBytes": 265200,
+  "contactCacheBytes": 1851598,
+  "dlssExecuted": true,
+  "destructionWreckKinds": [
+    "medium"
+  ],
+  "battleObservedStyles": [
+    [
+      "debris",
+      0
+    ],
+    [
+      "mushroom",
+      0
+    ]
+  ],
+  "battleWeaponEvents": {
+    "antiAir": 18,
+    "engineer": 33,
+    "medium": 16,
+    "scout": 12,
+    "short": 43,
+    "xtralong": 7
+  },
+  "limitations": [
+    "Analytic sky/ground reflections do not include nearby objects.",
+    "Vehicle contact shading is baked in the bind pose; moving parts still rely on dynamic shadows."
+  ],
+  "details": ".data/render-checks/model-finish/verification.json"
+}

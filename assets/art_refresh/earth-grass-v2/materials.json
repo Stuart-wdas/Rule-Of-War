@@ -1,0 +1,78 @@
+{
+  "earth_grass_olive_v2": {
+    "repeat_m": [
+      8.0,
+      8.0
+    ],
+    "size": [
+      1254,
+      1254
+    ],
+    "source": "OpenAI built-in image generation",
+    "provenance": "assets/art_refresh/earth-grass-v2/generation.json",
+    "normal": "OpenGL +Y, approximate shallow relief from generated companion height",
+    "normal_height_range_m": 0.08,
+    "albedo_linear_mean_rgb": [
+      0.05231873582686514,
+      0.04166624706122097,
+      0.0175406262695085
+    ],
+    "orm": "R=local cavity AO G=matte roughness B=0",
+    "lighting": {
+      "sun_ray_world": [
+        0.444,
+        -0.778,
+        -0.444
+      ],
+      "short_shadow_direction_image": [
+        1,
+        -1
+      ],
+      "variation": "translation only; no rotation or mirroring"
+    },
+    "usage": "Natural terrain in ordinary matches, training and ground demo. Excludes asphalt/concrete.",
+    "runtime_sha256": {
+      "albedo": "71c9e7858a1676804a905f14370a4020290f9384a0f5e1fef83a523c3fe71723",
+      "normal": "040b9c548644f2e36d4ce794aef0fad6f93317a16f525342d12a0181ece2908d",
+      "orm": "19ba4e06df82a697d9fca2a91e504fc0043bccc0c01665d5f5d411b76f044adf"
+    }
+  },
+  "earth_grass_stony_v2": {
+    "repeat_m": [
+      6.0,
+      6.0
+    ],
+    "size": [
+      1254,
+      1254
+    ],
+    "source": "OpenAI built-in image generation",
+    "provenance": "assets/art_refresh/earth-grass-v2/generation.json",
+    "normal": "OpenGL +Y, approximate shallow relief from generated companion height",
+    "normal_height_range_m": 0.1,
+    "albedo_linear_mean_rgb": [
+      0.06918868839529671,
+      0.05358254199877259,
+      0.02899232514318469
+    ],
+    "orm": "R=local cavity AO G=matte roughness B=0",
+    "lighting": {
+      "sun_ray_world": [
+        0.444,
+        -0.778,
+        -0.444
+      ],
+      "short_shadow_direction_image": [
+        1,
+        -1
+      ],
+      "variation": "translation only; no rotation or mirroring"
+    },
+    "usage": "Natural terrain in ordinary matches, training and ground demo. Excludes asphalt/concrete.",
+    "runtime_sha256": {
+      "albedo": "b1be0d131e3a5b73882c6a7644cc6c74f48813eb2472f882d60c6ebb5a065b6c",
+      "normal": "93c7ff6498ddfe63e3f718087adba199c5ff30b96f06bce6539ff1874f6b4094",
+      "orm": "053c6db7b6fbbecab0fb8d9e6fd34ab675a35773fa154de6cc6b6e1d904f2541"
+    }
+  }
+}

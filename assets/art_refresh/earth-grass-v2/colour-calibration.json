@@ -1,0 +1,18 @@
+{
+  "tool": "OpenAI built-in image generation",
+  "reason": "Calibrate generated base-colour reflectance against unchanged existing game sunlight; preserve texture layout and small-shadow direction.",
+  "assets": [
+    {
+      "name": "olive",
+      "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-293a7119-7b6d-4055-ba0f-0a8d8aae787c.png",
+      "prompt": "Use case: lighting-weather / precise material colour calibration. EDIT TARGET: the supplied square ground texture. Preserve its EXACT layout, all grass mat outlines, every stone/leaf/soil feature, all scales, resolution, texture structure, crop and existing tiny upper-right contact-shadow directions. Make ONE change: calibrate its BASE COLOUR reflectance for a bright physically lit game so the game will not wash it out. Reduce the average LINEAR RGB reflectance to about 55% of the supplied image (roughly 20-25% darker in display RGB), maintaining local contrast and detailed highlights. Shift the grass slightly away from golden yellow toward muted earthy olive; keep dry straw tawny and exposed earth a deep neutral warm brown. Dark roots and crevices must remain dark. Stones should be weathered neutral grey, with readable fine detail, not white. The resulting texture should visibly look darker and more subdued than the reference. This is a calibrated diffuse/albedo material, not a bright photograph. Do NOT add new objects, rearrange anything, blur, sharpen into noise, rotate/mirror, change the light direction, add a vignette/global gradient, increase cast shadows or paint new shadows. Every physical feature must stay registered with the existing height/normal map. Square seamless repeating extent unchanged. No labels, borders or text.",
+      "reference": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-9915fe16-96b5-44f5-85cc-7eb82ce1afcf.png"
+    },
+    {
+      "name": "stony",
+      "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-9da13dbf-f029-4ea2-85d6-dccbb7eca72c.png",
+      "prompt": "Use case: lighting-weather / precise material colour calibration. EDIT TARGET: the supplied square ground texture. Preserve its EXACT layout, all grass mat outlines, every stone/leaf/soil feature, all scales, resolution, texture structure, crop and existing tiny upper-right contact-shadow directions. Make ONE change: calibrate its BASE COLOUR reflectance for a bright physically lit game so the game will not wash it out. Reduce the average LINEAR RGB reflectance to about 55% of the supplied image (roughly 20-25% darker in display RGB), maintaining local contrast and detailed highlights. Shift the grass slightly away from golden yellow toward muted earthy olive; keep dry straw tawny and exposed earth a deep neutral warm brown. Dark roots and crevices must remain dark. Stones should be weathered neutral grey, with readable fine detail, not white. The resulting texture should visibly look darker and more subdued than the reference. This is a calibrated diffuse/albedo material, not a bright photograph. Do NOT add new objects, rearrange anything, blur, sharpen into noise, rotate/mirror, change the light direction, add a vignette/global gradient, increase cast shadows or paint new shadows. Every physical feature must stay registered with the existing height/normal map. Square seamless repeating extent unchanged. No labels, borders or text.",
+      "reference": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-b4cf042d-be93-4d9e-88ab-d6fdd1f91495.png"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "tool": "OpenAI built-in image generation",
+  "created": "2026-10-26",
+  "sunRayWorld": [
+    0.444,
+    -0.778,
+    -0.444
+  ],
+  "textureShadowDirection": [
+    1,
+    -1
+  ],
+  "notes": "Overhead ground textures. Translation-only variation preserves the source shadow direction. Low creeping scrub only; large shrubs, rocks and trees retain dynamic 3D shadows.",
+  "assets": [
+    {
+      "name": "olive",
+      "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-9915fe16-96b5-44f5-85cc-7eb82ce1afcf.png",
+      "prompt": "Use case: photorealistic-natural. Asset: production seamless square repeating ground texture for an RTS game, TRUE PERPENDICULAR OVERHEAD ORTHOGRAPHIC view, no perspective or horizon. Represent a 12m x 12m ground patch. Photographic surface realism and rich readable intermediate-sized detail. Earthy, restrained palette: deep muted olive and khaki grass, dry straw, warm dark brown exposed soil, weathered grey limestone. Strong LOCAL separation: shaded dark soil crevices, individual pale stones and dark green low plants; avoid a pale beige veil, fuzzy clouds, large blurry noise patches, neon greens or uniform lawn. Lighting constraint: warm sun at 51 degrees elevation, from image bottom-left; all very SHORT ground-level cast shadows point upper-right (+image X, -image Y), about 0.8 times the object's height. Neutral overall exposure, no dramatic global lighting gradient. Include crevice/contact darkening around stones and grass roots, but no long cast shadows. No trees, tall bushes, vehicles, buildings, roads, text, grid, border, vignette, camera angle or painted broad scene shadows. Tileable on all four edges with evenly distributed composition, no central hero feature. Main material A: about 60% irregular dense low olive grass mats, 20% exposed dark brown gritty soil pockets, 12% dry yellow-brown grass at mat edges and 8% little embedded limestone stones. Grass mats are 30-100cm islands with naturally ragged outlines, individual short blades and dark roots. Scattered creeping dark olive groundcover plants 10-25cm across and only 5-12cm high, tiny dense leaves; varied density. Distinct small bare patches surrounded by darker grass. Fine rounded and fractured 3-12cm pebbles partly embedded, a few weathered 20cm stones. Make the earthy dark recesses visible from an RTS distance; preserve muted sunny highlights on dry grass."
+    },
+    {
+      "name": "stony",
+      "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-b4cf042d-be93-4d9e-88ab-d6fdd1f91495.png",
+      "prompt": "Use case: photorealistic-natural. Asset: production seamless square repeating ground texture for an RTS game, TRUE PERPENDICULAR OVERHEAD ORTHOGRAPHIC view, no perspective or horizon. Represent a 12m x 12m ground patch. Photographic surface realism and rich readable intermediate-sized detail. Earthy, restrained palette: deep muted olive and khaki grass, dry straw, warm dark brown exposed soil, weathered grey limestone. Strong LOCAL separation: shaded dark soil crevices, individual pale stones and dark green low plants; avoid a pale beige veil, fuzzy clouds, large blurry noise patches, neon greens or uniform lawn. Lighting constraint: warm sun at 51 degrees elevation, from image bottom-left; all very SHORT ground-level cast shadows point upper-right (+image X, -image Y), about 0.8 times the object's height. Neutral overall exposure, no dramatic global lighting gradient. Include crevice/contact darkening around stones and grass roots, but no long cast shadows. No trees, tall bushes, vehicles, buildings, roads, text, grid, border, vignette, camera angle or painted broad scene shadows. Tileable on all four edges with evenly distributed composition, no central hero feature. Main material B: a drier, stonier companion to olive meadow, sharing exactly its earth/grass colour family. Roughly 35% sparse dry olive grass mats, 25% dark compacted earthy gaps, 25% uneven limestone gravel clusters and 15% small creeping scrub/low leaf rosettes with straw at their bases. Embedded stones 3-15cm across, a few 25cm fractured rocks. Arrange stones in irregular clustered bands with intervening grassy areas, not evenly sprinkled everywhere. Low scrub is 10-35cm wide and 5-15cm tall with irregular leafy tops and dark soil immediately underneath. Visible natural micro crevices, dry root fibres, irregular clump silhouettes. Overall ground should remain earthy olive-brown, not predominantly white rock or pale sand."
+    },
+    {
+      "name": "olive_height",
+      "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-91055746-477c-45b2-a01b-beb1d8a9b85a.png",
+      "prompt": "Use case: precise-object-edit. Create a grayscale physical HEIGHT DATA map companion for the supplied exact terrain texture (edit target). Preserve every stone, plant mat, leaf rosette, soil patch and footprint in exactly the same pixel location and extent. Pure grayscale only, no scene lighting or cast shadows. Mid-dark grey compacted soil; mid-grey grass mats raised a few centimetres with softly rounded broad tops; brighter embedded stones, very darkest narrow cracks between objects. Remove directional lighting and white dry-leaf brightness from the height interpretation: bright straw is not automatically a tall spike. This is shallow height data, NOT a grayscale photograph: no shaded sunlit face on a stone, only its convex or fractured height. Preserve layout perfectly; true perpendicular overhead, seamless square extent exactly matching supplied image, no text or borders. Grass heights 5-10cm, low creeping leaf plants at most 12cm, stones 2-12cm above soil; uniform broad ground level, no mountains or hills. Softly smooth subpixel leaf noise but retain stone boundaries."
+    },
+    {
+      "name": "stony_height",
+      "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-abc20d89-0ebe-4f2b-8391-829347099aac.png",
+      "prompt": "Use case: precise-object-edit. Create a grayscale physical HEIGHT DATA map companion for the supplied exact terrain texture (edit target). Preserve every stone, plant mat, leaf rosette, soil patch and footprint in exactly the same pixel location and extent. Pure grayscale only, no scene lighting or cast shadows. Mid-dark grey compacted soil; mid-grey grass mats raised a few centimetres with softly rounded broad tops; brighter embedded stones, very darkest narrow cracks between objects. Remove directional lighting and white dry-leaf brightness from the height interpretation: bright straw is not automatically a tall spike. This is shallow height data, NOT a grayscale photograph: no shaded sunlit face on a stone, only its convex or fractured height. Preserve layout perfectly; true perpendicular overhead, seamless square extent exactly matching supplied image, no text or borders. Grass heights 5-10cm, low creeping leaf plants at most 12cm, stones 2-12cm above soil; uniform broad ground level, no mountains or hills. Softly smooth subpixel leaf noise but retain stone boundaries."
+    }
+  ],
+  "colourCalibration": {
+    "tool": "OpenAI built-in image generation",
+    "reason": "Calibrate generated base-colour reflectance against unchanged existing game sunlight; preserve texture layout and small-shadow direction.",
+    "assets": [
+      {
+        "name": "olive",
+        "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-293a7119-7b6d-4055-ba0f-0a8d8aae787c.png",
+        "prompt": "Use case: lighting-weather / precise material colour calibration. EDIT TARGET: the supplied square ground texture. Preserve its EXACT layout, all grass mat outlines, every stone/leaf/soil feature, all scales, resolution, texture structure, crop and existing tiny upper-right contact-shadow directions. Make ONE change: calibrate its BASE COLOUR reflectance for a bright physically lit game so the game will not wash it out. Reduce the average LINEAR RGB reflectance to about 55% of the supplied image (roughly 20-25% darker in display RGB), maintaining local contrast and detailed highlights. Shift the grass slightly away from golden yellow toward muted earthy olive; keep dry straw tawny and exposed earth a deep neutral warm brown. Dark roots and crevices must remain dark. Stones should be weathered neutral grey, with readable fine detail, not white. The resulting texture should visibly look darker and more subdued than the reference. This is a calibrated diffuse/albedo material, not a bright photograph. Do NOT add new objects, rearrange anything, blur, sharpen into noise, rotate/mirror, change the light direction, add a vignette/global gradient, increase cast shadows or paint new shadows. Every physical feature must stay registered with the existing height/normal map. Square seamless repeating extent unchanged. No labels, borders or text.",
+        "reference": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-9915fe16-96b5-44f5-85cc-7eb82ce1afcf.png"
+      },
+      {
+        "name": "stony",
+        "path": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-9da13dbf-f029-4ea2-85d6-dccbb7eca72c.png",
+        "prompt": "Use case: lighting-weather / precise material colour calibration. EDIT TARGET: the supplied square ground texture. Preserve its EXACT layout, all grass mat outlines, every stone/leaf/soil feature, all scales, resolution, texture structure, crop and existing tiny upper-right contact-shadow directions. Make ONE change: calibrate its BASE COLOUR reflectance for a bright physically lit game so the game will not wash it out. Reduce the average LINEAR RGB reflectance to about 55% of the supplied image (roughly 20-25% darker in display RGB), maintaining local contrast and detailed highlights. Shift the grass slightly away from golden yellow toward muted earthy olive; keep dry straw tawny and exposed earth a deep neutral warm brown. Dark roots and crevices must remain dark. Stones should be weathered neutral grey, with readable fine detail, not white. The resulting texture should visibly look darker and more subdued than the reference. This is a calibrated diffuse/albedo material, not a bright photograph. Do NOT add new objects, rearrange anything, blur, sharpen into noise, rotate/mirror, change the light direction, add a vignette/global gradient, increase cast shadows or paint new shadows. Every physical feature must stay registered with the existing height/normal map. Square seamless repeating extent unchanged. No labels, borders or text.",
+        "reference": "C:\\Users\\StuartKieser\\.codex\\generated_images\\01a13e40-ec70-76d3-816b-f2683d27449e\\exec-b4cf042d-be93-4d9e-88ab-d6fdd1f91495.png"
+      }
+    ]
+  },
+  "activeAlbedos": {
+    "olive": "materials/pbr/earth_grass_v2/olive.png",
+    "stony": "materials/pbr/earth_grass_v2/stony.png"
+  }
+}

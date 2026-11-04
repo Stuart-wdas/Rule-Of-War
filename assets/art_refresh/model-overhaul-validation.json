@@ -1,0 +1,78 @@
+{
+  "nativeTestsPassed": 318,
+  "strictClippyPassed": true,
+  "renderCasesPassed": [
+    "infantry",
+    "tank",
+    "support",
+    "carrier",
+    "rocket",
+    "anti-air",
+    "apache",
+    "a10",
+    "town",
+    "facilities",
+    "low",
+    "dlss",
+    "battle"
+  ],
+  "resolution": [
+    1920,
+    1080
+  ],
+  "infantryExport": {
+    "passed": true,
+    "triangles_equipped": 10834,
+    "triangle_limit": 14000,
+    "vertices_exported": 12113,
+    "weighted_vertices": 12113,
+    "degenerate_triangles": 0,
+    "skin_joints": 35,
+    "materials": 1,
+    "embedded_images": 3,
+    "animations": [
+      {
+        "name": "A_Pose",
+        "duration_seconds": 0.067,
+        "channels": 105
+      },
+      {
+        "name": "Crouch_Rifle",
+        "duration_seconds": 2.367,
+        "channels": 105
+      },
+      {
+        "name": "Fire_Rifle",
+        "duration_seconds": 0.433,
+        "channels": 105
+      },
+      {
+        "name": "Idle_Rifle",
+        "duration_seconds": 3.033,
+        "channels": 105
+      },
+      {
+        "name": "Walk_Rifle",
+        "duration_seconds": 1.033,
+        "channels": 105
+      }
+    ],
+    "bytes_glb": 5661656
+  },
+  "animationRoundTrip": {
+    "passed": true,
+    "sampled_poses": 17,
+    "max_joint_error_m": 6.447658579444866e-07,
+    "max_bounds_error_m": 1.1166557669639587e-06
+  },
+  "triangles": {
+    "battleTank": 13776,
+    "supportGun": 14492,
+    "troopCarrier": 15316,
+    "rocketArtillery": 11304,
+    "antiAir": 14740,
+    "apache": 12574,
+    "a10": 8686,
+    "equippedInfantry": 10834
+  }
+}
