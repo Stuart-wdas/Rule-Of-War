@@ -1170,6 +1170,17 @@ pub fn run(
                 controls.build = Some("range:cover:wall".into());
             }
         }
+        if args.iter().any(|s| s == "--c130-check") {
+            let id = game.smoke_gunship();
+            controls.selected = vec![id];
+            controls.center = Vec3::new(310., 35., 250.);
+            controls.zoom = 255.;
+            controls.command_drawer = false;
+            controls.last_map = format!(
+                "{}:{}:{}:{}",
+                game.terrain.id, game.terrain.cols, game.terrain.rows, game.terrain.seed
+            );
+        }
         if args.iter().any(|s| s == "--weapons") {
             *game = NativeGame::default();
             game.entities.clear();
@@ -1716,6 +1727,7 @@ pub fn run(
                 || s == "--vehicle-check"
                 || (s == "--explosions" || s == "--destruction")
                 || s == "--weapons"
+                || s == "--c130-check"
                 || s == "--training"
                 || s == "--infantry-check"
                 || s == "--garrison-check"
@@ -1785,6 +1797,7 @@ pub fn run(
                 || s == "--vehicle-check"
                 || (s == "--explosions" || s == "--destruction")
                 || s == "--weapons"
+                || s == "--c130-check"
                 || s == "--training"
                 || s == "--infantry-check"
                 || s == "--garrison-check"
@@ -2408,7 +2421,13 @@ pub fn run(
             commands.spawn((action, Interaction::Pressed, BackgroundColor::default()));
         }
     }
-    let capture_due = if let Some(study) = &render.stress {
+    let capture_due = if std::env::args().any(|s| s == "--c130-check") {
+        ready.ready
+            && smoke.frames >= 180
+            && time.elapsed_secs() - smoke.scenario_started >= 4.
+            && smoke.peak_projectiles > 0
+            && smoke.peak_effects > 0
+    } else if let Some(study) = &render.stress {
         study.complete && ready.ready
     } else if crate::gis_prototype::enabled() {
         ready.ready
@@ -2577,6 +2596,7 @@ pub fn run(
                 || s == "--vehicle-check"
                 || (s == "--explosions" || s == "--destruction")
                 || s == "--weapons"
+                || s == "--c130-check"
                 || s == "--training"
                 || s == "--infantry-check"
                 || s == "--garrison-check"
@@ -2671,6 +2691,7 @@ pub fn run(
             report["sceneryStreaming"] = stats.report();
         }
         report["renderPipeline"] = crate::render_profile::report();
+        report["renderTextureBudget"] = crate::render_limits::report();
         report["terrainMeshBuilds"] = serde_json::json!(ready.builds);
         report["terrainVertices"] = serde_json::json!(ready.vertices);
         report["terrainStreaming"] = serde_json::json!({"uploadedBytes":ready.upload_bytes,"peakUploadBytes":ready.peak_upload_bytes,
@@ -2711,7 +2732,7 @@ pub fn run(
         );
         report["rocketTrails"] =
             serde_json::json!(render.trails.iter().filter(|p| p.smoke).count());
-        report["aircraft"] = serde_json::json!(battle.snapshot.entities.iter().filter(|p|p.category=="aircraft").map(|p|serde_json::json!({"kind":p.kind,"activity":p.activity,"altitude":p.flight_height(),"fuel":p.fuel_fraction,"pitch":p.flight_pitch,"bank":p.flight_bank,"speed":bevy::math::Vec2::from_array(p.velocity).length(),"ammunition":p.cannon_ammo,"rotorPower":p.rotor_power,"targetLocked":p.strafe_locked,"strafeTarget":p.strafe_target})).collect::<Vec<_>>());
+        report["aircraft"] = serde_json::json!(battle.snapshot.entities.iter().filter(|p|p.category=="aircraft").map(|p|serde_json::json!({"kind":p.kind,"activity":p.activity,"altitude":p.flight_height(),"fuel":p.fuel_fraction,"pitch":p.flight_pitch,"bank":p.flight_bank,"speed":bevy::math::Vec2::from_array(p.velocity).length(),"ammunition":p.cannon_ammo,"rotorPower":p.rotor_power,"targetLocked":p.strafe_locked,"strafeTarget":p.strafe_target,"gunshipTarget":p.gunship_target,"gunshipLaps":p.gunship_laps})).collect::<Vec<_>>());
         report["vehicleDistanceTravelled"] = serde_json::json!(smoke.vehicle_distance);
         if std::env::args().any(|s| s == "--missile-hit") {
             assert!(

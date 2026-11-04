@@ -7,7 +7,7 @@ use bevy::{
 };
 use std::collections::{HashMap, HashSet};
 
-const KINDS: [&str; 14] = [
+const KINDS: [&str; 15] = [
     "short",
     "scout",
     "medic",
@@ -18,6 +18,7 @@ const KINDS: [&str; 14] = [
     "antiAir",
     "troopCarrier",
     "plane",
+    "c130",
     "helicopter",
     "huey",
     "commander",
@@ -160,6 +161,21 @@ fn geometry(kind: &str) -> Vec<Mark> {
             line([-0.85, 0.], [-0.19, 0.], 0.075),
             line([0.19, 0.], [0.85, 0.], 0.075),
             Mark::Ring(0.035, 0.035),
+        ],
+        "c130" => vec![
+            rect(0., 0., 0.29, 1.55),
+            polygon(&[[0., 0.94], [0.15, 0.65], [-0.15, 0.65]]),
+            rect(0., 0.18, 1.85, 0.25),
+            rect(0., -0.65, 0.86, 0.19),
+            rect(-0.35, 0.3, 0.16, 0.44),
+            rect(0.35, 0.3, 0.16, 0.44),
+            rect(-0.72, 0.3, 0.16, 0.44),
+            rect(0.72, 0.3, 0.16, 0.44),
+            line([-0.87, 0.52], [-0.57, 0.52], 0.065),
+            line([0.57, 0.52], [0.87, 0.52], 0.065),
+            line([-0.5, 0.52], [-0.2, 0.52], 0.065),
+            line([0.2, 0.52], [0.5, 0.52], 0.065),
+            line([-0.16, -0.3], [-0.4, -0.3], 0.085),
         ],
         "plane" => vec![
             polygon(&[

@@ -2402,7 +2402,11 @@ impl NativeGame {
             }
         }
         // Departing support aircraft leave without becoming destroyed wrecks.
-        self.entities.retain(|e| e.gunship.as_ref().is_none_or(|m| m.phase != GunshipPhase::Departed));
+        self.entities.retain(|e| {
+            e.gunship
+                .as_ref()
+                .is_none_or(|m| m.phase != GunshipPhase::Departed)
+        });
         self.separate_units();
         let positions: BTreeMap<String, Point> = self
             .entities
@@ -3018,7 +3022,9 @@ impl NativeGame {
                     || !e.aircraft.round_credit.is_finite()
                     || e.aircraft.flares > 3
                     || !e.aircraft.world_y.is_finite()
-                    || e.gunship.as_ref().is_some_and(|m| e.view.kind != "c130" || !m.valid(game.terrain.cols, game.terrain.rows))
+                    || e.gunship.as_ref().is_some_and(|m| {
+                        e.view.kind != "c130" || !m.valid(game.terrain.cols, game.terrain.rows)
+                    })
                     || !e.aircraft.yaw_rate.is_finite()
                     || !e.aircraft.vertical_speed.is_finite()
                     || !e.aircraft.approach_height.is_finite()

@@ -653,8 +653,9 @@ fn spawn_building_parts(
             let mut child = parent.spawn((
                 Mesh3d(handle),
                 MeshMaterial3d(if finish == Finish::AircraftPaint {
-                    art.aircraft_paint
-                        [usize::from(p.kind != "plane") * 2 + p.owner.clamp(0, 1) as usize]
+                    art.aircraft_paint[usize::from(!matches!(p.kind.as_str(), "plane" | "c130"))
+                        * 2
+                        + p.owner.clamp(0, 1) as usize]
                         .clone()
                 } else if p.category == "aircraft" {
                     art.aircraft_finishes[material].clone()
@@ -840,8 +841,11 @@ fn spawn_piece(
                     {
                         art.apache_glass.clone()
                     } else if finish == Finish::AircraftPaint {
-                        art.aircraft_paint
-                            [usize::from(p.kind != "plane") * 2 + p.owner.clamp(0, 1) as usize]
+                        art.aircraft_paint[usize::from(!matches!(
+                            p.kind.as_str(),
+                            "plane" | "c130"
+                        )) * 2
+                            + p.owner.clamp(0, 1) as usize]
                             .clone()
                     } else if p.category == "aircraft" {
                         art.aircraft_finishes[material].clone()

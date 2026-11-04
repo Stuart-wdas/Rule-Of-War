@@ -23,8 +23,9 @@ pub enum Cue {
     Naval,
     Jet,
     Gau8,
+    Propeller,
 }
-const CUES: [Cue; 15] = [
+const CUES: [Cue; 16] = [
     Cue::Order,
     Cue::Rifle,
     Cue::MachineGun,
@@ -40,6 +41,7 @@ const CUES: [Cue; 15] = [
     Cue::Naval,
     Cue::Jet,
     Cue::Gau8,
+    Cue::Propeller,
 ];
 #[derive(Resource)]
 pub struct Sounds {
@@ -171,9 +173,16 @@ fn wave(cue: Cue, variant: u32) -> Vec<u8> {
             }
             Cue::Naval => tone(48.) * 0.12 + low * 0.20 + mid * 0.02,
             Cue::Jet => mid * 0.18 + low * 0.25 + tone(390.) * 0.025 + tone(780.) * 0.015,
+            Cue::Propeller => {
+                (low * 0.2 + mid * 0.08 + tone(90.) * 0.1 + tone(180.) * 0.045)
+                    * (0.82 + tone(24.) * 0.18)
+            }
         };
         // Short fades at loop boundaries; no hard discontinuity or clipped peaks.
-        let edge = if matches!(cue, Cue::Diesel | Cue::Rotor | Cue::Naval | Cue::Jet) {
+        let edge = if matches!(
+            cue,
+            Cue::Diesel | Cue::Rotor | Cue::Naval | Cue::Jet | Cue::Propeller
+        ) {
             (t / 0.006).min(1.) * ((seconds - t) / 0.006).min(1.)
         } else {
             ((seconds - t) / 0.01).min(1.)
@@ -387,7 +396,7 @@ pub fn engines(
                 && (p.category == "vehicle"
                     || p.category == "naval"
                     || matches!(p.kind.as_str(), "helicopter" | "huey")
-                    || p.kind == "plane")
+                    || matches!(p.kind.as_str(), "plane" | "c130"))
                 && (Vec2::from(p.velocity).length() > 0.2 || p.airborne)
         })
         .map(|p| {
@@ -419,6 +428,8 @@ pub fn engines(
         if !present.contains(&p.id) {
             let cue = if matches!(p.kind.as_str(), "helicopter" | "huey") {
                 Cue::Rotor
+            } else if p.kind == "c130" {
+                Cue::Propeller
             } else if p.kind == "plane" {
                 Cue::Jet
             } else if p.category == "naval" {

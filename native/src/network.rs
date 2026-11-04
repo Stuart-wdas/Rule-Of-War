@@ -243,7 +243,7 @@ impl Host {
                 Wire::Command { command } if self.authorized => {
                     if matches!(
                         command["type"].as_str(),
-                        Some("command" | "build" | "recruit")
+                        Some("command" | "build" | "recruit" | "call-in")
                     ) {
                         game.command_as(1, command);
                     }
@@ -566,7 +566,7 @@ impl Session {
                     if client.ready
                         && matches!(
                             command["type"].as_str(),
-                            Some("command" | "build" | "recruit")
+                            Some("command" | "build" | "recruit" | "call-in")
                         )
                         && let Some(socket) = &mut client.socket
                         && let Err(e) = socket.send(&Wire::Command { command })

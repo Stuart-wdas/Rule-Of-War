@@ -658,7 +658,7 @@ pub fn rebuild_actions(
                     Action::CancelProduction(job["id"].as_str().unwrap_or("").into()),
                 ));
             }
-        } else {
+        } else if p.kind != "c130" {
             actions.push(("ATTACK / ADVANCE [Q]".into(), Action::AttackMode));
             if !p.building && p.capacity > 0 {
                 actions.push((
@@ -1335,12 +1335,16 @@ pub fn update(
                     info.push_str("\nRIFLE 110m / RELOAD 4.5s");
                 }
                 if p.category == "aircraft" {
-                    info.push_str(&format!(
-                        "\nFUEL {:.0}% | {}\nALTITUDE {:.0} m",
-                        p.fuel_fraction * 100.,
-                        p.activity.replace('-', " ").to_uppercase(),
-                        p.flight_height()
-                    ));
+                    if p.kind == "c130" {
+                        info.push_str(&format!("\n{} / {} OF 5 ORBITS\n30 mm: 1.2s / 105 mm: 3.8s\nALTITUDE {:.0} m\nAUTOMATIC DEPARTURE", p.activity.to_uppercase(), p.gunship_laps, p.flight_height()));
+                    } else {
+                        info.push_str(&format!(
+                            "\nFUEL {:.0}% | {}\nALTITUDE {:.0} m",
+                            p.fuel_fraction * 100.,
+                            p.activity.replace('-', " ").to_uppercase(),
+                            p.flight_height()
+                        ));
+                    }
                     info.push_str(&format!(
                         "\nFLARES {}/3 / {}",
                         p.flare_salvos,

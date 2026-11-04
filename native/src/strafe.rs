@@ -95,16 +95,32 @@ pub fn draw(
         return;
     }
     let s = &battle.snapshot;
-    for p in s.entities.iter().filter(|p| p.owner == session.owner && p.gunship_target.is_some()) {
+    for p in s
+        .entities
+        .iter()
+        .filter(|p| p.owner == session.owner && p.gunship_target.is_some())
+    {
         let target = p.gunship_target.unwrap();
-        let at = Vec3::new(target[0], game.terrain.height(target[0], target[1]) + 0.35, target[1]);
-        gizmos.circle(Isometry3d::new(at, Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
-            crate::simulation::GUNSHIP_AREA, Color::srgba(1., 0.64, 0.18, 0.8));
+        let at = Vec3::new(
+            target[0],
+            game.terrain.height(target[0], target[1]) + 0.35,
+            target[1],
+        );
+        gizmos.circle(
+            Isometry3d::new(at, Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
+            crate::simulation::GUNSHIP_AREA,
+            Color::srgba(1., 0.64, 0.18, 0.8),
+        );
     }
     if controls.build.as_deref() == Some("callin:c130") {
         if let Some(at) = controls.ground {
-            pipper(&mut gizmos, at + Vec3::Y * 0.3, 0., crate::simulation::GUNSHIP_AREA,
-                Color::srgb(1., 0.72, 0.23));
+            pipper(
+                &mut gizmos,
+                at + Vec3::Y * 0.3,
+                0.,
+                crate::simulation::GUNSHIP_AREA,
+                Color::srgb(1., 0.72, 0.23),
+            );
         }
         return;
     }

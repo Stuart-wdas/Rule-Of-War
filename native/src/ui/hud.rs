@@ -128,10 +128,12 @@ pub fn setup(mut commands: Commands, icons: Res<crate::unit_icons::UnitIcons>) {
             ("BARRACKS", "barracks", "short"),
             ("DEPOT", "vehicleDepot", "medium"),
             ("AIRFIELD", "airfield", "plane"),
+            ("AC-130", "gunship", "c130"),
             ("ORDERS", "orders", "attack"),
         ] {
-            let action = if kind == "orders" { Action::ToggleDrawer } else { Action::Factory(kind.into()) };
-            p.spawn((Button, action, DockTab(kind), PlayerControls, crate::menu::TacticalUi, Tooltip(format!("{label}\nClick to expand or collapse. Production uses the least busy available facility.")),
+            let action = if kind == "orders" { Action::ToggleDrawer } else if kind == "gunship" { Action::GunshipCallIn } else { Action::Factory(kind.into()) };
+            let tip = if kind == "gunship" { "AC-130 CALL-IN [J] / 60 SUPPLY\nClick a target area. Enters from your map edge, fires during five orbits, then leaves. One active gunship per side.".into() } else { format!("{label}\nClick to expand or collapse. Production uses the least busy available facility.") };
+            p.spawn((Button, action, DockTab(kind), PlayerControls, crate::menu::TacticalUi, Tooltip(tip),
                 Node { flex_grow: 1., flex_basis: px(0), min_width: px(78), height: percent(100), column_gap: px(5),
                     padding: UiRect::axes(px(6), px(3)), align_items: AlignItems::Center, justify_content: JustifyContent::Center,
                     border: UiRect::bottom(px(2)), ..default() },

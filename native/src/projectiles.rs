@@ -330,7 +330,10 @@ pub fn update(
         }
         let age = battle.snapshot.tick.saturating_sub(e.tick) as f32 * 0.05;
         if age
-            > if matches!(e.weapon.as_str(), "plane" | "manpads" | "heli-rocket" | "c130-30" | "c130-105") {
+            > if matches!(
+                e.weapon.as_str(),
+                "plane" | "manpads" | "heli-rocket" | "c130-30" | "c130-105"
+            ) {
                 e.duration
             } else {
                 0.15
@@ -378,7 +381,11 @@ pub fn update(
                     )),
                     root.rotation * Vec3::Z,
                 )
-            } else if let Some(socket) = sockets.0.get(if e.weapon.starts_with("c130-") { usize::from(e.weapon == "c130-105") } else { e.tick as usize % sockets.0.len().max(1) }) {
+            } else if let Some(socket) = sockets.0.get(if e.weapon.starts_with("c130-") {
+                usize::from(e.weapon == "c130-105")
+            } else {
+                e.tick as usize % sockets.0.len().max(1)
+            }) {
                 socket_pose(socket, root, &walk.pose, walk.phase)
             } else {
                 (piece.position() + Vec3::Y * 0.1, Vec3::NEG_Y)
@@ -390,7 +397,11 @@ pub fn update(
                 ))
                 .with_scale(piece.model_transform_scale());
             let sockets = crate::models::WeaponSockets::from_parts(&crate::models::parts(piece));
-            if let Some(socket) = sockets.0.get(if e.weapon.starts_with("c130-") { usize::from(e.weapon == "c130-105") } else { e.tick as usize % sockets.0.len().max(1) }) {
+            if let Some(socket) = sockets.0.get(if e.weapon.starts_with("c130-") {
+                usize::from(e.weapon == "c130-105")
+            } else {
+                e.tick as usize % sockets.0.len().max(1)
+            }) {
                 socket_pose(socket, &root, &crate::animation::Pose::target(piece), 0.)
             } else {
                 (piece.position() + Vec3::Y * 0.1, Vec3::NEG_Y)
