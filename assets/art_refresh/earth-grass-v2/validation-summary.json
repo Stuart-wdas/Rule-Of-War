@@ -1,0 +1,30 @@
+{
+  "appliedTo": [
+    "main game",
+    "training ground",
+    "ground demonstration"
+  ],
+  "unitTests": {
+    "passed": 328,
+    "failed": 0
+  },
+  "strictClippy": true,
+  "nativeRenderChecks": [
+    "before-wide",
+    "after-wide",
+    "before-close",
+    "after-close",
+    "variation-mask",
+    "low",
+    "dlss",
+    "training",
+    "main-game",
+    "tracks"
+  ],
+  "meadowMacroNormalPreserved": true,
+  "variationCoverage": {
+    "visibleOliveDominantFraction": 0.19985435956790124,
+    "visibleStonyDominantFraction": 0.20835841049382717
+  },
+  "dlssQualityActive": true
+}

@@ -1,0 +1,16 @@
+{
+  "retrieved": "2026-10-29",
+  "credits": "../../README.md",
+  "photos": [
+    {
+      "file": "uh1y-flight-2017.jpg",
+      "sha256": "dc6506ee594664da4ec62c1b347797428e62aec15604833673e4a3939ed5fd3c",
+      "bytes": 1930876
+    },
+    {
+      "file": "uh1y-loading-2026.jpg",
+      "sha256": "ce4db349272566e26623f1cdddd7d835fa6759653476baee5cd8a424d3e57fc9",
+      "bytes": 3127355
+    }
+  ]
+}

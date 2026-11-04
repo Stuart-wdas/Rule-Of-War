@@ -1,0 +1,23 @@
+{
+  "nativeTestsPassed": 326,
+  "strictClippyPassed": true,
+  "gpuCases": [
+    "ignition",
+    "spread",
+    "faded",
+    "low",
+    "high",
+    "large",
+    "vehicle",
+    "dlss"
+  ],
+  "spreadSeconds": 0.5,
+  "lifetimeSeconds": 1.05,
+  "maximumUnscaledHeightMetres": 0.556,
+  "filledThreeDimensionalVolume": true,
+  "newTextureImages": 0,
+  "bakedCloudChanged": false,
+  "depthClipsOpaqueScene": true,
+  "dlssGPUExecuted": true,
+  "details": ".data/render-checks/dirt-disc/verification.json"
+}

@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-25",
+  "nativeBuild": "passed",
+  "testsPassed": 326,
+  "testsFailed": 0,
+  "strictClippy": "passed",
+  "renderCases": [
+    "tank",
+    "carrier",
+    "anti-air",
+    "apache",
+    "a10",
+    "low",
+    "dlss"
+  ],
+  "renderChecksPassed": 7,
+  "lightingChanged": false,
+  "newTextures": false,
+  "visualReview": [
+    "tank before/after",
+    "Apache before/after",
+    "A-10"
+  ],
+  "diagnostics": ".data/render-checks/metal-sheen/verification.json"
+}

@@ -1,0 +1,21 @@
+{
+  "retrieved": "2026-10-29",
+  "source_and_credits": "../README.md",
+  "photos": [
+    {
+      "file": "uh1d-landing-1966.jpg",
+      "bytes": 3102010,
+      "sha256": "ef253cf1b7262ec55510da118c69af3b3918109ec4257c082536d92e201fcc83"
+    },
+    {
+      "file": "uh1h-nasa-2011.jpg",
+      "bytes": 3438529,
+      "sha256": "8dc1d546937b37d01082abb19f4ff938b5b09966c0d313660f86ef986f3efd4f"
+    },
+    {
+      "file": "uh1h-side-1971.jpg",
+      "bytes": 4456997,
+      "sha256": "a73533618db196c83ad553900586660aadf3b1d2c0b6f43092ce5a7b047e3654"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-26",
+  "revisedAlbedos": [
+    "a10_livery",
+    "aircraft_grey",
+    "aircraft_sand",
+    "armour_green",
+    "armour_sand",
+    "dark_fittings",
+    "helicopter_green",
+    "helicopter_sand",
+    "steel"
+  ],
+  "revisedCount": 9,
+  "nativeCodeChanged": false,
+  "camouflageAndUvScaleChanged": false,
+  "testsPassed": 327,
+  "testsFailed": 0,
+  "renderChecksPassed": 7,
+  "renderCases": [
+    "tank",
+    "normal-view",
+    "carrier",
+    "apache",
+    "a10",
+    "low",
+    "dlss"
+  ],
+  "comparisonCameraAndLightingMatched": true,
+  "unchangedOtherAlbedos": 7,
+  "prompts": "generation/prompts.json",
+  "runtimeCatalog": "materials/vehicle_detail/catalog.json",
+  "diagnostics": ".data/render-checks/larger-wear/verification.json"
+}

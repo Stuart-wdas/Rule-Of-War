@@ -1,0 +1,36 @@
+{
+  "nativeTestsPassed": 324,
+  "strictClippyPassed": true,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "gpuCases": [
+    "hardstanding",
+    "apron",
+    "low",
+    "dlss",
+    "settings-cycle",
+    "town",
+    "wide"
+  ],
+  "foundationGroundBatches": 1,
+  "texturePixels": {
+    "low": 512,
+    "settings-cycle": 1024,
+    "hardstanding": 2048
+  },
+  "dlssGPUExecuted": true,
+  "initialConcurrentBuildRunMaxFrameMs": 64966.198300000004,
+  "idleRepeatFrameTimings": {
+    "calls": 514,
+    "maxMs": 76.9498,
+    "p50Ms": 6.8096,
+    "p95Ms": 8.0007,
+    "p99Ms": 9.1107,
+    "totalMs": 3675.2490999999964
+  },
+  "details": ".data/render-checks/concrete-weathering/verification.json",
+  "geometryDisplacementAdded": false,
+  "transparencyAdded": false
+}
