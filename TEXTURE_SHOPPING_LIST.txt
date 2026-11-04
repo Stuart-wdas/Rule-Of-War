@@ -1,0 +1,75 @@
+RULE OF WAR — TEXTURE SOURCING LIST
+23 October 2026
+
+Target: grounded, weathered military environments in muted greens, earth tones,
+grey masonry and worn roofing. The fixed camera gives roofs, roads and ground
+the most screen coverage. Start with these surfaces before small equipment.
+
+DOWNLOAD FORMAT
+- Complete PBR material ZIPs, preferably 2K PNG. 4K ground/roof masters are useful
+  when available; 8K packs are unnecessary for this pass. Runtime sizes will be
+  chosen separately to keep memory use controlled.
+- Base Colour/Albedo, Normal (OpenGL / +Y), Roughness and Ambient Occlusion.
+- Metallic for metal packs; Height/Displacement is optional reference material.
+- Separate maps are fine. Leave the original names intact; I will convert and
+  pack the game's occlusion/roughness/metallic texture (R=AO, G=roughness, B=metal).
+- Choose seamless/tileable surfaces. Look for neutral base colour without strong
+  baked shadows or highlights. Keep the stated physical repeat size in metres.
+- For foliage and decals, retain transparent PNG alpha and any supplied masks.
+- Keep the source URL and licence beside each pack, especially for paid assets.
+
+FIRST BATCH — HIGHEST VISUAL RETURN
+1. Grass/ground: short mixed green grass, drier sparse grass, compacted earth.
+   3 packs. Search: "short grass", "dry grassy ground", "compacted dirt".
+   Broad colour variation and exposed soil are useful; avoid giant grass blades.
+2. Roads: worn fine-aggregate asphalt and dusty fine gravel. 2 packs.
+   Search: "weathered asphalt", "fine gravel ground". Road markings are separate.
+3. Concrete: weathered pavement/base apron concrete. 1 pack.
+   Subtle stains, small chips, restrained cracks and believable aggregate size.
+4. Walls: aged neutral lime plaster/render plus worn brick. 2 packs.
+   Plaster can be tinted into the building palette. Visible damage is useful.
+5. Roofing: weathered terracotta tiles and dark slate. 2 packs.
+   Well-defined tile relief without strong baked lighting; include tile size.
+
+That is ten packs for the first delivery. The first three groups alone will
+already cover much of the battlefield. Save extra packs for later if preferred.
+
+SECOND BATCH — VEHICLES, PROPS AND NATURE
+6. Corrugated or standing-seam roofing: 1 pack for hangars/base buildings.
+7. Matte painted steel: 1 neutral pack with subtle wear, dirt and chipped edges.
+   Paint is mostly non-metallic; exposed steel may use a metallic mask.
+8. Wood: worn exterior boards and darker structural timber, 1–2 packs.
+9. Rocks: weathered grey stone with restrained moss, 1 pack.
+10. Tree bark: 1 pack with believable small-scale relief.
+11. Foliage: 1 leaf/branch atlas and 1 small shrub/grass-clump atlas, with alpha.
+    A matching set of low-poly game-ready plant models is useful if available.
+12. Uniform fabric and rubber: 1 muted woven cloth and 1 worn rubber pack.
+    Unit-specific uniforms/camouflage will still need suitable UV layouts.
+
+THIRD BATCH — THE DETAILS THAT JOIN THE SCENE TOGETHER
+- Transparent decal sheets: dirt deposits, soot/scorch, cracks, chipped masonry,
+  damp marks and restrained oil staining. Separate masks are useful.
+- Rubble surfaces: broken brick, rough concrete and fractured stone.
+- Optional trim sheet: window/door frames, gutters, sills and small metal trims.
+- Optional vehicle wear masks: dust, scuffs and paint chips rather than a full
+  livery for an unrelated vehicle. Existing A-10-specific paint is retained.
+
+WHERE TO LOOK
+Poly Haven textures: https://polyhaven.com/textures
+Licence: https://polyhaven.com/license
+ambientCG: https://ambientcg.com/
+Licence: https://docs.ambientcg.com/license/
+Both sites publish their assets under CC0. No purchase is required for this list.
+
+WHERE TO PUT DOWNLOADS
+C:\Code\Rule Of War\assets\incoming_textures\
+Use one folder per original pack; ZIP files can stay zipped. Include source.txt
+with its URL, licence and physical repeat size if the download does not include
+these. Tell me when a batch is ready; you do not need to rename or pack maps.
+
+INTEGRATION NOTES
+The current materials folder is largely colour-only PNGs. Surface relief and
+roughness variation are needed as well as cleaner colour images. The material
+pass will tune UV scale, tint, normal strength, surface response and terrain
+blending for the shared game/Blender lighting. New packs are source assets;
+runtime resolution and mipmaps will be chosen per material.

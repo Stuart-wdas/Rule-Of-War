@@ -1,0 +1,7 @@
+[build]
+target-dir = "native/target"
+
+[env]
+DLSS_SDK = { value = ".data/dlss-tools/DLSS", relative = true }
+VULKAN_SDK = { value = ".data/dlss-tools/Vulkan-Headers", relative = true }
+LIBCLANG_PATH = { value = ".data/dlss-tools/clang-runtime/clang/native", relative = true }
