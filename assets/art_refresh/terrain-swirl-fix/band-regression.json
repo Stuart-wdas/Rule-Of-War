@@ -1,0 +1,12 @@
+{
+  "before": 6.666107713455138,
+  "after": 3.9518410224384812,
+  "ratio": 0.5928258576533241,
+  "roi": [
+    650,
+    580,
+    1120,
+    970
+  ],
+  "scope": "Unlit constant-texture diagnostic including unchanged 3D props; not an overall image quality score"
+}

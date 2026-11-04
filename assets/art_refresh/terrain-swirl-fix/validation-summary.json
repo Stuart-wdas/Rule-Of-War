@@ -1,0 +1,39 @@
+{
+  "cause": "High-frequency warped procedural colour/blend noise on the soil coverage",
+  "fixedInDefaultRenderer": true,
+  "unitTests": {
+    "passed": 328,
+    "failed": 0
+  },
+  "strictClippy": true,
+  "nativeChecks": [
+    "before",
+    "after",
+    "colour-before",
+    "colour-after",
+    "low",
+    "dlss",
+    "flat-before",
+    "flat-after"
+  ],
+  "materialSetsPreserved": [
+    "earth_grass_olive_v2",
+    "earth_grass_stony_v2",
+    "meadow_relief_v1",
+    "photo_shoulder_v1",
+    "asphalt"
+  ],
+  "bandRegression": {
+    "before": 6.666107713455138,
+    "after": 3.9518410224384812,
+    "ratio": 0.5928258576533241,
+    "roi": [
+      650,
+      580,
+      1120,
+      970
+    ],
+    "scope": "Unlit constant-texture diagnostic including unchanged 3D props; not an overall image quality score"
+  },
+  "dlssActive": true
+}

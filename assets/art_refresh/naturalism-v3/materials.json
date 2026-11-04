@@ -1,0 +1,83 @@
+{
+  "natural_meadow_v3": {
+    "repeat_m": [
+      16.0,
+      16.0
+    ],
+    "size": [
+      1254,
+      1254
+    ],
+    "source": "OpenAI built-in image generation",
+    "provenance": "assets/art_refresh/naturalism-v3/generation.json",
+    "normal": "OpenGL +Y, registered approximate companion height with periodic filtered physical gradients",
+    "normal_height_range_m": 0.055,
+    "albedo_linear_mean_rgb": [
+      0.17584594985888113,
+      0.1355684329180658,
+      0.05125733718620462
+    ],
+    "linear_reflectance_gain": 0.3,
+    "orm": "R=restrained cavity occlusion G=varied matte roughness B=nonmetal",
+    "usage": "Ordinary matches, training and terrain demos; concrete/asphalt retain their own materials.",
+    "runtime_sha256": {
+      "albedo": "ecacd29fb6f26f7ef1963dbfd0eb3d93434aaa14505b3c2b9afe8b86d4f98817",
+      "normal": "9cf8f41b4f3333a65a5797e72c3fb9596f476a23a94efd1b55a0c0da05b47e19",
+      "orm": "1b852a3e27e798739b8fb70fbd7484006a63ff9a64acae6a95d00755a33c8e98"
+    }
+  },
+  "natural_stony_v3": {
+    "repeat_m": [
+      12.0,
+      12.0
+    ],
+    "size": [
+      1254,
+      1254
+    ],
+    "source": "OpenAI built-in image generation",
+    "provenance": "assets/art_refresh/naturalism-v3/generation.json",
+    "normal": "OpenGL +Y, registered approximate companion height with periodic filtered physical gradients",
+    "normal_height_range_m": 0.075,
+    "albedo_linear_mean_rgb": [
+      0.180305573219519,
+      0.1312387608710576,
+      0.07253474152414277
+    ],
+    "linear_reflectance_gain": 0.34,
+    "orm": "R=restrained cavity occlusion G=varied matte roughness B=nonmetal",
+    "usage": "Ordinary matches, training and terrain demos; concrete/asphalt retain their own materials.",
+    "runtime_sha256": {
+      "albedo": "52c47394e8008320b5b8b66ec0364e085273001cc45658324aa0f2f2f012f019",
+      "normal": "f464e0e11bc174084f06cf2eef62b2633aca20cb203e4d9a762e1716acf8b72f",
+      "orm": "0458398f0c617be5a783d253476ff2b8fb671707d0f28070a9e4ddee0483c0df"
+    }
+  },
+  "natural_shoulder_v3": {
+    "repeat_m": [
+      8.0,
+      8.0
+    ],
+    "size": [
+      1254,
+      1254
+    ],
+    "source": "OpenAI built-in image generation",
+    "provenance": "assets/art_refresh/naturalism-v3/generation.json",
+    "normal": "OpenGL +Y, registered approximate companion height with periodic filtered physical gradients",
+    "normal_height_range_m": 0.04,
+    "albedo_linear_mean_rgb": [
+      0.3247298183163847,
+      0.2459110207541996,
+      0.1707412958738985
+    ],
+    "linear_reflectance_gain": 0.9,
+    "orm": "R=restrained cavity occlusion G=varied matte roughness B=nonmetal",
+    "usage": "Ordinary matches, training and terrain demos; concrete/asphalt retain their own materials.",
+    "runtime_sha256": {
+      "albedo": "15a41f6cb46cf7ebfad493473dc7f329e0b7cff085b5be38e6faabd82914593f",
+      "normal": "7e03d3dcad2f61b767ea423fc1f9316c560942d237d248f5d6a576d38f3fdcc6",
+      "orm": "8045c993a81c883f905cb70f5634817ebb7bcd61fc0f35dc3c4c0a86fa2acfc6"
+    }
+  }
+}
