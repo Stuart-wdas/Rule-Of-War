@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "native_scene_reopened": true,
+  "png_frames": 64,
+  "png_mode": "RGBA",
+  "sprite_sheets": [
+    {
+      "path": "3d/spiky_explosion/spiky_explosion_8x8_4096.png",
+      "resolution": [
+        4096,
+        4096
+      ],
+      "cell_size": [
+        512,
+        512
+      ],
+      "sha256": "bc2a9684de18acae7433e072060d4e5d6ee488d7d00a61cb81f4cc39260dd26c"
+    },
+    {
+      "path": "3d/spiky_explosion/spiky_explosion_8x8_2048.png",
+      "resolution": [
+        2048,
+        2048
+      ],
+      "cell_size": [
+        256,
+        256
+      ],
+      "sha256": "994e225338765aeb5fa8692f87512dd53d0eced9de56353f224d955079211beb"
+    }
+  ],
+  "first_last_frames_fully_transparent": true,
+  "frame_cell_outer_borders_fully_transparent": true,
+  "frame_order": "Left to right, top to bottom",
+  "fps": 24,
+  "duration_seconds": 2.6666666666666665,
+  "video": {
+    "decoded": true,
+    "dimensions": [
+      960,
+      720
+    ],
+    "fps": 24,
+    "frames": 160,
+    "duration_seconds": 6.666666666666667,
+    "audio": false
+  },
+  "engine_adapter": {
+    "particle_tracks": 169,
+    "finite_transforms": true,
+    "native_bevy_motion_tests": "PASS",
+    "node_runtime_playback": "NOT RUN for this revision; optional Three.js adapter",
+    "browser_shader_test": "NOT RUN: standalone Three.js adapter remains experimental; native Bevy renderer checked separately"
+  },
+  "provenance": "Authored procedural volume remake, not extracted from game and not fluid-simulated"
+}

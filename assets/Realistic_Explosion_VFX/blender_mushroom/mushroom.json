@@ -1,0 +1,17 @@
+{
+  "frame_count": 64,
+  "grid": [
+    8,
+    8
+  ],
+  "fps": 10.0,
+  "pivot": [
+    0.4677369296550751,
+    0.6977359354496002
+  ],
+  "source": "mushroom_explosion.blend",
+  "dimensions": [
+    320,
+    384
+  ]
+}

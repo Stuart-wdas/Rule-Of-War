@@ -1,0 +1,121 @@
+{
+  "status": "PASS",
+  "saved_blend_reopened": true,
+  "frames": 64,
+  "fps": 24,
+  "spikes": [
+    {
+      "name": "Spike 01 - burning tip",
+      "launch_frame": 5,
+      "launch_distance_to_core": 0.1083,
+      "distance_travelled_after_8_frames": 5.8775,
+      "height_gained_after_8_frames": 3.6364,
+      "apex_height": 6.4255,
+      "apex_frame": 22,
+      "drop_after_apex": 1.6815
+    },
+    {
+      "name": "Spike 02 - burning tip",
+      "launch_frame": 6,
+      "launch_distance_to_core": 0.0878,
+      "distance_travelled_after_8_frames": 4.5981,
+      "height_gained_after_8_frames": 2.5476,
+      "apex_height": 4.3737,
+      "apex_frame": 20,
+      "drop_after_apex": 3.0644
+    },
+    {
+      "name": "Spike 03 - burning tip",
+      "launch_frame": 7,
+      "launch_distance_to_core": 0.0672,
+      "distance_travelled_after_8_frames": 5.2129,
+      "height_gained_after_8_frames": 4.225,
+      "apex_height": 7.7064,
+      "apex_frame": 26,
+      "drop_after_apex": 1.1171
+    },
+    {
+      "name": "Spike 04 - burning tip",
+      "launch_frame": 8,
+      "launch_distance_to_core": 0.0638,
+      "distance_travelled_after_8_frames": 5.9579,
+      "height_gained_after_8_frames": 4.1834,
+      "apex_height": 7.565,
+      "apex_frame": 27,
+      "drop_after_apex": 1.1544
+    },
+    {
+      "name": "Spike 05 - burning tip",
+      "launch_frame": 5,
+      "launch_distance_to_core": 0.0748,
+      "distance_travelled_after_8_frames": 5.3605,
+      "height_gained_after_8_frames": 3.2925,
+      "apex_height": 5.7004,
+      "apex_frame": 21,
+      "drop_after_apex": 2.0715
+    },
+    {
+      "name": "Spike 06 - burning tip",
+      "launch_frame": 6,
+      "launch_distance_to_core": 0.0577,
+      "distance_travelled_after_8_frames": 5.7667,
+      "height_gained_after_8_frames": 4.3828,
+      "apex_height": 8.0312,
+      "apex_frame": 26,
+      "drop_after_apex": 0.9888
+    },
+    {
+      "name": "Spike 07 - burning tip",
+      "launch_frame": 7,
+      "launch_distance_to_core": 0.0561,
+      "distance_travelled_after_8_frames": 4.7325,
+      "height_gained_after_8_frames": 3.8784,
+      "apex_height": 6.9295,
+      "apex_frame": 25,
+      "drop_after_apex": 1.4362
+    },
+    {
+      "name": "Spike 08 - burning tip",
+      "launch_frame": 8,
+      "launch_distance_to_core": 0.057,
+      "distance_travelled_after_8_frames": 5.8152,
+      "height_gained_after_8_frames": 4.576,
+      "apex_height": 8.497,
+      "apex_frame": 29,
+      "drop_after_apex": 0.8377
+    },
+    {
+      "name": "Spike 09 - burning tip",
+      "launch_frame": 5,
+      "launch_distance_to_core": 0.0632,
+      "distance_travelled_after_8_frames": 4.5166,
+      "height_gained_after_8_frames": 3.223,
+      "apex_height": 5.5476,
+      "apex_frame": 21,
+      "drop_after_apex": 2.156
+    },
+    {
+      "name": "Spike 10 - burning tip",
+      "launch_frame": 6,
+      "launch_distance_to_core": 0.124,
+      "distance_travelled_after_8_frames": 4.5496,
+      "height_gained_after_8_frames": 3.8112,
+      "apex_height": 6.8671,
+      "apex_frame": 24,
+      "drop_after_apex": 1.5035
+    },
+    {
+      "name": "Spike 11 - burning tip",
+      "launch_frame": 7,
+      "launch_distance_to_core": 0.072,
+      "distance_travelled_after_8_frames": 5.8701,
+      "height_gained_after_8_frames": 4.4061,
+      "apex_height": 8.1135,
+      "apex_frame": 27,
+      "drop_after_apex": 0.9703
+    }
+  ],
+  "main_flame_gone_by_frame": 21,
+  "all_volumes_dissipated_at_frame_64": true,
+  "shader_type": "Cycles volume materials rendered on GPU; no external texture/cache dependencies"
+}
