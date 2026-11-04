@@ -1,0 +1,15 @@
+[workspace]
+members = ["native"]
+default-members = ["native"]
+resolver = "3"
+exclude = ["native/vendor/bevy_anti_alias", "native/vendor/dlss_wgpu"]
+
+[patch.crates-io]
+bevy_anti_alias = { path = "native/vendor/bevy_anti_alias" }
+dlss_wgpu = { path = "native/vendor/dlss_wgpu" }
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
