@@ -1,0 +1,200 @@
+{
+  "frame_count": 64,
+  "grid": [
+    8,
+    8
+  ],
+  "fps": 20,
+  "world_size": [
+    28,
+    28
+  ],
+  "center_height": 6,
+  "camera_normal": [
+    0.45267871022224426,
+    0.45267871022224426,
+    0.7682213187217712
+  ],
+  "slice_centers": [
+    -1.5,
+    4.5,
+    10.5
+  ],
+  "slice_boundaries": [
+    1.5,
+    7.5
+  ],
+  "source": "Blender Cycles / existing Mantaflow fluid grids / new weapon-specific daylight shading",
+  "source_motion": "C:\\Code\\Rule Of War\\.data\\mantaflow-production\\sources\\debris\\debris_simulation.blend",
+  "simulation_resolution": 128,
+  "simulation_noise_upres": 2,
+  "simulation_fps": 24,
+  "simulation_frames": 88,
+  "source_frame_map": [
+    1,
+    3,
+    3,
+    5,
+    7,
+    7,
+    9,
+    11,
+    11,
+    13,
+    15,
+    17,
+    17,
+    19,
+    21,
+    21,
+    23,
+    25,
+    25,
+    27,
+    29,
+    29,
+    31,
+    33,
+    33,
+    35,
+    37,
+    37,
+    39,
+    41,
+    41,
+    43,
+    45,
+    47,
+    47,
+    49,
+    51,
+    51,
+    53,
+    55,
+    55,
+    57,
+    59,
+    59,
+    61,
+    63,
+    63,
+    65,
+    67,
+    67,
+    69,
+    71,
+    71,
+    73,
+    75,
+    77,
+    77,
+    79,
+    81,
+    81,
+    83,
+    85,
+    85,
+    87
+  ],
+  "engine": "CYCLES",
+  "render_size": 512,
+  "samples": 32,
+  "backend": "OPTIX",
+  "art_profile": "mantaflow",
+  "encoding": "log-radiance",
+  "radiance_range": 32,
+  "radiance_scale": 32,
+  "source_radiance_scale": 32,
+  "source_bit_depth": 16,
+  "hd_revision": 3,
+  "mirror_u": true,
+  "align_depth_layers": true,
+  "simulated_heat": true,
+  "lighting": {
+    "revision": 1,
+    "sun_linear": [
+      1.0,
+      0.8553999999999999,
+      0.6545
+    ],
+    "sun_ray_blender": [
+      0.444,
+      -0.444,
+      -0.778
+    ],
+    "sun_energy": 4.872,
+    "sun_angle_degrees": 0.526,
+    "sun_lux": 15079.999999999998,
+    "sky_linear": [
+      0.38,
+      0.48,
+      0.65
+    ],
+    "sky_strength": 0.28800000000000003,
+    "ambient_brightness": 270.0,
+    "fill_linear": [
+      0.68,
+      0.78,
+      1.0
+    ],
+    "fill_energy": 0.24499999999999997
+  },
+  "impact_profile": "rocket",
+  "profile": {
+    "source": "debris",
+    "fps": 20,
+    "last": 88,
+    "color": [
+      0.29,
+      0.285,
+      0.26
+    ],
+    "density": 1.0,
+    "heat": [
+      [
+        1,
+        0
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        8,
+        0.65
+      ],
+      [
+        16,
+        0
+      ],
+      [
+        128,
+        0
+      ]
+    ],
+    "fade": [
+      [
+        1,
+        1
+      ],
+      [
+        25,
+        1
+      ],
+      [
+        58,
+        0.35
+      ],
+      [
+        88,
+        0
+      ]
+    ],
+    "size": 28,
+    "center": 6
+  },
+  "schema_revision": 1,
+  "packed_frame_size": 512,
+  "billow_lighting": false,
+  "radiance_prefilter_pixels": 0.5
+}

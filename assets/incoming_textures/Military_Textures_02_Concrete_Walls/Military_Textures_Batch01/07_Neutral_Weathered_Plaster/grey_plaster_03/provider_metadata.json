@@ -1,0 +1,52 @@
+{
+  "date_published": 1575595854,
+  "sponsors": [
+    "20953239"
+  ],
+  "name": "Grey Plaster 03",
+  "scale": "1.5M x 1.5M",
+  "old_id": 235,
+  "categories": [
+    "plaster",
+    "outdoor",
+    "indoor",
+    "man made",
+    "dirty",
+    "wall",
+    "floor",
+    "plaster-concrete"
+  ],
+  "type": 1,
+  "dimensions": [
+    1000,
+    1000
+  ],
+  "authors": {
+    "Rob Tuytel": "All"
+  },
+  "tags": [
+    "rough",
+    "grey",
+    "uneven"
+  ],
+  "max_resolution": [
+    8192,
+    8192
+  ],
+  "files_hash": "20506e1b1e1659b487f4790b0cb76522683c40a4",
+  "description": "Free 8K texture of rough, uneven grey plaster with a matte, porous surface, subtle dirt, small chips and soft trowel marks across the surface.",
+  "category_id": "ebaa964c-b45c-52e2-bd50-892d64616d87",
+  "category": "Concrete/Plaster & Stucco/Bare Plaster",
+  "attributes": {
+    "surface_use": "wall",
+    "condition": [
+      "weathered",
+      "worn"
+    ],
+    "origin": "man_made",
+    "setting": "either"
+  },
+  "img_version": "cc8aaa60",
+  "download_count": 41276,
+  "thumbnail_url": "https://cdn.polyhaven.com/asset_img/thumbs/grey_plaster_03.png?width=256&height=256&format=webp&v=cc8aaa60"
+}

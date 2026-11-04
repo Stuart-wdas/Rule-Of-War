@@ -1,0 +1,4 @@
+Rocky Terrain 02 by Amal Kumar / Poly Haven. CC0 1.0 Universal.
+https://polyhaven.com/a/rocky_terrain_02
+https://polyhaven.com/license
+90 metre aerial scan. Source PNGs are untouched; runtime derivatives are in materials/pbr.

@@ -1,0 +1,20 @@
+{
+  "back": {
+    "frames": 64,
+    "first_empty": true,
+    "last_empty": true,
+    "visible_frames": 62
+  },
+  "middle": {
+    "frames": 64,
+    "first_empty": true,
+    "last_empty": true,
+    "visible_frames": 59
+  },
+  "front": {
+    "frames": 64,
+    "first_empty": true,
+    "last_empty": true,
+    "visible_frames": 37
+  }
+}

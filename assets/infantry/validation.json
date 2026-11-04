@@ -1,0 +1,763 @@
+{
+  "name": "Rule of War - woodland rifleman",
+  "version": 1,
+  "triangles_equipped": 10834,
+  "triangle_limit": 14000,
+  "vertices_source": 5766,
+  "deforming_bones": 28,
+  "total_bones": 35,
+  "all_vertices_weighted": true,
+  "all_weights_normalized": true,
+  "materials_export": 1,
+  "atlas_resolution": 2048,
+  "clips": [
+    {
+      "name": "A_Pose",
+      "frames": [
+        1.0,
+        2.0
+      ]
+    },
+    {
+      "name": "Idle_Rifle",
+      "frames": [
+        1.0,
+        91.0
+      ]
+    },
+    {
+      "name": "Walk_Rifle",
+      "frames": [
+        1.0,
+        31.0
+      ]
+    },
+    {
+      "name": "Fire_Rifle",
+      "frames": [
+        1.0,
+        13.0
+      ]
+    },
+    {
+      "name": "Crouch_Rifle",
+      "frames": [
+        1.0,
+        71.0
+      ]
+    }
+  ],
+  "socket_bones": [
+    "muzzle",
+    "magazine",
+    "hand_ik.L",
+    "hand_ik.R"
+  ],
+  "parts": [
+    {
+      "name": "jacket pelvis",
+      "triangles": 276
+    },
+    {
+      "name": "jacket torso",
+      "triangles": 596
+    },
+    {
+      "name": "neck",
+      "triangles": 68
+    },
+    {
+      "name": "standing collar",
+      "triangles": 44
+    },
+    {
+      "name": "trouser leg L",
+      "triangles": 824
+    },
+    {
+      "name": "combat boot L",
+      "triangles": 140
+    },
+    {
+      "name": "boot sole L",
+      "triangles": 44
+    },
+    {
+      "name": "boot lacing L",
+      "triangles": 12
+    },
+    {
+      "name": "boot lacing L",
+      "triangles": 12
+    },
+    {
+      "name": "boot lacing L",
+      "triangles": 12
+    },
+    {
+      "name": "boot lacing L",
+      "triangles": 12
+    },
+    {
+      "name": "knee pad L",
+      "triangles": 60
+    },
+    {
+      "name": "knee pad insert L",
+      "triangles": 12
+    },
+    {
+      "name": "cargo thigh pocket L",
+      "triangles": 60
+    },
+    {
+      "name": "cargo pocket flap L",
+      "triangles": 12
+    },
+    {
+      "name": "thigh seam L",
+      "triangles": 12
+    },
+    {
+      "name": "sleeve L",
+      "triangles": 824
+    },
+    {
+      "name": "wrist cuff L",
+      "triangles": 36
+    },
+    {
+      "name": "shoulder patch L",
+      "triangles": 44
+    },
+    {
+      "name": "glove palm L",
+      "triangles": 44
+    },
+    {
+      "name": "glove fingers L",
+      "triangles": 32
+    },
+    {
+      "name": "glove fingers L",
+      "triangles": 32
+    },
+    {
+      "name": "glove thumb L",
+      "triangles": 32
+    },
+    {
+      "name": "trouser leg R",
+      "triangles": 824
+    },
+    {
+      "name": "combat boot R",
+      "triangles": 140
+    },
+    {
+      "name": "boot sole R",
+      "triangles": 44
+    },
+    {
+      "name": "boot lacing R",
+      "triangles": 12
+    },
+    {
+      "name": "boot lacing R",
+      "triangles": 12
+    },
+    {
+      "name": "boot lacing R",
+      "triangles": 12
+    },
+    {
+      "name": "boot lacing R",
+      "triangles": 12
+    },
+    {
+      "name": "knee pad R",
+      "triangles": 60
+    },
+    {
+      "name": "knee pad insert R",
+      "triangles": 12
+    },
+    {
+      "name": "cargo thigh pocket R",
+      "triangles": 60
+    },
+    {
+      "name": "cargo pocket flap R",
+      "triangles": 12
+    },
+    {
+      "name": "thigh seam R",
+      "triangles": 12
+    },
+    {
+      "name": "sleeve R",
+      "triangles": 824
+    },
+    {
+      "name": "wrist cuff R",
+      "triangles": 36
+    },
+    {
+      "name": "shoulder patch R",
+      "triangles": 44
+    },
+    {
+      "name": "glove palm R",
+      "triangles": 44
+    },
+    {
+      "name": "glove fingers R",
+      "triangles": 32
+    },
+    {
+      "name": "glove fingers R",
+      "triangles": 32
+    },
+    {
+      "name": "glove thumb R",
+      "triangles": 32
+    },
+    {
+      "name": "head",
+      "triangles": 428
+    },
+    {
+      "name": "ear",
+      "triangles": 76
+    },
+    {
+      "name": "eye socket",
+      "triangles": 60
+    },
+    {
+      "name": "eye",
+      "triangles": 60
+    },
+    {
+      "name": "iris",
+      "triangles": 32
+    },
+    {
+      "name": "brow",
+      "triangles": 26
+    },
+    {
+      "name": "ear",
+      "triangles": 76
+    },
+    {
+      "name": "eye socket",
+      "triangles": 60
+    },
+    {
+      "name": "eye",
+      "triangles": 60
+    },
+    {
+      "name": "iris",
+      "triangles": 32
+    },
+    {
+      "name": "brow",
+      "triangles": 26
+    },
+    {
+      "name": "nose",
+      "triangles": 8
+    },
+    {
+      "name": "mouth",
+      "triangles": 26
+    },
+    {
+      "name": "helmet shell",
+      "triangles": 284
+    },
+    {
+      "name": "helmet rim",
+      "triangles": 140
+    },
+    {
+      "name": "chin strap",
+      "triangles": 26
+    },
+    {
+      "name": "helmet side webbing",
+      "triangles": 12
+    },
+    {
+      "name": "chin strap",
+      "triangles": 26
+    },
+    {
+      "name": "helmet side webbing",
+      "triangles": 12
+    },
+    {
+      "name": "helmet front mount",
+      "triangles": 12
+    },
+    {
+      "name": "helmet fabric strip",
+      "triangles": 12
+    },
+    {
+      "name": "helmet fabric strip",
+      "triangles": 12
+    },
+    {
+      "name": "helmet fabric strip",
+      "triangles": 12
+    },
+    {
+      "name": "helmet fabric strip",
+      "triangles": 12
+    },
+    {
+      "name": "helmet fabric strip",
+      "triangles": 12
+    },
+    {
+      "name": "helmet fabric strip",
+      "triangles": 12
+    },
+    {
+      "name": "helmet fabric strip",
+      "triangles": 12
+    },
+    {
+      "name": "front armour plate",
+      "triangles": 60
+    },
+    {
+      "name": "back armour plate",
+      "triangles": 60
+    },
+    {
+      "name": "carrier shoulder strap",
+      "triangles": 60
+    },
+    {
+      "name": "strap buckle",
+      "triangles": 44
+    },
+    {
+      "name": "side cummerbund",
+      "triangles": 60
+    },
+    {
+      "name": "carrier shoulder strap",
+      "triangles": 60
+    },
+    {
+      "name": "strap buckle",
+      "triangles": 44
+    },
+    {
+      "name": "side cummerbund",
+      "triangles": 60
+    },
+    {
+      "name": "padded magazine pouch",
+      "triangles": 156
+    },
+    {
+      "name": "pouch closure",
+      "triangles": 12
+    },
+    {
+      "name": "pouch pulltab",
+      "triangles": 12
+    },
+    {
+      "name": "padded magazine pouch",
+      "triangles": 156
+    },
+    {
+      "name": "pouch closure",
+      "triangles": 12
+    },
+    {
+      "name": "pouch pulltab",
+      "triangles": 12
+    },
+    {
+      "name": "padded magazine pouch",
+      "triangles": 156
+    },
+    {
+      "name": "pouch closure",
+      "triangles": 12
+    },
+    {
+      "name": "pouch pulltab",
+      "triangles": 12
+    },
+    {
+      "name": "padded magazine pouch",
+      "triangles": 156
+    },
+    {
+      "name": "pouch closure",
+      "triangles": 12
+    },
+    {
+      "name": "pouch pulltab",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE row",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE row",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE row",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "MOLLE stitch",
+      "triangles": 12
+    },
+    {
+      "name": "unit identification patch",
+      "triangles": 12
+    },
+    {
+      "name": "patch inset",
+      "triangles": 12
+    },
+    {
+      "name": "padded radio pouch",
+      "triangles": 156
+    },
+    {
+      "name": "radio body",
+      "triangles": 60
+    },
+    {
+      "name": "radio antenna",
+      "triangles": 20
+    },
+    {
+      "name": "padded IFAK side pouch",
+      "triangles": 156
+    },
+    {
+      "name": "IFAK closure",
+      "triangles": 12
+    },
+    {
+      "name": "padded compact assault pack",
+      "triangles": 156
+    },
+    {
+      "name": "pack top flap",
+      "triangles": 60
+    },
+    {
+      "name": "padded pack front pocket",
+      "triangles": 156
+    },
+    {
+      "name": "pack compression strap",
+      "triangles": 12
+    },
+    {
+      "name": "pack buckle",
+      "triangles": 12
+    },
+    {
+      "name": "pack compression strap",
+      "triangles": 12
+    },
+    {
+      "name": "pack buckle",
+      "triangles": 12
+    },
+    {
+      "name": "pack carrying handle",
+      "triangles": 36
+    },
+    {
+      "name": "combat belt",
+      "triangles": 60
+    },
+    {
+      "name": "belt buckle",
+      "triangles": 12
+    },
+    {
+      "name": "padded belt utility pouch",
+      "triangles": 156
+    },
+    {
+      "name": "padded belt utility pouch",
+      "triangles": 156
+    },
+    {
+      "name": "M4 lower receiver",
+      "triangles": 60
+    },
+    {
+      "name": "M4 upper receiver",
+      "triangles": 28
+    },
+    {
+      "name": "M4 buffer tube",
+      "triangles": 28
+    },
+    {
+      "name": "M4 sliding stock",
+      "triangles": 60
+    },
+    {
+      "name": "M4 stock buttplate",
+      "triangles": 44
+    },
+    {
+      "name": "M4 stock cheekrest",
+      "triangles": 44
+    },
+    {
+      "name": "M4 stock lower brace",
+      "triangles": 44
+    },
+    {
+      "name": "M4 pistol grip",
+      "triangles": 44
+    },
+    {
+      "name": "M4 curved magazine",
+      "triangles": 60
+    },
+    {
+      "name": "M4 magazine stamped rib",
+      "triangles": 12
+    },
+    {
+      "name": "M4 magazine stamped rib",
+      "triangles": 12
+    },
+    {
+      "name": "M4 magazine stamped rib",
+      "triangles": 12
+    },
+    {
+      "name": "M4 magazine stamped rib",
+      "triangles": 12
+    },
+    {
+      "name": "M4 magazine stamped rib",
+      "triangles": 12
+    },
+    {
+      "name": "M4 magazine stamped rib",
+      "triangles": 12
+    },
+    {
+      "name": "M4 trigger guard",
+      "triangles": 28
+    },
+    {
+      "name": "M4 trigger",
+      "triangles": 12
+    },
+    {
+      "name": "M4 ribbed handguard",
+      "triangles": 36
+    },
+    {
+      "name": "M4 handguard rib",
+      "triangles": 28
+    },
+    {
+      "name": "M4 handguard rib",
+      "triangles": 28
+    },
+    {
+      "name": "M4 handguard rib",
+      "triangles": 28
+    },
+    {
+      "name": "M4 handguard rib",
+      "triangles": 28
+    },
+    {
+      "name": "M4 handguard rib",
+      "triangles": 28
+    },
+    {
+      "name": "M4 handguard rib",
+      "triangles": 28
+    },
+    {
+      "name": "M4 top rail",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 rail tooth",
+      "triangles": 12
+    },
+    {
+      "name": "M4 charging handle",
+      "triangles": 12
+    },
+    {
+      "name": "M4 ejection port",
+      "triangles": 12
+    },
+    {
+      "name": "M4 forward assist",
+      "triangles": 12
+    },
+    {
+      "name": "M4 exposed barrel",
+      "triangles": 28
+    },
+    {
+      "name": "M4 barrel collar",
+      "triangles": 28
+    },
+    {
+      "name": "M4 flash hider",
+      "triangles": 28
+    },
+    {
+      "name": "M4 muzzle opening",
+      "triangles": 28
+    },
+    {
+      "name": "M4 front sight post",
+      "triangles": 12
+    },
+    {
+      "name": "M4 front sight wing",
+      "triangles": 16
+    },
+    {
+      "name": "M4 front sight wing",
+      "triangles": 16
+    },
+    {
+      "name": "M4 rear sight base",
+      "triangles": 44
+    },
+    {
+      "name": "M4 rear sight aperture",
+      "triangles": 12
+    }
+  ],
+  "references": [
+    "assets/infantry_resources/modern soldier, front side back.webp",
+    "assets/infantry_resources/PEO_M4_Carbine_RAS.jpg"
+  ],
+  "textures": [
+    "assets/infantry_resources/uniform materials.webp",
+    "materials/cloth.png"
+  ],
+  "integration": "Used by native/src/infantry.rs; rebuild the game after changing this GLB."
+}

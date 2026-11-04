@@ -1,0 +1,39 @@
+Concrete Floor Worn 001 — Weathered apron concrete
+Asset ID: concrete_floor_worn_001
+Provider: Poly Haven
+Creator: Dimitrios Savva, Rico Cilliers
+Source URL: https://polyhaven.com/a/concrete_floor_worn_001
+Retrieved: 2026-10-23
+Licence: CC0 1.0 Universal
+Provider licence: https://polyhaven.com/license
+CC0 summary: https://creativecommons.org/publicdomain/zero/1.0/
+Commercial use, modification and redistribution are allowed; attribution is not required.
+
+Approximate physical repeat: 3 m x 3 m
+Normal convention: OpenGL / +Y
+Resolution: 2K PNG (2048 px long edge; brick is 2048 x 1024)
+Map values and original filenames are unchanged.
+All maps for this pack share the same UV tile.
+Metallic: non-metal surface; use constant 0 when packing ORM.
+
+Archive: concrete_floor_worn_001_2k_PNG_PBR.zip
+Archive provenance: Locally assembled ZIP of the requested original 2K PNG PBR maps plus displacement, downloaded directly from Poly Haven. Original PNG bytes and filenames are unchanged; Blender/glTF sidecars and redundant packed map variants are not included.
+Original ZIP / official file index: https://api.polyhaven.com/files/concrete_floor_worn_001
+SHA-256: 500f3127610227cf40dc1feb5e364abcf5c72b4665371c8dcb650441634c4f37
+
+Selection and integration notes:
+Muted grey concrete with fine scratches, small chips and restrained stains, chosen for large base aprons and pavement.
+
+Included PNGs:
+concrete_floor_worn_001_diff_2k.png | 2048 x 2048 | 16-bit PNG
+concrete_floor_worn_001_nor_gl_2k.png | 2048 x 2048 | 16-bit PNG
+concrete_floor_worn_001_rough_2k.png | 2048 x 2048 | 16-bit PNG
+concrete_floor_worn_001_ao_2k.png | 2048 x 2048 | 16-bit PNG
+concrete_floor_worn_001_disp_2k.png | 2048 x 2048 | 16-bit PNG
+
+Optional 4K source links (not downloaded in this 2K delivery):
+Diffuse: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/concrete_floor_worn_001/concrete_floor_worn_001_diff_4k.png
+nor_gl: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/concrete_floor_worn_001/concrete_floor_worn_001_nor_gl_4k.png
+Rough: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/concrete_floor_worn_001/concrete_floor_worn_001_rough_4k.png
+AO: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/concrete_floor_worn_001/concrete_floor_worn_001_ao_4k.png
+Displacement: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/concrete_floor_worn_001/concrete_floor_worn_001_disp_4k.png

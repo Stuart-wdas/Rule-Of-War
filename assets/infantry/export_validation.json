@@ -1,0 +1,39 @@
+{
+  "passed": true,
+  "triangles_equipped": 10834,
+  "triangle_limit": 14000,
+  "vertices_exported": 12113,
+  "weighted_vertices": 12113,
+  "degenerate_triangles": 0,
+  "skin_joints": 35,
+  "materials": 1,
+  "embedded_images": 3,
+  "animations": [
+    {
+      "name": "A_Pose",
+      "duration_seconds": 0.067,
+      "channels": 105
+    },
+    {
+      "name": "Crouch_Rifle",
+      "duration_seconds": 2.367,
+      "channels": 105
+    },
+    {
+      "name": "Fire_Rifle",
+      "duration_seconds": 0.433,
+      "channels": 105
+    },
+    {
+      "name": "Idle_Rifle",
+      "duration_seconds": 3.033,
+      "channels": 105
+    },
+    {
+      "name": "Walk_Rifle",
+      "duration_seconds": 1.033,
+      "channels": 105
+    }
+  ],
+  "bytes_glb": 5661656
+}

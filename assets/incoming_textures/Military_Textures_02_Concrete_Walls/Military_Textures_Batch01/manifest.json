@@ -1,0 +1,808 @@
+{
+  "title": "Military Texture Sources \u2014 Batch 01",
+  "date": "2026-10-23",
+  "packs": [
+    {
+      "index": 1,
+      "role": "Short mixed grass",
+      "asset_id": "Grass003",
+      "name": "Grass003",
+      "provider": "ambientCG",
+      "author": "ambientCG / Lennart Demes",
+      "source_url": "https://ambientcg.com/view?id=Grass003",
+      "licence": "CC0 1.0 Universal",
+      "licence_url": "https://docs.ambientcg.com/license/",
+      "cc0_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "repeat_width_m": 1.4,
+      "repeat_height_m": 1.4,
+      "repeat_basis": "Provider stated approximate physical repeat",
+      "normal_convention": "OpenGL / +Y",
+      "metallic": "Dielectric: use 0; no metallic texture required",
+      "archive": "01_Short_Mixed_Grass/Grass003/Grass003_2K-PNG.zip",
+      "archive_size_bytes": 72229299,
+      "archive_sha256": "82a1db5a546134d06b99c564ef20836828239cd9264dc6995f33cb81242d938f",
+      "archive_provenance": "Original provider ZIP, unchanged, including supplied sidecars and additional maps.",
+      "original_download_or_file_index_url": "https://ambientcg.com/get?file=Grass003_2K-PNG.zip",
+      "maps": [
+        {
+          "file": "Grass003_2K-PNG_AmbientOcclusion.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "6e8e295fb4a5f12789aa3e11780bae295f762c959f16c6ff6be7136f0cf10421"
+        },
+        {
+          "file": "Grass003_2K-PNG_Color.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "66dd45988413b30ba2b18690e5ae5be939d4cb4e87321837b68d487b68ea58af"
+        },
+        {
+          "file": "Grass003_2K-PNG_Displacement.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "9d3efbc64203c5e3ae812ffd85d6f6aff96df7d7ded969c03a0704666d515af3"
+        },
+        {
+          "file": "Grass003_2K-PNG_NormalDX.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "882dc7e217da0ccd5e564659facfc4136ad9daf2bfeff7649f82712d4d3268be"
+        },
+        {
+          "file": "Grass003_2K-PNG_NormalGL.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "7853ca430f5d7a6a9ec9c04d739fd89e93a3187e7654478664083adb07bfde35"
+        },
+        {
+          "file": "Grass003_2K-PNG_Roughness.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "1457d759d89883230c6299d728a2ee4b9c982886fad809a39793030e14c57781"
+        }
+      ],
+      "notes": "Short green ground cover with restrained colour variation; keep its small 1.4 m repeat rather than scaling individual blades up.",
+      "scale_warning": "",
+      "optional_4k_links_not_downloaded": [
+        {
+          "map": "Complete original 4K PNG ZIP",
+          "url": "https://ambientcg.com/get?file=Grass003_4K-PNG.zip"
+        }
+      ],
+      "retrieved_date": "2026-10-23"
+    },
+    {
+      "index": 2,
+      "role": "Dry patchy grass",
+      "asset_id": "withered_grass",
+      "name": "Withered Grass",
+      "provider": "Poly Haven",
+      "author": "Charlotte Baglioni",
+      "source_url": "https://polyhaven.com/a/withered_grass",
+      "licence": "CC0 1.0 Universal",
+      "licence_url": "https://polyhaven.com/license",
+      "cc0_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "repeat_width_m": 2.0,
+      "repeat_height_m": 2.0,
+      "repeat_basis": "Provider stated approximate physical repeat",
+      "normal_convention": "OpenGL / +Y",
+      "metallic": "Dielectric: use 0; no metallic texture required",
+      "archive": "02_Sparse_Dry_Grass/withered_grass/withered_grass_2k_PNG_PBR.zip",
+      "archive_size_bytes": 74427585,
+      "archive_sha256": "6237813fef31a717910866c5b7d4d28e3ca82cbc85134cacf2b8d8caec3542f9",
+      "archive_provenance": "Locally assembled ZIP of the requested original 2K PNG PBR maps plus displacement, downloaded directly from Poly Haven. Original PNG bytes and filenames are unchanged; Blender/glTF sidecars and redundant packed map variants are not included.",
+      "original_download_or_file_index_url": "https://api.polyhaven.com/files/withered_grass",
+      "maps": [
+        {
+          "file": "withered_grass_diff_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "ca1600e92cb82ba4c579d54f9b02a36c5fd1d55174c5732c6031ba5885f8323f"
+        },
+        {
+          "file": "withered_grass_nor_gl_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "5b4be863674ec322952cc3e0aa2a33980b194ad65d83ff012e348ae4bd38849f"
+        },
+        {
+          "file": "withered_grass_rough_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "a1eb44209deb2d423dc70287fefe836468d95e1bb4b51bf7b3d8f906c9d7a7e4"
+        },
+        {
+          "file": "withered_grass_ao_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "e225b798e925e41dba24051718391a286562ab6c40cd290f51f4497612db37c7"
+        },
+        {
+          "file": "withered_grass_disp_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "2a7bf2836fd70e443e093f7239f8de3488a8e675c1301771371adba92836ea57"
+        }
+      ],
+      "notes": "Short sun-bleached brown/tan grass with exposed patches and small debris. Blend with compacted earth for sparser areas.",
+      "scale_warning": "",
+      "optional_4k_links_not_downloaded": [
+        {
+          "map": "Diffuse",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/withered_grass/withered_grass_diff_4k.png"
+        },
+        {
+          "map": "nor_gl",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/withered_grass/withered_grass_nor_gl_4k.png"
+        },
+        {
+          "map": "Rough",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/withered_grass/withered_grass_rough_4k.png"
+        },
+        {
+          "map": "AO",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/withered_grass/withered_grass_ao_4k.png"
+        },
+        {
+          "map": "Displacement",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/withered_grass/withered_grass_disp_4k.png"
+        }
+      ],
+      "retrieved_date": "2026-10-23"
+    },
+    {
+      "index": 3,
+      "role": "Compacted earth",
+      "asset_id": "dirt_floor",
+      "name": "Dirt Floor",
+      "provider": "Poly Haven",
+      "author": "eye-candy.xyz",
+      "source_url": "https://polyhaven.com/a/dirt_floor",
+      "licence": "CC0 1.0 Universal",
+      "licence_url": "https://polyhaven.com/license",
+      "cc0_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "repeat_width_m": 2.07,
+      "repeat_height_m": 2.07,
+      "repeat_basis": "Provider stated approximate physical repeat",
+      "normal_convention": "OpenGL / +Y",
+      "metallic": "Dielectric: use 0; no metallic texture required",
+      "archive": "03_Compacted_Earth/dirt_floor/dirt_floor_2k_PNG_PBR.zip",
+      "archive_size_bytes": 76076790,
+      "archive_sha256": "40f7c8018e3469107ac30df88acc69b3927aa8cad0883a1e960c6d9e6e804bd7",
+      "archive_provenance": "Locally assembled ZIP of the requested original 2K PNG PBR maps plus displacement, downloaded directly from Poly Haven. Original PNG bytes and filenames are unchanged; Blender/glTF sidecars and redundant packed map variants are not included.",
+      "original_download_or_file_index_url": "https://api.polyhaven.com/files/dirt_floor",
+      "maps": [
+        {
+          "file": "dirt_floor_diff_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "850e0d11ba5d5a75382b63dc9dbbacc098be51a89f704c260df8cdf7539e4697"
+        },
+        {
+          "file": "dirt_floor_nor_gl_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "6bfd01a27abbab03c65afe55ca5ceaac78e94d052d8806549a35a17cb4541d72"
+        },
+        {
+          "file": "dirt_floor_rough_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "164e8d7ad5219f613e2d93445c374dd2505836960b27d4b6ae1de873bb18b4c6"
+        },
+        {
+          "file": "dirt_floor_ao_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "4e558e14e1312f3e28f1d7f42604ae5da31df8a424ed449637ded0c3e718b7ae"
+        },
+        {
+          "file": "dirt_floor_disp_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "5896ea2600f95469a83dc4d9efd6a46c41b14ff06a1ab06fdcfb8fc570445ed5"
+        }
+      ],
+      "notes": "Fine, compacted brown soil with scattered small debris. A restrained earth layer for tracks, cleared areas and terrain blending.",
+      "scale_warning": "",
+      "optional_4k_links_not_downloaded": [
+        {
+          "map": "Diffuse",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/dirt_floor/dirt_floor_diff_4k.png"
+        },
+        {
+          "map": "nor_gl",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/dirt_floor/dirt_floor_nor_gl_4k.png"
+        },
+        {
+          "map": "Rough",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/dirt_floor/dirt_floor_rough_4k.png"
+        },
+        {
+          "map": "AO",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/dirt_floor/dirt_floor_ao_4k.png"
+        },
+        {
+          "map": "Displacement",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/dirt_floor/dirt_floor_disp_4k.png"
+        }
+      ],
+      "retrieved_date": "2026-10-23"
+    },
+    {
+      "index": 4,
+      "role": "Worn fine asphalt",
+      "asset_id": "Asphalt023S",
+      "name": "Asphalt023S",
+      "provider": "ambientCG",
+      "author": "ambientCG / Lennart Demes",
+      "source_url": "https://ambientcg.com/view?id=Asphalt023S",
+      "licence": "CC0 1.0 Universal",
+      "licence_url": "https://docs.ambientcg.com/license/",
+      "cc0_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "repeat_width_m": 1.25,
+      "repeat_height_m": 1.25,
+      "repeat_basis": "Provider stated approximate physical repeat",
+      "normal_convention": "OpenGL / +Y",
+      "metallic": "Dielectric: use 0; no metallic texture required",
+      "archive": "04_Worn_Asphalt/Asphalt023S/Asphalt023S_2K-PNG.zip",
+      "archive_size_bytes": 70557596,
+      "archive_sha256": "4b745fb1ee6f223a34fafde7a99ea25ed15e147a4b9ddf3be93790e84149e9a5",
+      "archive_provenance": "Original provider ZIP, unchanged, including supplied sidecars and additional maps.",
+      "original_download_or_file_index_url": "https://ambientcg.com/get?file=Asphalt023S_2K-PNG.zip",
+      "maps": [
+        {
+          "file": "Asphalt023S_2K-PNG_AmbientOcclusion.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "8a1ba8e2b07bf6a47f80d554e74e624a8bc9936171b1da3a301723bd2228d8cf"
+        },
+        {
+          "file": "Asphalt023S_2K-PNG_Color.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "946a7bd116b1a5b441c34f037651b4329cbb56a8fcdcaaa3c258ecb02dad1de7"
+        },
+        {
+          "file": "Asphalt023S_2K-PNG_Displacement.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "c31abeaf729fa30d65228d893c83e51c1c8fc6dd4789c3448385b82c5e8af27b"
+        },
+        {
+          "file": "Asphalt023S_2K-PNG_NormalDX.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "fc225eb9852c6bfa0c8ce0dfeda53840d82af288d45f1100327ff1517a02c976"
+        },
+        {
+          "file": "Asphalt023S_2K-PNG_NormalGL.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "705aa09dd63c63bb5fa2357bc234d7f00de1c06f545c8195cee89ee63a6c7510"
+        },
+        {
+          "file": "Asphalt023S_2K-PNG_Roughness.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "7f8a6ffc956feae3717a73dc36b4f33914b874c0ef8e4278110b2d1b493d66c6"
+        }
+      ],
+      "notes": "Grey fine-aggregate road surface with restrained variation. Road markings and stronger local damage remain separate overlays.",
+      "scale_warning": "",
+      "optional_4k_links_not_downloaded": [
+        {
+          "map": "Complete original 4K PNG ZIP",
+          "url": "https://ambientcg.com/get?file=Asphalt023S_4K-PNG.zip"
+        }
+      ],
+      "retrieved_date": "2026-10-23"
+    },
+    {
+      "index": 5,
+      "role": "Fine gravel",
+      "asset_id": "Gravel043",
+      "name": "Gravel043",
+      "provider": "ambientCG",
+      "author": "ambientCG / Lennart Demes",
+      "source_url": "https://ambientcg.com/view?id=Gravel043",
+      "licence": "CC0 1.0 Universal",
+      "licence_url": "https://docs.ambientcg.com/license/",
+      "cc0_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "repeat_width_m": 1.6,
+      "repeat_height_m": 1.6,
+      "repeat_basis": "Provider stated approximate physical repeat",
+      "normal_convention": "OpenGL / +Y",
+      "metallic": "Dielectric: use 0; no metallic texture required",
+      "archive": "05_Fine_Gravel/Gravel043/Gravel043_2K-PNG.zip",
+      "archive_size_bytes": 77725961,
+      "archive_sha256": "b82ec69c7b23ea770a90f431e6d86d0373422725d3e87f4535c681e67c252d18",
+      "archive_provenance": "Original provider ZIP, unchanged, including supplied sidecars and additional maps.",
+      "original_download_or_file_index_url": "https://ambientcg.com/get?file=Gravel043_2K-PNG.zip",
+      "maps": [
+        {
+          "file": "Gravel043_2K-PNG_AmbientOcclusion.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "7633a0b9a80b731f6646d185eb85b771f00ae9491bbc465dad1e82e14e92a81c"
+        },
+        {
+          "file": "Gravel043_2K-PNG_Color.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "868c75ec325082fa966ab0f05b2b15482eb586ce1b0aa3143fe8dc85dc1157e4"
+        },
+        {
+          "file": "Gravel043_2K-PNG_Displacement.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "50629565f16067db11d2b1d66d79b4cbec456f28b45d6541d500730b2c62ecd4"
+        },
+        {
+          "file": "Gravel043_2K-PNG_NormalDX.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "af5623a7da23c8160ae54ccf6180c2965f6731435bd3eed5a9990430993cd008"
+        },
+        {
+          "file": "Gravel043_2K-PNG_NormalGL.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "9bc7abb51b7505d4466e3f3de76af731c6a772d9a584bb11a827f4b1fd0023c3"
+        },
+        {
+          "file": "Gravel043_2K-PNG_Roughness.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "4d145c88a592c034fbf2c6cc6c19f62dc2170677b402ade5a49775b5c52142a9"
+        }
+      ],
+      "notes": "Fine grey granular gravel; add the earth layer during integration for dusty shoulders instead of enlarging the stones.",
+      "scale_warning": "",
+      "optional_4k_links_not_downloaded": [
+        {
+          "map": "Complete original 4K PNG ZIP",
+          "url": "https://ambientcg.com/get?file=Gravel043_4K-PNG.zip"
+        }
+      ],
+      "retrieved_date": "2026-10-23"
+    },
+    {
+      "index": 6,
+      "role": "Weathered apron concrete",
+      "asset_id": "concrete_floor_worn_001",
+      "name": "Concrete Floor Worn 001",
+      "provider": "Poly Haven",
+      "author": "Dimitrios Savva, Rico Cilliers",
+      "source_url": "https://polyhaven.com/a/concrete_floor_worn_001",
+      "licence": "CC0 1.0 Universal",
+      "licence_url": "https://polyhaven.com/license",
+      "cc0_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "repeat_width_m": 3.0,
+      "repeat_height_m": 3.0,
+      "repeat_basis": "Provider stated approximate physical repeat",
+      "normal_convention": "OpenGL / +Y",
+      "metallic": "Dielectric: use 0; no metallic texture required",
+      "archive": "06_Weathered_Concrete/concrete_floor_worn_001/concrete_floor_worn_001_2k_PNG_PBR.zip",
+      "archive_size_bytes": 71173601,
+      "archive_sha256": "500f3127610227cf40dc1feb5e364abcf5c72b4665371c8dcb650441634c4f37",
+      "archive_provenance": "Locally assembled ZIP of the requested original 2K PNG PBR maps plus displacement, downloaded directly from Poly Haven. Original PNG bytes and filenames are unchanged; Blender/glTF sidecars and redundant packed map variants are not included.",
+      "original_download_or_file_index_url": "https://api.polyhaven.com/files/concrete_floor_worn_001",
+      "maps": [
+        {
+          "file": "concrete_floor_worn_001_diff_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "843aae212472d07be046382c4f9480cf68c630f7b3a897eab17a57370e88c608"
+        },
+        {
+          "file": "concrete_floor_worn_001_nor_gl_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "c300b26f84b094c04ee1d45db47b349561b03c6b371f2f6b85b95584f7f507c7"
+        },
+        {
+          "file": "concrete_floor_worn_001_rough_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "47a220ba154ccff36123c998077d4b0740445af485a33ccd17ea180d89e5a6b5"
+        },
+        {
+          "file": "concrete_floor_worn_001_ao_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "cf03dcb38370b809ac64ff94f6bbf274c698c6570e9ac0c1e767c13184d3a16e"
+        },
+        {
+          "file": "concrete_floor_worn_001_disp_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "31d3d4c9d339b5773a6872813e1cbdf793d21e6e4ad72aeb45c05a45a915ce4c"
+        }
+      ],
+      "notes": "Muted grey concrete with fine scratches, small chips and restrained stains, chosen for large base aprons and pavement.",
+      "scale_warning": "",
+      "optional_4k_links_not_downloaded": [
+        {
+          "map": "Diffuse",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/concrete_floor_worn_001/concrete_floor_worn_001_diff_4k.png"
+        },
+        {
+          "map": "nor_gl",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/concrete_floor_worn_001/concrete_floor_worn_001_nor_gl_4k.png"
+        },
+        {
+          "map": "Rough",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/concrete_floor_worn_001/concrete_floor_worn_001_rough_4k.png"
+        },
+        {
+          "map": "AO",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/concrete_floor_worn_001/concrete_floor_worn_001_ao_4k.png"
+        },
+        {
+          "map": "Displacement",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/concrete_floor_worn_001/concrete_floor_worn_001_disp_4k.png"
+        }
+      ],
+      "retrieved_date": "2026-10-23"
+    },
+    {
+      "index": 7,
+      "role": "Neutral weathered plaster",
+      "asset_id": "grey_plaster_03",
+      "name": "Grey Plaster 03",
+      "provider": "Poly Haven",
+      "author": "Rob Tuytel",
+      "source_url": "https://polyhaven.com/a/grey_plaster_03",
+      "licence": "CC0 1.0 Universal",
+      "licence_url": "https://polyhaven.com/license",
+      "cc0_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "repeat_width_m": 1.0,
+      "repeat_height_m": 1.0,
+      "repeat_basis": "Provider stated approximate physical repeat",
+      "normal_convention": "OpenGL / +Y",
+      "metallic": "Dielectric: use 0; no metallic texture required",
+      "archive": "07_Neutral_Weathered_Plaster/grey_plaster_03/grey_plaster_03_2k_PNG_PBR.zip",
+      "archive_size_bytes": 75404332,
+      "archive_sha256": "6056222068861ccf07c85bd789b4003bb1f6e705011223c606cb815e60f9ea12",
+      "archive_provenance": "Locally assembled ZIP of the requested original 2K PNG PBR maps plus displacement, downloaded directly from Poly Haven. Original PNG bytes and filenames are unchanged; Blender/glTF sidecars and redundant packed map variants are not included.",
+      "original_download_or_file_index_url": "https://api.polyhaven.com/files/grey_plaster_03",
+      "maps": [
+        {
+          "file": "grey_plaster_03_diff_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "2b25e45659d6d7cc5996fccc390985cd46deaca773c0d03d09b78e2f4e8c0c36"
+        },
+        {
+          "file": "grey_plaster_03_nor_gl_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "d5bd68c2a6a68422ef4f99530766022c1c73204a25f5c81fe2cc3e8dc0f88e9d"
+        },
+        {
+          "file": "grey_plaster_03_rough_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "a8205a479980c3ed21c91ef4f202d081286cadec8a7bc65a7011d318b6d15287"
+        },
+        {
+          "file": "grey_plaster_03_ao_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "bd5fd9df0507451e10a959ea74aeb39e6ab73a41f2b5071d4690c4370ca3bf47"
+        },
+        {
+          "file": "grey_plaster_03_disp_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "e09d0dc07fa55746d08e16cab4adee47d48a41a0057ff036c51301932b005689"
+        }
+      ],
+      "notes": "Neutral matte weathered render with subtle pitting and trowel variation. Tint into the building palette. The provider does not identify its binder as lime.",
+      "scale_warning": "Scale discrepancy: current asset page and numeric API dimensions state 1 x 1 m; the legacy API scale string says 1.5M x 1.5M. This delivery uses the current page/numeric 1 x 1 m value and preserves the original metadata so this conflict is visible.",
+      "optional_4k_links_not_downloaded": [
+        {
+          "map": "Diffuse",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/grey_plaster_03/grey_plaster_03_diff_4k.png"
+        },
+        {
+          "map": "nor_gl",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/grey_plaster_03/grey_plaster_03_nor_gl_4k.png"
+        },
+        {
+          "map": "Rough",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/grey_plaster_03/grey_plaster_03_rough_4k.png"
+        },
+        {
+          "map": "AO",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/grey_plaster_03/grey_plaster_03_ao_4k.png"
+        },
+        {
+          "map": "Displacement",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/grey_plaster_03/grey_plaster_03_disp_4k.png"
+        }
+      ],
+      "retrieved_date": "2026-10-23"
+    },
+    {
+      "index": 8,
+      "role": "Worn brick",
+      "asset_id": "Bricks085",
+      "name": "Bricks085",
+      "provider": "ambientCG",
+      "author": "ambientCG / Lennart Demes",
+      "source_url": "https://ambientcg.com/view?id=Bricks085",
+      "licence": "CC0 1.0 Universal",
+      "licence_url": "https://docs.ambientcg.com/license/",
+      "cc0_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "repeat_width_m": 2.4,
+      "repeat_height_m": 1.2,
+      "repeat_basis": "Provider stated approximate physical repeat",
+      "normal_convention": "OpenGL / +Y",
+      "metallic": "Dielectric: use 0; no metallic texture required",
+      "archive": "08_Worn_Brick/Bricks085/Bricks085_2K-PNG.zip",
+      "archive_size_bytes": 32603187,
+      "archive_sha256": "e782057e2b779e6a128bc0a8c49a72a4362d9eeb140ee578f53a992d91f99b9f",
+      "archive_provenance": "Original provider ZIP, unchanged, including supplied sidecars and additional maps.",
+      "original_download_or_file_index_url": "https://ambientcg.com/get?file=Bricks085_2K-PNG.zip",
+      "maps": [
+        {
+          "file": "Bricks085_2K-PNG_AmbientOcclusion.png",
+          "width": 2048,
+          "height": 1024,
+          "png_bit_depth": 8,
+          "sha256": "ab4454051d225e523711fc0f354b8cbf56dadde97af889d4017ea6c506f9d35f"
+        },
+        {
+          "file": "Bricks085_2K-PNG_Color.png",
+          "width": 2048,
+          "height": 1024,
+          "png_bit_depth": 8,
+          "sha256": "a2b7b831f3e64e2882d315e6ea490027a1bee185aae60536ff59826a3d196836"
+        },
+        {
+          "file": "Bricks085_2K-PNG_Displacement.png",
+          "width": 2048,
+          "height": 1024,
+          "png_bit_depth": 16,
+          "sha256": "beaa3e41feeaafbf7e0b9fc757a0ad56f0ff550c9beddab3448f5f4ce12779cf"
+        },
+        {
+          "file": "Bricks085_2K-PNG_NormalDX.png",
+          "width": 2048,
+          "height": 1024,
+          "png_bit_depth": 16,
+          "sha256": "2166994096a907c3b6cd48499b26e159fedb36d90e219cdd2ec189384f28c586"
+        },
+        {
+          "file": "Bricks085_2K-PNG_NormalGL.png",
+          "width": 2048,
+          "height": 1024,
+          "png_bit_depth": 16,
+          "sha256": "86038ed055a4c0709cd2fc8887046a7d96194b1d0815b8551f776a7fd72f389e"
+        },
+        {
+          "file": "Bricks085_2K-PNG_Roughness.png",
+          "width": 2048,
+          "height": 1024,
+          "png_bit_depth": 8,
+          "sha256": "85fb33c1f1d1bcc1ae7814c0baa5d258cc8b39ea8bb082655be300668c2b8021"
+        }
+      ],
+      "notes": "Worn red/brown masonry with uneven edges. Original texture is 2048 x 1024 over a 2.4 x 1.2 m repeat: preserve that aspect ratio.",
+      "scale_warning": "",
+      "optional_4k_links_not_downloaded": [
+        {
+          "map": "Complete original 4K PNG ZIP",
+          "url": "https://ambientcg.com/get?file=Bricks085_4K-PNG.zip"
+        }
+      ],
+      "retrieved_date": "2026-10-23"
+    },
+    {
+      "index": 9,
+      "role": "Weathered terracotta",
+      "asset_id": "RoofingTiles012B",
+      "name": "RoofingTiles012B",
+      "provider": "ambientCG",
+      "author": "ambientCG / Lennart Demes",
+      "source_url": "https://ambientcg.com/view?id=RoofingTiles012B",
+      "licence": "CC0 1.0 Universal",
+      "licence_url": "https://docs.ambientcg.com/license/",
+      "cc0_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "repeat_width_m": 2.9,
+      "repeat_height_m": 2.9,
+      "repeat_basis": "Provider stated approximate physical repeat",
+      "normal_convention": "OpenGL / +Y",
+      "metallic": "Dielectric: use 0; no metallic texture required",
+      "archive": "09_Terracotta_Roof/RoofingTiles012B/RoofingTiles012B_2K-PNG.zip",
+      "archive_size_bytes": 56476041,
+      "archive_sha256": "2034829735ec092224b8a79b3f1fc12d29a60843f1ba939456da63d4cb765014",
+      "archive_provenance": "Original provider ZIP, unchanged, including supplied sidecars and additional maps.",
+      "original_download_or_file_index_url": "https://ambientcg.com/get?file=RoofingTiles012B_2K-PNG.zip",
+      "maps": [
+        {
+          "file": "RoofingTiles012B_2K-PNG_AmbientOcclusion.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "bf0811449bc9b32ea8f2aeaf19e4686a8cc239890e2abfdd27836d02572f57f7"
+        },
+        {
+          "file": "RoofingTiles012B_2K-PNG_Color.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "ed04582e4ac2e148236fb12a05350cae024ee08e7b1a95c0c69d36db3f2504a8"
+        },
+        {
+          "file": "RoofingTiles012B_2K-PNG_Displacement.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "e3c63ad4239be002d45debb7e55ec3898015f4fa363fe6e87b69dd3d56ba526d"
+        },
+        {
+          "file": "RoofingTiles012B_2K-PNG_NormalDX.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "de59e0b441d99ddf51532488735347180debca4cf9dd93478ed5525c582205d3"
+        },
+        {
+          "file": "RoofingTiles012B_2K-PNG_NormalGL.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "a82872d0cee78303e449518d7a0686388b3b9b01c944418625c4c967d680b1b2"
+        },
+        {
+          "file": "RoofingTiles012B_2K-PNG_Opacity.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 1,
+          "sha256": "7bfcead43edb1bc2f7d51dc074ac7b2669cac4e89f9ffbc674633f3a1d6c07b6"
+        },
+        {
+          "file": "RoofingTiles012B_2K-PNG_Roughness.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 8,
+          "sha256": "89b33602dc6312ad253a8bb7bacd56794fb273b6eabc191d01991911b128680b"
+        }
+      ],
+      "notes": "Dirty terracotta clay tile relief and restrained green staining. The original opacity map is retained. Visible motif exposure is approximately 0.223 x 0.223 m (2.9 m / 13 repeats); this is an estimate from the delivered displacement map, not a supplier specification for the full overlapping tile.",
+      "scale_warning": "",
+      "optional_4k_links_not_downloaded": [
+        {
+          "map": "Complete original 4K PNG ZIP",
+          "url": "https://ambientcg.com/get?file=RoofingTiles012B_4K-PNG.zip"
+        }
+      ],
+      "retrieved_date": "2026-10-23"
+    },
+    {
+      "index": 10,
+      "role": "Weathered grey slate",
+      "asset_id": "roof_slates_03",
+      "name": "Roof Slates 03",
+      "provider": "Poly Haven",
+      "author": "Rob Tuytel",
+      "source_url": "https://polyhaven.com/a/roof_slates_03",
+      "licence": "CC0 1.0 Universal",
+      "licence_url": "https://polyhaven.com/license",
+      "cc0_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "repeat_width_m": 3.0,
+      "repeat_height_m": 3.0,
+      "repeat_basis": "Provider stated approximate physical repeat",
+      "normal_convention": "OpenGL / +Y",
+      "metallic": "Dielectric: use 0; no metallic texture required",
+      "archive": "10_Slate_Roof/roof_slates_03/roof_slates_03_2k_PNG_PBR.zip",
+      "archive_size_bytes": 57545179,
+      "archive_sha256": "2d7066f3577b408e3bcc97ab0465d4000bb71dc1b17210d782dd87255bc36d7d",
+      "archive_provenance": "Locally assembled ZIP of the requested original 2K PNG PBR maps plus displacement, downloaded directly from Poly Haven. Original PNG bytes and filenames are unchanged; Blender/glTF sidecars and redundant packed map variants are not included.",
+      "original_download_or_file_index_url": "https://api.polyhaven.com/files/roof_slates_03",
+      "maps": [
+        {
+          "file": "roof_slates_03_diff_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "a0ad641313a0afd0ebe59fa3578439d59df585ffd5c08cadf926eb689aa23852"
+        },
+        {
+          "file": "roof_slates_03_nor_gl_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "697447fb11b1b7743afb28556af24ab930ecc9ea5bdbef577b1d83549521214e"
+        },
+        {
+          "file": "roof_slates_03_rough_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "83a5aece8d368b98bf3e53311c8c95f56e9f6c6b59f508d837e0f3a97ce4316f"
+        },
+        {
+          "file": "roof_slates_03_ao_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "9b391f28533f60ccc28d7d6c23cfbf2c9a7ec3d6a9e56710fbead6eab5586c41"
+        },
+        {
+          "file": "roof_slates_03_disp_2k.png",
+          "width": 2048,
+          "height": 2048,
+          "png_bit_depth": 16,
+          "sha256": "ecd4d7b6acb696a257927e4a5983345739c92e086d2c2d1daa184ee434e2e1a0"
+        }
+      ],
+      "notes": "Aged grey overlapping slate with chipped edges. Darken with the material tint if needed. The supplied roughness map is effectively constant at 1.0; it does not contain meaningful wear variation. Visible exposure is approximately 0.15-0.18 m wide by 0.10-0.11 m high, estimated from the 3 m field; full tile dimensions beneath overlaps are not published.",
+      "scale_warning": "",
+      "optional_4k_links_not_downloaded": [
+        {
+          "map": "Diffuse",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/roof_slates_03/roof_slates_03_diff_4k.png"
+        },
+        {
+          "map": "nor_gl",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/roof_slates_03/roof_slates_03_nor_gl_4k.png"
+        },
+        {
+          "map": "Rough",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/roof_slates_03/roof_slates_03_rough_4k.png"
+        },
+        {
+          "map": "AO",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/roof_slates_03/roof_slates_03_ao_4k.png"
+        },
+        {
+          "map": "Displacement",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/roof_slates_03/roof_slates_03_disp_4k.png"
+        }
+      ],
+      "retrieved_date": "2026-10-23"
+    }
+  ]
+}
