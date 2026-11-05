@@ -1,0 +1,41 @@
+Grey Plaster 03 — Neutral weathered plaster
+Asset ID: grey_plaster_03
+Provider: Poly Haven
+Creator: Rob Tuytel
+Source URL: https://polyhaven.com/a/grey_plaster_03
+Retrieved: 2026-10-23
+Licence: CC0 1.0 Universal
+Provider licence: https://polyhaven.com/license
+CC0 summary: https://creativecommons.org/publicdomain/zero/1.0/
+Commercial use, modification and redistribution are allowed; attribution is not required.
+
+Approximate physical repeat: 1 m x 1 m
+Normal convention: OpenGL / +Y
+Resolution: 2K PNG (2048 px long edge; brick is 2048 x 1024)
+Map values and original filenames are unchanged.
+All maps for this pack share the same UV tile.
+Metallic: non-metal surface; use constant 0 when packing ORM.
+
+Archive: grey_plaster_03_2k_PNG_PBR.zip
+Archive provenance: Locally assembled ZIP of the requested original 2K PNG PBR maps plus displacement, downloaded directly from Poly Haven. Original PNG bytes and filenames are unchanged; Blender/glTF sidecars and redundant packed map variants are not included.
+Original ZIP / official file index: https://api.polyhaven.com/files/grey_plaster_03
+SHA-256: 6056222068861ccf07c85bd789b4003bb1f6e705011223c606cb815e60f9ea12
+
+Selection and integration notes:
+Neutral matte weathered render with subtle pitting and trowel variation. Tint into the building palette. The provider does not identify its binder as lime.
+
+Scale discrepancy: current asset page and numeric API dimensions state 1 x 1 m; the legacy API scale string says 1.5M x 1.5M. This delivery uses the current page/numeric 1 x 1 m value and preserves the original metadata so this conflict is visible.
+
+Included PNGs:
+grey_plaster_03_diff_2k.png | 2048 x 2048 | 16-bit PNG
+grey_plaster_03_nor_gl_2k.png | 2048 x 2048 | 16-bit PNG
+grey_plaster_03_rough_2k.png | 2048 x 2048 | 16-bit PNG
+grey_plaster_03_ao_2k.png | 2048 x 2048 | 16-bit PNG
+grey_plaster_03_disp_2k.png | 2048 x 2048 | 16-bit PNG
+
+Optional 4K source links (not downloaded in this 2K delivery):
+Diffuse: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/grey_plaster_03/grey_plaster_03_diff_4k.png
+nor_gl: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/grey_plaster_03/grey_plaster_03_nor_gl_4k.png
+Rough: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/grey_plaster_03/grey_plaster_03_rough_4k.png
+AO: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/grey_plaster_03/grey_plaster_03_ao_4k.png
+Displacement: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/grey_plaster_03/grey_plaster_03_disp_4k.png

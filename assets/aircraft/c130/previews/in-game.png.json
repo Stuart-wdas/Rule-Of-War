@@ -1,0 +1,2630 @@
+{
+  "aircraft": [
+    {
+      "activity": "orbiting",
+      "altitude": 220.49920654296875,
+      "ammunition": 0,
+      "bank": 0.5199324488639832,
+      "fuel": 1.0,
+      "gunshipLaps": 0,
+      "gunshipTarget": [
+        280.0,
+        280.0
+      ],
+      "kind": "c130",
+      "pitch": 0.0,
+      "rotorPower": 0.0,
+      "speed": 38.00014114379883,
+      "strafeTarget": null,
+      "targetLocked": false
+    }
+  ],
+  "audioEngines": 0,
+  "audioSinks": 2,
+  "audioVoices": 2,
+  "baked3dParticles": 36,
+  "basePlans": 0,
+  "blenderBillowAges": [
+    2.1980044841766357,
+    2.1980044841766357,
+    2.1980044841766357,
+    1.0939363241195679,
+    1.0939363241195679,
+    1.0939363241195679,
+    0.996317982673645,
+    0.996317982673645,
+    0.996317982673645
+  ],
+  "blenderBillowLayers": 9,
+  "blenderBillowScales": [
+    1.25,
+    1.25,
+    1.25,
+    1.7000000476837158,
+    1.7000000476837158,
+    1.7000000476837158,
+    1.25,
+    1.25,
+    1.25
+  ],
+  "blenderBillowStyles": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "blenderDaylightVfx": true,
+  "blenderFramePixels": 512,
+  "blenderHdrVfx": true,
+  "blenderLayeredVfx": true,
+  "blenderRadianceScale": 32.0,
+  "blenderSimulatedHeat": true,
+  "blenderTextureMiB": 1023.9990234375,
+  "cameraCenter": [
+    340.0,
+    22.0800724029541,
+    220.0
+  ],
+  "cameraDistance": 0.0,
+  "cameraElevationDegrees": 50.19444274902344,
+  "cameraFovDegrees": 25.0,
+  "cameraHeadingDegrees": 45.0,
+  "cameraPinned": true,
+  "cameraZoom": 430.0,
+  "captureRadius": 32.0,
+  "captureZoneShown": false,
+  "capturedVisibleEffects": 70,
+  "carriers": [],
+  "cloudShadows": {
+    "enabled": true,
+    "lightPlanePeriod": 768.0,
+    "minimumSunTransmission": 0.44999998807907104,
+    "seconds": 4.740666700000001,
+    "texturePixels": 512,
+    "windMetersPerSecond": [
+      1.649999976158142,
+      0.0,
+      0.5799999833106995
+    ]
+  },
+  "cols": 1024,
+  "concreteGroundBatches": 0,
+  "concreteTexturePixels": 1024,
+  "coverObjects": 1,
+  "crashImpacts": 0,
+  "cursorMode": "Move",
+  "dirtDiscMaximumRadius": 0.0,
+  "dirtDiscsPeak": 0,
+  "dirtDiscsSpawned": 0,
+  "dlssSupported": true,
+  "doorCrossedSoldiers": 0,
+  "dragCameraDistance": 0.0,
+  "fallingHelicopters": 0,
+  "fogEnabled": false,
+  "foundationGroundBatches": 0,
+  "freestandingBuildings": 0,
+  "friendlyPlannedWaypoints": 0,
+  "garrisonedSoldiers": 0,
+  "gpuPassesMs": {},
+  "graphics": {
+    "environment": "balanced",
+    "explosions": "balanced",
+    "shadows": "balanced",
+    "textures": "balanced",
+    "upscaler": "native"
+  },
+  "groundPhysicalRepeats": [
+    [
+      0.25,
+      0.011111111380159855,
+      0.125,
+      0.125
+    ],
+    [
+      0.3333333432674408
+    ]
+  ],
+  "groundTextureLayers": 5,
+  "groundTrackBounds": null,
+  "groundTrackStamps": 0,
+  "groundcoverClusters": 2133,
+  "gunshipSmokeTrails": 4,
+  "hudHidden": false,
+  "impactScarMeshCount": 1,
+  "impactScars": [
+    {
+      "at": [
+        277.6973571777344,
+        270.5352783203125
+      ],
+      "excavated": true,
+      "radius": 2.4000000953674316,
+      "seed": 204404818
+    }
+  ],
+  "infantryRanges": [],
+  "legacyTerrainBlendNoise": false,
+  "loadingBusy": false,
+  "mainMenuVisible": false,
+  "map": "training-ground",
+  "maxFrameMs": 37.45869827270508,
+  "maxLimbMotion": 2.3719184398651123,
+  "maxSkeletalRotation": 0.0,
+  "observedActions": [
+    "orbiting",
+    "stopped"
+  ],
+  "observedBlenderStyles": [
+    [
+      "debris",
+      0
+    ]
+  ],
+  "outcomeReason": "",
+  "ownedSquads": 1,
+  "owner": 0,
+  "peakAudioVoices": 3,
+  "peakCoverHolders": 0,
+  "peakEffects": 101,
+  "peakVisibleProjectiles": 2,
+  "peakWeaponFlares": 271,
+  "photographicGroundDemo": false,
+  "photographicGroundMaterials": true,
+  "pressureCentersScreen": [],
+  "pressureShells": 0,
+  "pressureSphereScales": [],
+  "pressureWavesPeak": 2,
+  "pressureWavesSpawned": 3,
+  "queuedOrdersAfterDrag": 0,
+  "renderPipeline": {},
+  "renderTextureBudget": {
+    "adapter": {
+      "backend": "Vulkan",
+      "driver": "NVIDIA",
+      "driverInfo": "616.92",
+      "name": "NVIDIA GeForce RTX 3060 Laptop GPU"
+    },
+    "adapterLimits": {
+      "bindingArrayElementsPerShaderStage": 1048576,
+      "bindingArraySamplerElementsPerShaderStage": 1048576,
+      "maximumTextureArrayLayers": 2048,
+      "maximumTextureDimension2d": 32768,
+      "sampledTexturesPerShaderStage": 1048576,
+      "samplersPerShaderStage": 1048576
+    },
+    "allTextureAndSamplerBudgetsFit": true,
+    "deviceLimits": {
+      "bindingArrayElementsPerShaderStage": 1048576,
+      "bindingArraySamplerElementsPerShaderStage": 1048576,
+      "maximumTextureArrayLayers": 2048,
+      "maximumTextureDimension2d": 32768,
+      "sampledTexturesPerShaderStage": 1048576,
+      "samplersPerShaderStage": 1048576
+    },
+    "failedPipelines": 0,
+    "maximumPortableViewTextureBindingCount": 11,
+    "maximumSampledTexturesPerStage": 17,
+    "pipelines": [
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "ssao_preprocess_depth_bind_group_layout",
+          "ssao_common_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 2
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "ssao_preprocess_depth_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "ssao_spatial_denoise_bind_group_layout",
+          "ssao_common_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 2,
+          "samplers": 2
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "ssao_spatial_denoise_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "transmittance_lut_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 2,
+          "samplers": 1
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "transmittance_lut_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "multiscattering_lut_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 3,
+          "samplers": 2
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "multi_scattering_lut_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "sky_view_lut_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 4,
+          "samplers": 2
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "sky_view_lut_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "aerial_view_lut_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 4,
+          "samplers": 2
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "aerial_view_lut_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "copy_deferred_lighting_id_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "copy_deferred_lighting_id_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "downsampling_bind_group_layout_combined"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "downsampling_first_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "downsampling_bind_group_layout_combined"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "downsampling_second_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "radiance_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 2,
+          "samplers": 1
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "radiance_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "irradiance_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 2,
+          "samplers": 1
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "irradiance_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "copy_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "copy_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "environment_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 4,
+          "samplers": 1
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "environment_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "ui_view_layout",
+          "ui_image_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "kind": "render",
+        "label": "ui_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "ui_texture_slice_view_layout",
+          "ui_texture_slice_image_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "kind": "render",
+        "label": "ui_texture_slice_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "fxaa_texture_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "kind": "render",
+        "label": "fxaa",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "ssao_ssao_bind_group_layout",
+          "ssao_common_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 3,
+          "samplers": 2
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "ssao_ssao_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build mesh uniforms direct bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "mesh preprocessing (direct)",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build mesh uniforms GPU frustum culling bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "mesh preprocessing (GPU frustum culling)",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build mesh uniforms GPU early occlusion culling bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "mesh preprocessing (early GPU occlusion culling)",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build mesh uniforms GPU late occlusion culling bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "mesh preprocessing (late GPU occlusion culling)",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build indexed indirect parameters bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "frustum culling build indexed indirect parameters",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build non-indexed indirect parameters bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "frustum culling build non-indexed indirect parameters",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "reset indirect batch sets bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "reset indirect batch sets",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build indexed indirect parameters bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "early occlusion culling build indexed indirect parameters",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build non-indexed indirect parameters bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "early occlusion culling build non-indexed indirect parameters",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build indexed indirect parameters bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "late occlusion culling build indexed indirect parameters",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build non-indexed indirect parameters bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "late occlusion culling build non-indexed indirect parameters",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build indexed indirect parameters bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "main occlusion culling build indexed indirect parameters",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "build non-indexed indirect parameters bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "main occlusion culling build non-indexed indirect parameters",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "downsample depth bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "downsample depth first phase pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "downsample depth bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "downsample depth second phase pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "downsample multisample depth bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "downsample depth multisample first phase pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "bloom_downsampling_bind_group_layout_with_settings"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "kind": "render",
+        "label": "bloom_downsampling_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "downsample multisample depth bind group layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "compute",
+        "label": "downsample depth multisample second phase pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "bloom_downsampling_bind_group_layout_with_settings"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "kind": "render",
+        "label": "bloom_downsampling_pipeline_first",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "bloom_upsampling_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "kind": "render",
+        "label": "bloom_upsampling_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "bloom_upsampling_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "kind": "render",
+        "label": "bloom_upsampling_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "tonemapping_hdr_texture_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 2,
+          "samplers": 2
+        },
+        "kind": "render",
+        "label": "tonemapping pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "blit_bind_group_layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 1
+        },
+        "kind": "render",
+        "label": "blit pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "LineGizmoUniform layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 7,
+          "samplers": 4
+        },
+        "kind": "render",
+        "label": "LineGizmo 3d Pipeline",
+        "portableViewTextureBindingCount": 7,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "LineGizmoUniform layout"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 7,
+          "samplers": 4
+        },
+        "kind": "render",
+        "label": "LineGizmo 3d Pipeline",
+        "portableViewTextureBindingCount": 7,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 19480,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 7,
+          "samplers": 7
+        },
+        "kind": "render",
+        "label": "pbr_alpha_blend_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "VehicleFinish"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 1048,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 13,
+          "samplers": 13
+        },
+        "kind": "render",
+        "label": "pbr_opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "VehicleFinish"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "VehicleFinish"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 1048,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 13,
+          "samplers": 13
+        },
+        "kind": "render",
+        "label": "pbr_opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "VehicleFinish"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 1048,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 13,
+          "samplers": 13
+        },
+        "kind": "render",
+        "label": "pbr_opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "VehicleFinish"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "VehicleFinish"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 19480,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 7,
+          "samplers": 7
+        },
+        "kind": "render",
+        "label": "pbr_opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 19480,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 7,
+          "samplers": 7
+        },
+        "kind": "render",
+        "label": "pbr_opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 19480,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 7,
+          "samplers": 7
+        },
+        "kind": "render",
+        "label": "pbr_opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "GrassBlend"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 1048,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 17,
+          "samplers": 17
+        },
+        "kind": "render",
+        "label": "pbr_opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 10,
+          "samplers": 10
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "GrassBlend"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 10,
+          "samplers": 10
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 10,
+          "samplers": 10
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "VehicleFinish"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "VehicleFinish"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "VehicleFinish"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 6,
+          "samplers": 6
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "GrassBlend"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 10,
+          "samplers": 10
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 10,
+          "samplers": 10
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 19480,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 7,
+          "samplers": 7
+        },
+        "kind": "render",
+        "label": "pbr_opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 19480,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 7,
+          "samplers": 7
+        },
+        "kind": "render",
+        "label": "pbr_alpha_blend_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 19480,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 7,
+          "samplers": 7
+        },
+        "kind": "render",
+        "label": "pbr_alpha_blend_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "Material"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 1048,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 9,
+          "samplers": 8
+        },
+        "kind": "render",
+        "label": "alpha_blend_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 2,
+          "samplers": 1
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "PressureMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 1048,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 7,
+          "samplers": 7
+        },
+        "kind": "render",
+        "label": "opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 19480,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 7,
+          "samplers": 7
+        },
+        "kind": "render",
+        "label": "pbr_opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "prepass_view_layout_no_motion_vectors",
+          "prepass_empty_layout",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "pbr_prepass_pipeline",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "mesh_view_layout_depth_normal",
+          "mesh_view_layout_depth_normal_binding_array",
+          "mesh_layout",
+          "StandardMaterial"
+        ],
+        "compute": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 19480,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 7,
+          "samplers": 7
+        },
+        "kind": "render",
+        "label": "pbr_opaque_mesh_pipeline",
+        "portableViewTextureBindingCount": 11,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 18432,
+          "bindingArraySamplerElements": 6144,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      },
+      {
+        "allTextureAndSamplerBudgetsFit": true,
+        "bindGroups": [
+          "screenshot-to-screen-bgl"
+        ],
+        "compute": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        },
+        "fragment": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 1,
+          "samplers": 0
+        },
+        "kind": "render",
+        "label": "screenshot-to-screen",
+        "portableViewTextureBindingCount": 0,
+        "state": "ready",
+        "vertex": {
+          "bindingArrayElements": 0,
+          "bindingArraySamplerElements": 0,
+          "sampledTextures": 0,
+          "samplers": 0
+        }
+      }
+    ],
+    "pipelinesInspected": 78,
+    "portableViewThresholdExceeded": true,
+    "portableViewWarningThreshold": 10,
+    "readyPipelines": 78,
+    "sampledTextureHeadroom": 1048559,
+    "scope": "Declared layouts across all bind groups of cached render and compute pipelines; binding arrays use their own budgets."
+  },
+  "resultsOpen": false,
+  "resultsVisible": false,
+  "resumeKeyPassed": false,
+  "rightDragConsumed": false,
+  "rockClusters": 577,
+  "rocketTrails": 265,
+  "ruinedHouses": 0,
+  "sceneryCoverageReady": false,
+  "sceneryDuplicateCells": 0,
+  "sceneryPeakChunks": 0,
+  "sceneryPeakProps": 0,
+  "sceneryShiftedCells": 0,
+  "sceneryStreaming": {
+    "activeMeshBytes": 104329224,
+    "activeVariants": 56,
+    "cacheHits": 0,
+    "completedVariants": 106,
+    "discardedVariants": 3,
+    "inactiveCacheBudgetBytes": 67108864,
+    "inactiveCacheBytes": 0,
+    "maxPartVertices": 8192,
+    "peakUploadBytesPerFrame": 1045008,
+    "pendingVariants": 0,
+    "queuedUploadBytes": 0,
+    "residentMeshBytes": 104329224,
+    "retiringBytes": 0,
+    "uploadBudgetBytes": 1048576,
+    "uploadedBytes": 127901184,
+    "workerRequests": 37
+  },
+  "selectedAutoAttack": [
+    true
+  ],
+  "selectedFriendlyUnits": 1,
+  "session": "SOLO",
+  "shrubClusters": 1651,
+  "sightSources": 1,
+  "simulationTick": 313,
+  "skinnedInfantry": 0,
+  "sourceModelWrecks": 0,
+  "stopKeyPassed": false,
+  "strafeMissionMarkers": 0,
+  "strafePreviewMarkers": 0,
+  "suppressedSquads": 0,
+  "terrainError": null,
+  "terrainMeshBuilds": 436,
+  "terrainReady": true,
+  "terrainStreaming": {
+    "cachedDetailTiles": 0,
+    "peakUploadBytes": 271032,
+    "pendingTiles": 0,
+    "staleTiles": 0,
+    "uploadedBytes": 0
+  },
+  "terrainTexturePixels": 1024,
+  "terrainVertices": 74122,
+  "timings": {},
+  "townPlans": [],
+  "trackMaskPixels": 0,
+  "trainingDamage": 0.83203125,
+  "trainingHits": 1,
+  "trainingShots": 4,
+  "trainingToolsVisible": false,
+  "unitSpecificBadges": 4,
+  "vehicleAtlasBatches": 90,
+  "vehicleAtlasModels": 6,
+  "vehicleClearanceViolations": 0,
+  "vehicleDetailMaps": 16,
+  "vehicleDistanceTravelled": 0.0,
+  "vfxQuality": "BALANCED",
+  "vfxShowcaseEffect": null,
+  "visibleEnemyImpactEvents": 0,
+  "visibleSkinnedInfantry": 0,
+  "visibleTacticalUiRoots": 14,
+  "winner": null,
+  "worldLighting": {
+    "ambientBrightness": 270.0,
+    "ambientLinear": [
+      0.3799999952316284,
+      0.47999998927116394,
+      0.6499999761581421,
+      1.0
+    ],
+    "atmosphereMaxOpacity": 0.03937465324997902,
+    "environmentProbeIntensity": 220.0,
+    "fillLinear": [
+      0.6800000071525574,
+      0.7799999713897705,
+      1.0,
+      1.0
+    ],
+    "fillLux": 758.3333740234375,
+    "modelContactCacheMatches": 343,
+    "shadowCascadeDepths": [
+      920.0127563476562,
+      1237.5697021484375
+    ],
+    "shadowMinimumDepth": 770.57421875,
+    "sunLinear": [
+      1.0,
+      0.855400025844574,
+      0.6545000076293945,
+      1.0
+    ],
+    "sunLux": 15080.0,
+    "sunRay": [
+      0.4440986216068268,
+      -0.7781727313995361,
+      -0.4440985918045044
+    ]
+  },
+  "woundedSquads": 0,
+  "wreckKinds": []
+}

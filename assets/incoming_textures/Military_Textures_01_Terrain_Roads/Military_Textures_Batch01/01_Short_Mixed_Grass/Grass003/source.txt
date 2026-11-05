@@ -1,0 +1,36 @@
+Grass003 — Short mixed grass
+Asset ID: Grass003
+Provider: ambientCG
+Creator: ambientCG / Lennart Demes
+Source URL: https://ambientcg.com/view?id=Grass003
+Retrieved: 2026-10-23
+Licence: CC0 1.0 Universal
+Provider licence: https://docs.ambientcg.com/license/
+CC0 summary: https://creativecommons.org/publicdomain/zero/1.0/
+Commercial use, modification and redistribution are allowed; attribution is not required.
+
+Approximate physical repeat: 1.4 m x 1.4 m
+Normal convention: OpenGL / +Y
+Resolution: 2K PNG (2048 px long edge; brick is 2048 x 1024)
+Map values and original filenames are unchanged.
+All maps for this pack share the same UV tile.
+Metallic: non-metal surface; use constant 0 when packing ORM.
+
+Archive: Grass003_2K-PNG.zip
+Archive provenance: Original provider ZIP, unchanged, including supplied sidecars and additional maps.
+Original ZIP / official file index: https://ambientcg.com/get?file=Grass003_2K-PNG.zip
+SHA-256: 82a1db5a546134d06b99c564ef20836828239cd9264dc6995f33cb81242d938f
+
+Selection and integration notes:
+Short green ground cover with restrained colour variation; keep its small 1.4 m repeat rather than scaling individual blades up.
+
+Included PNGs:
+Grass003_2K-PNG_AmbientOcclusion.png | 2048 x 2048 | 8-bit PNG
+Grass003_2K-PNG_Color.png | 2048 x 2048 | 8-bit PNG
+Grass003_2K-PNG_Displacement.png | 2048 x 2048 | 16-bit PNG
+Grass003_2K-PNG_NormalDX.png | 2048 x 2048 | 16-bit PNG
+Grass003_2K-PNG_NormalGL.png | 2048 x 2048 | 16-bit PNG
+Grass003_2K-PNG_Roughness.png | 2048 x 2048 | 8-bit PNG
+
+Optional 4K source links (not downloaded in this 2K delivery):
+Complete original 4K PNG ZIP: https://ambientcg.com/get?file=Grass003_4K-PNG.zip

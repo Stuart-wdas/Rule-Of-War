@@ -1,0 +1,59 @@
+{
+  "date_published": 1673827200,
+  "name": "Dirt Floor",
+  "type": 1,
+  "staging": null,
+  "tags": [
+    "dirt",
+    "ground",
+    "brown",
+    "nature",
+    "uneven",
+    "mud",
+    "debris",
+    "forest",
+    "pathway",
+    "woodland"
+  ],
+  "authors": {
+    "eye-candy.xyz": "All"
+  },
+  "info": null,
+  "dimensions": [
+    2069.9996948242188,
+    2069.9996948242188
+  ],
+  "prepaid": true,
+  "categories": [
+    "outdoor",
+    "natural",
+    "terrain",
+    "collection: verdant_trail"
+  ],
+  "max_resolution": [
+    8192,
+    8192
+  ],
+  "sponsors": [
+    "77433244",
+    "128081732"
+  ],
+  "files_hash": "5786a04233bc38e09aea24ac369f43f71a0aa728",
+  "description": "Free 8K texture of uneven brown dirt with compacted, slightly muddy surface, scattered twig and leaf debris, fine granular detail and subtle roughness.",
+  "category_id": "2b016db1-a760-53aa-89ac-54c30f13214a",
+  "category": "Ground & Terrain/Forest Floor/Forest Soil",
+  "collections": [
+    "verdant_trail"
+  ],
+  "attributes": {
+    "surface_use": "ground",
+    "origin": "natural",
+    "setting": "outdoor",
+    "condition": [
+      "clean"
+    ]
+  },
+  "img_version": "01ad0711",
+  "download_count": 52267,
+  "thumbnail_url": "https://cdn.polyhaven.com/asset_img/thumbs/dirt_floor.png?width=256&height=256&format=webp&v=01ad0711"
+}

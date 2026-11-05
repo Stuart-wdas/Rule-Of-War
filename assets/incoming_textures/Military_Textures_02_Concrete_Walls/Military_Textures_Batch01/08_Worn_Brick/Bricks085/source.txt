@@ -1,0 +1,36 @@
+Bricks085 — Worn brick
+Asset ID: Bricks085
+Provider: ambientCG
+Creator: ambientCG / Lennart Demes
+Source URL: https://ambientcg.com/view?id=Bricks085
+Retrieved: 2026-10-23
+Licence: CC0 1.0 Universal
+Provider licence: https://docs.ambientcg.com/license/
+CC0 summary: https://creativecommons.org/publicdomain/zero/1.0/
+Commercial use, modification and redistribution are allowed; attribution is not required.
+
+Approximate physical repeat: 2.4 m x 1.2 m
+Normal convention: OpenGL / +Y
+Resolution: 2K PNG (2048 px long edge; brick is 2048 x 1024)
+Map values and original filenames are unchanged.
+All maps for this pack share the same UV tile.
+Metallic: non-metal surface; use constant 0 when packing ORM.
+
+Archive: Bricks085_2K-PNG.zip
+Archive provenance: Original provider ZIP, unchanged, including supplied sidecars and additional maps.
+Original ZIP / official file index: https://ambientcg.com/get?file=Bricks085_2K-PNG.zip
+SHA-256: e782057e2b779e6a128bc0a8c49a72a4362d9eeb140ee578f53a992d91f99b9f
+
+Selection and integration notes:
+Worn red/brown masonry with uneven edges. Original texture is 2048 x 1024 over a 2.4 x 1.2 m repeat: preserve that aspect ratio.
+
+Included PNGs:
+Bricks085_2K-PNG_AmbientOcclusion.png | 2048 x 1024 | 8-bit PNG
+Bricks085_2K-PNG_Color.png | 2048 x 1024 | 8-bit PNG
+Bricks085_2K-PNG_Displacement.png | 2048 x 1024 | 16-bit PNG
+Bricks085_2K-PNG_NormalDX.png | 2048 x 1024 | 16-bit PNG
+Bricks085_2K-PNG_NormalGL.png | 2048 x 1024 | 16-bit PNG
+Bricks085_2K-PNG_Roughness.png | 2048 x 1024 | 8-bit PNG
+
+Optional 4K source links (not downloaded in this 2K delivery):
+Complete original 4K PNG ZIP: https://ambientcg.com/get?file=Bricks085_4K-PNG.zip

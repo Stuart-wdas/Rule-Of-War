@@ -6,6 +6,12 @@ terrain, and saves run in the native executable.
 Read [GAME.md](GAME.md) for a plain-language guide to the game, its mechanics
 and art direction.
 
+**AC-130 call-in:** click **AC-130** on the dock or press **J**, then click a
+target area (60 supply). It flies in from your map edge, fires its side cannons
+during three full orbits, then climbs away and leaves the map. The 30 mm fires
+every 1.2 seconds and the 105 mm every 3.8 seconds, with larger heavy-shell
+impacts. Available in battles and training. [Aircraft references and details](assets/aircraft/c130/README.md).
+
 The airfield now offers a **UH-1Y Venom** carrying **12 troops** for **24 supply**.
 Use **L** to load, right-click to fly, and **U** to land and unload. The same unit
 is available in the training shop. [Huey photographs and modelling notes](assets/aircraft/huey/README.md).

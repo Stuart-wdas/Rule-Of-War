@@ -13,3 +13,8 @@ opt-level = 1
 
 [profile.dev.package."*"]
 opt-level = 3
+
+# Embedded art makes full application PDBs too large for the Windows linker.
+# Keep dependency caching while building the game and its tests without symbols.
+[profile.dev.package.rule-of-war-native]
+debug = 0

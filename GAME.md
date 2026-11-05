@@ -184,10 +184,10 @@ engages nearby enemies automatically.
 The **AC-130 gunship** is an off-map support call-in. Click **AC-130** on the
 dock or press **J**, then click a target area. It costs **60 supply**, with one
 active gunship per player. It arrives already airborne from your side of the
-map and circles the fixed target point **five full times** while its port-side
+map and circles the fixed target point **three full times** while its port-side
 guns fire. The 30 mm fires every **1.2 seconds**, and the 105 mm every **3.8
 seconds**, producing larger earth, smoke and debris impacts. It rolls out of
-the fifth orbit, climbs and flies off map. It uses no airfield stand or runway.
+the third orbit, climbs and flies off map. It uses no airfield stand or runway.
 The roster shows completed orbits; the mission resumes when loading a save.
 The same call-in is available in training. Right-click or Escape cancels target
 selection. [Aircraft photographs and modelling notes](assets/aircraft/c130/README.md).

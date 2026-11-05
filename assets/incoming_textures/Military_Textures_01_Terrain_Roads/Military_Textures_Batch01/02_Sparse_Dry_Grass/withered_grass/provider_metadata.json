@@ -1,0 +1,47 @@
+{
+  "name": "Withered Grass",
+  "categories": [
+    "natural",
+    "outdoor",
+    "floor"
+  ],
+  "type": 1,
+  "tags": [
+    "old",
+    "weathered",
+    "grass",
+    "dead grass",
+    "discolored",
+    "driedup",
+    "dry"
+  ],
+  "authors": {
+    "Charlotte Baglioni": "All"
+  },
+  "info": null,
+  "dimensions": [
+    1999.9996423721313,
+    1999.9996423721313
+  ],
+  "date_published": 1694044800,
+  "staging": null,
+  "max_resolution": [
+    8192,
+    8192
+  ],
+  "files_hash": "eb88811d5af353e86750f73f412bf5aea3f7c8ab",
+  "description": "Free 8K texture of withered grass: brittle, fibrous, sun-bleached blades in muted brown and tan with scattered debris and compacted earth tones.",
+  "attributes": {
+    "surface_use": "ground",
+    "condition": [
+      "weathered"
+    ],
+    "origin": "natural",
+    "setting": "outdoor"
+  },
+  "category_id": "e9516d71-1efd-51d6-b3c4-ce945ee92604",
+  "category": "Ground & Terrain/Grass & Vegetation/Dry & Sparse Grass",
+  "img_version": "9de71eae",
+  "download_count": 8460,
+  "thumbnail_url": "https://cdn.polyhaven.com/asset_img/thumbs/withered_grass.png?width=256&height=256&format=webp&v=9de71eae"
+}

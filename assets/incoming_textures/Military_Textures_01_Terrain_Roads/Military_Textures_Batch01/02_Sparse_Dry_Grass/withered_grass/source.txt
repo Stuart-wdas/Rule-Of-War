@@ -1,0 +1,39 @@
+Withered Grass — Dry patchy grass
+Asset ID: withered_grass
+Provider: Poly Haven
+Creator: Charlotte Baglioni
+Source URL: https://polyhaven.com/a/withered_grass
+Retrieved: 2026-10-23
+Licence: CC0 1.0 Universal
+Provider licence: https://polyhaven.com/license
+CC0 summary: https://creativecommons.org/publicdomain/zero/1.0/
+Commercial use, modification and redistribution are allowed; attribution is not required.
+
+Approximate physical repeat: 2 m x 2 m
+Normal convention: OpenGL / +Y
+Resolution: 2K PNG (2048 px long edge; brick is 2048 x 1024)
+Map values and original filenames are unchanged.
+All maps for this pack share the same UV tile.
+Metallic: non-metal surface; use constant 0 when packing ORM.
+
+Archive: withered_grass_2k_PNG_PBR.zip
+Archive provenance: Locally assembled ZIP of the requested original 2K PNG PBR maps plus displacement, downloaded directly from Poly Haven. Original PNG bytes and filenames are unchanged; Blender/glTF sidecars and redundant packed map variants are not included.
+Original ZIP / official file index: https://api.polyhaven.com/files/withered_grass
+SHA-256: 6237813fef31a717910866c5b7d4d28e3ca82cbc85134cacf2b8d8caec3542f9
+
+Selection and integration notes:
+Short sun-bleached brown/tan grass with exposed patches and small debris. Blend with compacted earth for sparser areas.
+
+Included PNGs:
+withered_grass_diff_2k.png | 2048 x 2048 | 16-bit PNG
+withered_grass_nor_gl_2k.png | 2048 x 2048 | 16-bit PNG
+withered_grass_rough_2k.png | 2048 x 2048 | 16-bit PNG
+withered_grass_ao_2k.png | 2048 x 2048 | 16-bit PNG
+withered_grass_disp_2k.png | 2048 x 2048 | 16-bit PNG
+
+Optional 4K source links (not downloaded in this 2K delivery):
+Diffuse: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/withered_grass/withered_grass_diff_4k.png
+nor_gl: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/withered_grass/withered_grass_nor_gl_4k.png
+Rough: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/withered_grass/withered_grass_rough_4k.png
+AO: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/withered_grass/withered_grass_ao_4k.png
+Displacement: https://dl.polyhaven.org/file/ph-assets/Textures/png/4k/withered_grass/withered_grass_disp_4k.png

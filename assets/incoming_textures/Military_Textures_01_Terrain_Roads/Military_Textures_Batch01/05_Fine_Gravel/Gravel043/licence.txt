@@ -1,0 +1,4 @@
+CC0 1.0 Universal
+https://creativecommons.org/publicdomain/zero/1.0/
+Provider confirmation: https://docs.ambientcg.com/license/
+Commercial use, modification and redistribution permitted; attribution not required.
